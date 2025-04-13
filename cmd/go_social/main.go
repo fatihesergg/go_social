@@ -6,6 +6,7 @@ import (
 
 	"github.com/fatihesergg/go_social/internal/controller"
 	"github.com/fatihesergg/go_social/internal/database"
+	"github.com/fatihesergg/go_social/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -35,15 +36,26 @@ func main() {
 	}
 
 	userStore := database.NewUserStore(db)
-	storage := database.NewPostgresStorage(userStore)
+	postStore := database.NewPostStore(db)
+	storage := database.NewPostgresStorage(userStore, postStore)
 
 	userController := controller.UserController{Storage: *storage}
+	postController := controller.PostController{Storage: *storage}
 
 	base.POST("/signup", userController.Signup)
 	base.POST("/login", userController.Login)
 
 	userRouter := base.Group("/users")
 	userRouter.GET("/:id", userController.GetUserByID)
+
+	postRouter := base.Group("/posts")
+	postRouter.Use(middleware.AuthMiddleware())
+
+	postRouter.GET("/:id", postController.GetPostByID)
+	postRouter.GET("/", postController.GetPosts)
+	postRouter.POST("/", postController.CreatePost)
+	postRouter.PUT("/:id", postController.UpdatePost)
+
 	if err := engine.Run(":3000"); err != nil {
 		panic("Error starting the server")
 	}
