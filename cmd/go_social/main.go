@@ -37,10 +37,12 @@ func main() {
 
 	userStore := database.NewUserStore(db)
 	postStore := database.NewPostStore(db)
-	storage := database.NewPostgresStorage(userStore, postStore)
+	commentStore := database.NewCommentStore(db)
+	storage := database.NewPostgresStorage(userStore, postStore, commentStore)
 
 	userController := controller.UserController{Storage: *storage}
 	postController := controller.PostController{Storage: *storage}
+	commentController := controller.CommentController{Storage: *storage}
 
 	base.POST("/signup", userController.Signup)
 	base.POST("/login", userController.Login)
@@ -55,6 +57,13 @@ func main() {
 	postRouter.GET("/", postController.GetPosts)
 	postRouter.POST("/", postController.CreatePost)
 	postRouter.PUT("/:id", postController.UpdatePost)
+
+	commentRouter := base.Group("/comments")
+	commentRouter.Use(middleware.AuthMiddleware())
+	commentRouter.POST("/", commentController.CreateComment)
+	commentRouter.GET("/:post_id", commentController.GetCommentsByPostID)
+	commentRouter.PUT("/:id", commentController.UpdateComment)
+	commentRouter.DELETE("/:id", commentController.DeleteComment)
 
 	if err := engine.Run(":3000"); err != nil {
 		panic("Error starting the server")
