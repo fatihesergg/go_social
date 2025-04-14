@@ -38,7 +38,8 @@ func main() {
 	userStore := database.NewUserStore(db)
 	postStore := database.NewPostStore(db)
 	commentStore := database.NewCommentStore(db)
-	storage := database.NewPostgresStorage(userStore, postStore, commentStore)
+	followStore := database.NewFollowStore(db)
+	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore)
 
 	userController := controller.UserController{Storage: *storage}
 	postController := controller.PostController{Storage: *storage}
@@ -48,7 +49,12 @@ func main() {
 	base.POST("/login", userController.Login)
 
 	userRouter := base.Group("/users")
+	userRouter.Use(middleware.AuthMiddleware())
 	userRouter.GET("/:id", userController.GetUserByID)
+	userRouter.POST("/:id/follow", userController.FollowUser)
+	userRouter.DELETE("/:id/unfollow", userController.UnfollowUser)
+	userRouter.GET("/:id/followers", userController.GetFollowerByUserID)
+	userRouter.GET("/:id/following", userController.GetFollowingByUserID)
 
 	postRouter := base.Group("/posts")
 	postRouter.Use(middleware.AuthMiddleware())

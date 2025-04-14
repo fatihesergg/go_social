@@ -139,3 +139,103 @@ func (uc UserController) Login(c *gin.Context) {
 
 	c.JSON(200, gin.H{"result": token, "message": "Login successful"})
 }
+
+func (uc UserController) GetFollowerByUserID(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(400, gin.H{"error": "ID is required"})
+		return
+	}
+	idInt, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	followers, err := uc.Storage.FollowStore.GetFollowerByUserID(idInt)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	if len(followers) == 0 {
+		c.JSON(404, gin.H{"error": "No followers found"})
+		return
+	}
+
+	c.JSON(200, gin.H{"result": followers})
+}
+
+func (uc UserController) GetFollowingByUserID(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(400, gin.H{"error": "ID is required"})
+		return
+	}
+	idInt, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	followings, err := uc.Storage.FollowStore.GetFollowingByUserID(idInt)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	if len(followings) == 0 {
+		c.JSON(404, gin.H{"error": "No followings found"})
+		return
+	}
+
+	c.JSON(200, gin.H{"result": followings})
+}
+
+func (uc UserController) FollowUser(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(400, gin.H{"error": "ID is required"})
+		return
+	}
+	idInt, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	model := model.Follow{
+		UserID:   idInt,
+		FollowID: int64(c.MustGet("userID").(int)),
+	}
+
+	err = uc.Storage.FollowStore.FollowUser(model.UserID, model.FollowID)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{"error": "Error following user"})
+		return
+	}
+	c.JSON(200, gin.H{"result": model, "message": "Followed successfully"})
+}
+
+func (uc UserController) UnfollowUser(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(400, gin.H{"error": "ID is required"})
+		return
+	}
+	idInt, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	model := model.Follow{
+		UserID:   idInt,
+		FollowID: int64(c.MustGet("userID").(int)),
+	}
+	err = uc.Storage.FollowStore.UnFollowUser(model.UserID, model.FollowID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error unfollowing user"})
+		return
+	}
+	c.JSON(200, gin.H{"result": model, "message": "Unfollowed successfully"})
+}

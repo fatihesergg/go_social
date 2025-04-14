@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS follows(
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    follow_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (follow_id) REFERENCES users(id) ON DELETE CASCADE
+)
