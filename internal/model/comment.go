@@ -14,4 +14,5 @@ type Comment struct {
 	Image     sql.NullString `json:"image"`
 	CreatedAt string         `json:"created_at"`
 	UpdatedAt string         `json:"updated_at"`
+	User      User           `json:"user"`
 }

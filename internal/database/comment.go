@@ -44,6 +44,20 @@ func (cs CommentStore) GetCommentsByPostID(postID int64) ([]model.Comment, error
 	if rows.Err() != nil {
 		return nil, err
 	}
+
+	if len(commets) > 0 {
+		for i := 0; i < len(commets); i++ {
+			query := "SELECT name,last_name,username,email FROM users WHERE id = $1"
+			row := cs.db.QueryRow(query, commets[i].UserID)
+			user := model.User{}
+			err := row.Scan(&user.Name, &user.LastName, &user.Username, &user.Email)
+			if err != nil {
+				return nil, err
+			}
+			commets[i].User = user
+		}
+	}
+
 	return commets, nil
 
 }

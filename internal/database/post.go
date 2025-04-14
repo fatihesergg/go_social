@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/google/uuid"
 )
 
 type BasePostStore interface {
@@ -26,7 +27,64 @@ func NewPostStore(db *sql.DB) BasePostStore {
 
 func (s *PostStore) GetPosts() ([]model.Post, error) {
 	var posts []model.Post
-	query := "SELECT * FROM posts"
+	query := `SELECT posts.id,posts.content,posts.user_id,posts.image,posts.created_at,posts.updated_at,
+	post_user.id,post_user.name,post_user.last_name,post_user.username,post_user.email,
+	comments.id,comments.post_id,comments.user_id,comments.content,comments.image,
+	comment_user.id,comment_user.name,comment_user.last_name,comment_user.username,comment_user.email
+	 FROM posts JOIN users as post_user ON posts.user_id = post_user.id
+	  JOIN comments ON posts.id = comments.post_id
+	  JOIN users as comment_user ON comments.user_id = comment_user.id`
+	rows, err := s.DB.Query(query)
+	if err != nil {
+		fmt.Println("Hata")
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+	postMap := make(map[int64]*model.Post)
+	for rows.Next() {
+		post := model.Post{}
+		comment := model.Comment{}
+		err := rows.Scan(&post.ID, &post.Content, &post.UserID, &post.Image, &post.CreatedAt, &post.UpdatedAt,
+			&post.User.ID, &post.User.Name, &post.User.LastName, &post.User.Username, &post.User.Email,
+			&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.Image,
+			&comment.User.ID, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		if _, ok := postMap[post.ID]; !ok {
+			postMap[post.ID] = &post
+		}
+		if comment.ID != uuid.Nil {
+			postMap[comment.PostID].Comments = append(postMap[comment.PostID].Comments, comment)
+		}
+
+	}
+	if err := rows.Err(); err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	for _, post := range postMap {
+		posts = append(posts, *post)
+	}
+
+	fmt.Println(posts)
+	return posts, nil
+}
+
+func (s *PostStore) GetPostByID(id int64) (*model.Post, error) {
+	post := &model.Post{}
+
+	query := `SELECT posts.id,posts.content,posts.user_id,posts.image,posts.created_at,posts.updated_at,
+	post_user.id,post_user.name,post_user.last_name,post_user.username,post_user.email,
+	comments.id,comments.post_id,comments.user_id,comments.content,comments.image,
+	comment_user.id,comment_user.name,comment_user.last_name,comment_user.username,comment_user.email
+	 FROM posts JOIN users as post_user ON posts.user_id = post_user.id
+	  JOIN comments ON posts.id = comments.post_id
+	  JOIN users as comment_user ON comments.user_id = comment_user.id`
 	rows, err := s.DB.Query(query)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -34,34 +92,26 @@ func (s *PostStore) GetPosts() ([]model.Post, error) {
 		}
 		return nil, err
 	}
+
 	defer rows.Close()
+
 	for rows.Next() {
-		post := model.Post{}
-		err := rows.Scan(&post.ID, &post.Content, &post.Image, &post.UserID, &post.CreatedAt, &post.UpdatedAt)
+		comment := model.Comment{}
+		err := rows.Scan(&post.ID, &post.Content, &post.UserID, &post.Image, &post.CreatedAt, &post.UpdatedAt,
+			&post.User.ID, &post.User.Name, &post.User.LastName, &post.User.Username, &post.User.Email,
+			&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.Image,
+			&comment.User.ID, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email)
 		if err != nil {
 			return nil, err
 		}
-		posts = append(posts, post)
+		post.Comments = append(post.Comments, comment)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	return posts, nil
-}
 
-func (s *PostStore) GetPostByID(id int64) (*model.Post, error) {
-	post := &model.Post{}
-	query := "SELECT * FROM posts WHERE id = $1"
-	row := s.DB.QueryRow(query, id)
-	err := row.Scan(&post.ID, &post.Content, &post.Image, &post.UserID, &post.CreatedAt, &post.UpdatedAt)
-	if err != nil {
-		fmt.Println(err)
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
 	return post, nil
+
 }
 
 func (s *PostStore) GetPostsByUserID(userID int64) ([]model.Post, error) {
