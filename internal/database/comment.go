@@ -27,35 +27,27 @@ func NewCommentStore(db *sql.DB) BaseCommentStore {
 
 func (cs CommentStore) GetCommentsByPostID(postID int64) ([]model.Comment, error) {
 	var commets []model.Comment
-	query := "SELECT id,post_id,user_id,content,image,created_at,updated_at FROM comments WHERE post_id = $1"
+	query := `SELECT comments.id,comments.post_id,comments.user_id,comments.content,comments.image,comments.created_at,comments.updated_at,
+	users.name,users.last_name,users.username,users.email
+	FROM comments JOIN users ON comments.user_id = users.id WHERE comments.post_id = $1`
 	rows, err := cs.db.Query(query, postID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var commet model.Comment
-		err := rows.Scan(&commet.ID, &commet.PostID, &commet.UserID, &commet.Content, &commet.Image, &commet.CreatedAt, &commet.UpdatedAt)
+		var comment model.Comment
+		err := rows.Scan(
+			&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.Image, &comment.CreatedAt, &comment.UpdatedAt,
+			&comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email,
+		)
 		if err != nil {
 			return nil, err
 		}
-		commets = append(commets, commet)
+		commets = append(commets, comment)
 	}
 	if rows.Err() != nil {
 		return nil, err
-	}
-
-	if len(commets) > 0 {
-		for i := 0; i < len(commets); i++ {
-			query := "SELECT name,last_name,username,email FROM users WHERE id = $1"
-			row := cs.db.QueryRow(query, commets[i].UserID)
-			user := model.User{}
-			err := row.Scan(&user.Name, &user.LastName, &user.Username, &user.Email)
-			if err != nil {
-				return nil, err
-			}
-			commets[i].User = user
-		}
 	}
 
 	return commets, nil
@@ -63,8 +55,11 @@ func (cs CommentStore) GetCommentsByPostID(postID int64) ([]model.Comment, error
 }
 func (cs CommentStore) GetCommentByID(id uuid.UUID) (*model.Comment, error) {
 	var commet model.Comment
-	query := "SELECT * from comments WHERE id = $1"
-	err := cs.db.QueryRow(query, id).Scan(&commet.ID, &commet.PostID, &commet.UserID, &commet.Content, &commet.Image, &commet.CreatedAt, &commet.UpdatedAt)
+	query := `SELECT comments.id,comments.post_id,comment.user_id,comments.content,comments.image,comments.created_at,comments.updated_at
+		users.name,users.last_name,users.username,users.email	
+	FROM comments JOIN users ON comments.user_id = users.id
+		WHERE comments.id = $1`
+	err := cs.db.QueryRow(query, id).Scan(&commet.ID, &commet.PostID, &commet.UserID, &commet.Content, &commet.Image, &commet.CreatedAt, &commet.UpdatedAt, &commet.User.Name, &commet.User.LastName, &commet.User.Username, &commet.User.Email)
 	if err != nil {
 		return nil, err
 	}
