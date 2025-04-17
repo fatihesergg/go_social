@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    depends_on:
+      - db
+    container_name: go_social
+    ports:
+      - "3000:3000"
+  db:
+    image: postgres:latest
+    restart: always
+    container_name: go_social_db
+    environment:
+      - POSTGRES_USER=go_social
+      - POSTGRES_PASSWORD=go_social
+      - POSTGRES_DB=go_social
+    ports:
+      - "5432:5432"
+    volumes:
+        - db_data:/var/lib/postgresql/data
+volumes:
+  db_data:
