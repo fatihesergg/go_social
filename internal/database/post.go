@@ -28,12 +28,13 @@ func NewPostStore(db *sql.DB) BasePostStore {
 func (s *PostStore) GetPosts() ([]model.Post, error) {
 	var posts []model.Post
 	query := `SELECT posts.id,posts.content,posts.user_id,posts.image,posts.created_at,posts.updated_at,
-	post_user.id,post_user.name,post_user.last_name,post_user.username,post_user.email,
-	comments.id,comments.post_id,comments.user_id,comments.content,comments.image,
-	comment_user.id,comment_user.name,comment_user.last_name,comment_user.username,comment_user.email
-	 FROM posts JOIN users as post_user ON posts.user_id = post_user.id
-	  JOIN comments ON posts.id = comments.post_id
-	  JOIN users as comment_user ON comments.user_id = comment_user.id`
+    post_user.id,post_user.name,post_user.last_name,post_user.username,post_user.email,
+    comments.id,comments.post_id,comments.user_id,comments.content,comments.image,
+    comment_user.id,comment_user.name,comment_user.last_name,comment_user.username,comment_user.email
+    FROM posts 
+    JOIN users as post_user ON posts.user_id = post_user.id
+    LEFT JOIN comments ON posts.id = comments.post_id
+    LEFT JOIN users as comment_user ON comments.user_id = comment_user.id`
 	rows, err := s.DB.Query(query)
 	if err != nil {
 		fmt.Println(err)
@@ -47,18 +48,35 @@ func (s *PostStore) GetPosts() ([]model.Post, error) {
 	for rows.Next() {
 		post := model.Post{}
 		comment := model.Comment{}
+		var commentID uuid.UUID
+		var commentPostID, commentUserID, commentUsersID sql.NullInt64
+		var commentContent, commentImage sql.NullString
+		var commentUserName, commentUserLastName, commentUserUsername, commentUserEmail sql.NullString
+
 		err := rows.Scan(&post.ID, &post.Content, &post.UserID, &post.Image, &post.CreatedAt, &post.UpdatedAt,
 			&post.User.ID, &post.User.Name, &post.User.LastName, &post.User.Username, &post.User.Email,
-			&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.Image,
-			&comment.User.ID, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email)
+			&commentID, &commentPostID, &commentUserID, &commentContent, &commentImage,
+			&commentUsersID, &commentUserName, &commentUserLastName, &commentUserUsername, &commentUserEmail)
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
+		fmt.Println(post.ID)
 		if _, ok := postMap[post.ID]; !ok {
+			fmt.Println("Eklendi")
 			postMap[post.ID] = &post
 		}
-		if comment.ID != uuid.Nil {
+		if commentID != uuid.Nil {
+			comment.ID = commentID
+			comment.PostID = commentPostID.Int64
+			comment.UserID = commentUserID.Int64
+			comment.Content = commentContent.String
+			comment.Image = sql.NullString{String: commentImage.String, Valid: commentImage.Valid}
+			comment.User.ID = commentUsersID.Int64
+			comment.User.Name = commentUserName.String
+			comment.User.LastName = commentUserLastName.String
+			comment.User.Username = commentUserUsername.String
+			comment.User.Email = commentUserEmail.String
+
 			postMap[comment.PostID].Comments = append(postMap[comment.PostID].Comments, comment)
 		}
 

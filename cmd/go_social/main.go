@@ -22,7 +22,7 @@ func main() {
 		panic("Error loading .env file")
 	}
 
-	DSN := "postgres://go_social:go_social@db:5432/go_social?sslmode=disable"
+	DSN := "postgres://fatih:test@localhost:5432/go_social?sslmode=disable"
 
 	if os.Getenv("JWT_SECRET") == "" {
 		panic("JWT_SECRET is not set")
@@ -50,6 +50,7 @@ func main() {
 	userRouter := base.Group("/users")
 	userRouter.Use(middleware.AuthMiddleware())
 	userRouter.GET("/:id", userController.GetUserByID)
+	userRouter.GET("/getMe", userController.GetMe)
 	userRouter.POST("/:id/follow", userController.FollowUser)
 	userRouter.DELETE("/:id/unfollow", userController.UnfollowUser)
 	userRouter.GET("/:id/followers", userController.GetFollowerByUserID)

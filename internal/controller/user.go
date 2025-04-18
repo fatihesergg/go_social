@@ -140,6 +140,24 @@ func (uc UserController) Login(c *gin.Context) {
 	c.JSON(200, gin.H{"result": token, "message": "Login successful"})
 }
 
+func (uc UserController) GetMe(c *gin.Context) {
+	id := c.MustGet("userID").(int)
+	intID := int64(id)
+	user, err := uc.Storage.UserStore.GetUserByID(intID)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	if user == nil {
+		c.JSON(404, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(200, gin.H{"result": user})
+}
+
 func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {

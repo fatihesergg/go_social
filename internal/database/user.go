@@ -26,7 +26,7 @@ func NewUserStore(db *sql.DB) BaseUserStore {
 func (s *UserStore) GetUserByID(id int64) (*model.User, error) {
 	user := &model.User{}
 
-	query := "SELECT * FROM users WHERE id = $1"
+	query := "SELECT id,name,last_name,username,email,password,avatar,created_at,updated_at FROM users WHERE id = $1"
 	row := s.DB.QueryRow(query, id)
 
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.Avatar, &user.CreatedAt, &user.UpdatedAt)
