@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 )
@@ -78,6 +79,7 @@ func (s *UserStore) CreateUser(user model.User) error {
 	query := "INSERT INTO users (name, last_name, username, email, password, avatar) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
 	err := s.DB.QueryRow(query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.Avatar).Scan(&user.ID)
 	if err != nil {
+		fmt.Println("Error creating user:", err)
 		return err
 	}
 	return nil

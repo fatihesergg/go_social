@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"os"
 
 	"github.com/fatihesergg/go_social/internal/controller"
@@ -22,7 +21,7 @@ func main() {
 		panic("Error loading .env file")
 	}
 
-	DSN := "postgres://fatih:test@localhost:5432/go_social?sslmode=disable"
+	DSN := os.Getenv("DATABASE_URI")
 
 	if os.Getenv("JWT_SECRET") == "" {
 		panic("JWT_SECRET is not set")
@@ -30,7 +29,6 @@ func main() {
 
 	db, err := sql.Open("postgres", DSN)
 	if err != nil {
-		fmt.Println(err)
 		panic("Error connecting to the database")
 	}
 

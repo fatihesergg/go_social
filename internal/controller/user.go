@@ -67,7 +67,6 @@ func (uc UserController) Signup(c *gin.Context) {
 
 	existEmail, err := uc.Storage.UserStore.GetUserByEmail(user.Email)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Internal server error"})
 		fmt.Println(err)
 		fmt.Println("Error getting user by email")
 		return

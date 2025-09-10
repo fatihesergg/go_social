@@ -140,3 +140,38 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 	c.JSON(200, gin.H{"result": post})
 
 }
+
+func (pc PostController) DeletePost(c *gin.Context) {
+
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(400, gin.H{"error": "ID is required"})
+		return
+	}
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	post, err := pc.Storage.PostStore.GetPostByID(int64(idInt))
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	if post == nil {
+		c.JSON(404, gin.H{"error": "Post not found"})
+		return
+	}
+	if post.UserID != int64(c.MustGet("userID").(int)) {
+		c.JSON(403, gin.H{"error": "You are not authorized to delete this post"})
+		return
+	}
+
+	err = pc.Storage.PostStore.DeletePost(int64(idInt))
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error deleting post"})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Post deleted successfully"})
+}
