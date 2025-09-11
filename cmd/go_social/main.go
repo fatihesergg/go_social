@@ -36,11 +36,14 @@ func main() {
 	postStore := database.NewPostStore(db)
 	commentStore := database.NewCommentStore(db)
 	followStore := database.NewFollowStore(db)
-	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore)
+	feedStore := database.NewFeedStore(db)
+
+	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore)
 
 	userController := controller.UserController{Storage: *storage}
 	postController := controller.PostController{Storage: *storage}
 	commentController := controller.CommentController{Storage: *storage}
+	feedController := controller.FeedController{Storage: *storage}
 
 	base.POST("/signup", userController.Signup)
 	base.POST("/login", userController.Login)
@@ -61,6 +64,10 @@ func main() {
 	postRouter.GET("/", postController.GetPosts)
 	postRouter.POST("/", postController.CreatePost)
 	postRouter.PUT("/:id", postController.UpdatePost)
+
+	feedRouter := base.Group("/feed")
+	feedRouter.Use(middleware.AuthMiddleware())
+	feedRouter.GET("/", feedController.GetFeed)
 
 	commentRouter := base.Group("/comments")
 	commentRouter.Use(middleware.AuthMiddleware())
