@@ -9,9 +9,9 @@ import (
 )
 
 type BasePostStore interface {
-	GetPosts() ([]model.Post, error)
+	GetPosts(pagination Pagination) ([]model.Post, error)
 	GetPostByID(id int64) (*model.Post, error)
-	GetPostsByUserID(userID int64) ([]model.Post, error)
+	GetPostsByUserID(userID int64, pagination Pagination) ([]model.Post, error)
 	CreatePost(post model.Post) error
 	UpdatePost(post model.Post) error
 	DeletePost(id int64) error
@@ -25,17 +25,24 @@ func NewPostStore(db *sql.DB) BasePostStore {
 	return &PostStore{DB: db}
 }
 
-func (s *PostStore) GetPosts() ([]model.Post, error) {
+func (s *PostStore) GetPosts(pagination Pagination) ([]model.Post, error) {
 	var posts []model.Post
-	query := `SELECT posts.id,posts.content,posts.user_id,posts.image,posts.created_at,posts.updated_at,
+	query := `
+	WITH limited_posts AS (
+		SELECT * FROM posts
+		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2
+	)
+	SELECT posts.id,posts.content,posts.user_id,posts.image,posts.created_at,posts.updated_at,
     post_user.id,post_user.name,post_user.last_name,post_user.username,post_user.email,
     comments.id,comments.post_id,comments.user_id,comments.content,comments.image,
     comment_user.id,comment_user.name,comment_user.last_name,comment_user.username,comment_user.email
-    FROM posts 
+    FROM limited_posts as posts 
     JOIN users as post_user ON posts.user_id = post_user.id
     LEFT JOIN comments ON posts.id = comments.post_id
     LEFT JOIN users as comment_user ON comments.user_id = comment_user.id`
-	rows, err := s.DB.Query(query)
+
+	rows, err := s.DB.Query(query, pagination.Limit, pagination.Offset)
 	if err != nil {
 		fmt.Println(err)
 		if err == sql.ErrNoRows {
@@ -60,9 +67,7 @@ func (s *PostStore) GetPosts() ([]model.Post, error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(post.ID)
 		if _, ok := postMap[post.ID]; !ok {
-			fmt.Println("Eklendi")
 			postMap[post.ID] = &post
 		}
 		if commentID != uuid.Nil {
@@ -97,9 +102,10 @@ func (s *PostStore) GetPostByID(id int64) (*model.Post, error) {
 	post := &model.Post{}
 
 	// First query: Get post details
-	postQuery := `SELECT posts.id, posts.content, posts.user_id, posts.image, posts.created_at, posts.updated_at,
+	postQuery := `
+		SELECT posts.id, posts.content, posts.user_id, posts.image, posts.created_at, posts.updated_at,
         users.id, users.name, users.last_name, users.username, users.email
-        FROM posts 
+        FROM posts
         JOIN users ON posts.user_id = users.id
         WHERE posts.id = $1`
 
@@ -141,16 +147,25 @@ func (s *PostStore) GetPostByID(id int64) (*model.Post, error) {
 
 }
 
-func (s *PostStore) GetPostsByUserID(userID int64) ([]model.Post, error) {
+func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination) ([]model.Post, error) {
 	posts := []model.Post{}
 
-	postQuery := `SELECT posts.id, posts.content, posts.user_id, posts.image, posts.created_at, posts.updated_at,
-        users.id, users.name, users.last_name, users.username, users.email
-        FROM posts 
+	postQuery := `
+	WITH limited_posts AS (
+		SELECT * FROM posts
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	)
+	SELECT posts.id, posts.content, posts.user_id, posts.image, posts.created_at, posts.updated_at,
+        users.id, users.name, users.last_name, users.username, users.email,
+		comment_user.id, comment_user.name, comment_user.last_name, comment_user.username, comment_user.email
+        FROM limited_posts as posts
         JOIN users ON posts.user_id = users.id
-        WHERE posts.user_id = $1`
+		LEFT JOIN comments ON posts.id = comments.post_id
+		LEFT JOIN users as comment_user ON comments.user_id = comment_user.id`
 
-	rows, err := s.DB.Query(postQuery, userID)
+	rows, err := s.DB.Query(postQuery, userID, pagination.Limit, pagination.Offset)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -162,8 +177,11 @@ func (s *PostStore) GetPostsByUserID(userID int64) ([]model.Post, error) {
 	postMap := make(map[int64]*model.Post)
 	for rows.Next() {
 		post := model.Post{}
+		comment := model.Comment{}
 		err := rows.Scan(&post.ID, &post.Content, &post.UserID, &post.Image, &post.CreatedAt, &post.UpdatedAt,
-			&post.User.ID, &post.User.Name, &post.User.LastName, &post.User.Username, &post.User.Email)
+			&post.User.ID, &post.User.Name, &post.User.LastName, &post.User.Username, &post.User.Email,
+			&comment.User.ID, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email,
+		)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
@@ -171,36 +189,13 @@ func (s *PostStore) GetPostsByUserID(userID int64) ([]model.Post, error) {
 		if _, ok := postMap[post.ID]; !ok {
 			postMap[post.ID] = &post
 		}
+		if comment.User.ID != 0 {
+			postMap[post.ID].Comments = append(postMap[post.ID].Comments, comment)
+		}
 	}
 	if err := rows.Err(); err != nil {
 		fmt.Println(err)
 		return nil, err
-	}
-
-	commentQuery := `SELECT c.id, c.post_id, c.user_id, c.content, c.image,
-        u.id, u.name, u.last_name, u.username, u.email
-        FROM comments c
-        JOIN users u ON c.user_id = u.id
-        WHERE c.post_id = $1`
-
-	for _, post := range postMap {
-		commentRows, err := s.DB.Query(commentQuery, post.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		defer commentRows.Close()
-
-		for commentRows.Next() {
-			comment := model.Comment{}
-			err := commentRows.Scan(
-				&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.Image,
-				&comment.User.ID, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email)
-			if err != nil {
-				return nil, err
-			}
-			postMap[comment.PostID].Comments = append(postMap[comment.PostID].Comments, comment)
-		}
 	}
 
 	for _, post := range postMap {

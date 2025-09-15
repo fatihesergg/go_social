@@ -20,7 +20,8 @@ func NewFeedController(storage database.Storage) FeedController {
 func (fc FeedController) GetFeed(c *gin.Context) {
 	userID := c.MustGet("userID").(int)
 
-	posts, err := fc.Storage.FeedStore.GetFeed(int64(userID))
+	pagination := database.NewPagination(c)
+	posts, err := fc.Storage.FeedStore.GetFeed(int64(userID), pagination)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(404, gin.H{"error": "No posts found"})

@@ -20,7 +20,8 @@ func NewPostController(storage database.Storage) *PostController {
 }
 
 func (pc PostController) GetPosts(c *gin.Context) {
-	posts, err := pc.Storage.PostStore.GetPosts()
+	pagination := database.NewPagination(c)
+	posts, err := pc.Storage.PostStore.GetPosts(pagination)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
@@ -43,7 +44,6 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Invalid ID format"})
 		return
 	}
-
 	post, err := pc.Storage.PostStore.GetPostByID(int64(intID))
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Internal server error"})
@@ -153,7 +153,6 @@ func (pc PostController) DeletePost(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Invalid ID format"})
 		return
 	}
-
 	post, err := pc.Storage.PostStore.GetPostByID(int64(idInt))
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Internal server error"})

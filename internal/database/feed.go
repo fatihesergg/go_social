@@ -9,7 +9,7 @@ import (
 )
 
 type BaseFeedStore interface {
-	GetFeed(userID int64) ([]model.Post, error)
+	GetFeed(userID int64, pagination Pagination) ([]model.Post, error)
 }
 
 type FeedStore struct {
@@ -22,7 +22,7 @@ func NewFeedStore(db *sql.DB) BaseFeedStore {
 	}
 }
 
-func (fs FeedStore) GetFeed(userID int64) ([]model.Post, error) {
+func (fs FeedStore) GetFeed(userID int64, pagination Pagination) ([]model.Post, error) {
 	var posts []model.Post
 
 	followers := []int64{}
@@ -42,17 +42,24 @@ func (fs FeedStore) GetFeed(userID int64) ([]model.Post, error) {
 		followers = append(followers, followerID)
 	}
 
-	query := `SELECT posts.id, posts.content, posts.image, posts.created_at, posts.updated_at,
+	query := `
+	WITH limited_posts AS (
+		SELECT * FROM posts
+		WHERE user_id = ANY($1)
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	)
+
+	SELECT posts.id, posts.content, posts.image, posts.created_at, posts.updated_at,
 	 post_user.name, post_user.last_name, post_user.username,
 	comments.id, comments.content, comments.post_id, comments.created_at, comments.updated_at,
 	comment_user.name, comment_user.last_name, comment_user.username
-	FROM posts
+	FROM limited_posts as posts
 	JOIN users as post_user ON posts.user_id = post_user.id
 	LEFT JOIN comments ON posts.id = comments.post_id
 	JOIN users as comment_user ON comments.user_id = comment_user.id
-	WHERE posts.user_id = ANY($1)`
-
-	rows, err := fs.DB.Query(query, pq.Array(followers))
+	`
+	rows, err := fs.DB.Query(query, pq.Array(followers), pagination.Limit, pagination.Offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
