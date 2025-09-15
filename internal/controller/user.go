@@ -256,3 +256,48 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"result": model, "message": "Unfollowed successfully"})
 }
+
+func (uc UserController) GetUsersPosts(c *gin.Context) {
+	id := c.Param("id")
+
+	idInt, err := strconv.Atoi(id)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	user, err := uc.Storage.UserStore.GetUserByID(int64(idInt))
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	if user == nil {
+		c.JSON(404, gin.H{"error": "User not found"})
+		return
+	}
+
+	followers, err := uc.Storage.FollowStore.GetFollowerByUserID(user.ID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal server error"})
+		return
+	}
+	userID := c.MustGet("userID").(int)
+
+	for i := range followers {
+		followerID := followers[i].ID
+		if followerID == int64(userID) {
+			posts, err := uc.Storage.PostStore.GetPostsByUserID(user.ID)
+			if err != nil {
+				c.JSON(500, gin.H{"error": "Internal server error"})
+				return
+			}
+
+			c.JSON(200, gin.H{"result": posts})
+			return
+		}
+	}
+
+	c.JSON(403, gin.H{"error": "You are not allowed to view this user's posts"})
+}

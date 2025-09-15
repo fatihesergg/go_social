@@ -51,6 +51,7 @@ func main() {
 	userRouter := base.Group("/users")
 	userRouter.Use(middleware.AuthMiddleware())
 	userRouter.GET("/:id", userController.GetUserByID)
+	userRouter.GET("/:id/posts", userController.GetUsersPosts)
 	userRouter.GET("/getMe", userController.GetMe)
 	userRouter.POST("/:id/follow", userController.FollowUser)
 	userRouter.DELETE("/:id/unfollow", userController.UnfollowUser)
