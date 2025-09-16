@@ -4,17 +4,35 @@ import (
 	"database/sql"
 	"os"
 
+	docs "github.com/fatihesergg/go_social/docs"
 	"github.com/fatihesergg/go_social/internal/controller"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @securityDefinitions.apikey	Bearer
+// @in							header
+// @name						Authorization
+// @title						Go Social API
+// @version					1.0
+// @description				This is a simple social media API built with Go and Gin.
+// @host						localhost:3000
+// @BasePath					/api/v1
 func main() {
 	engine := gin.Default()
 	base := engine.Group("/api/v1")
+
+	// Swagger info
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Title = "Go Social API"
+	docs.SwaggerInfo.Description = "This is a simple social media API built with Go and Gin."
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Host = "localhost:3000"
 
 	dotenv := godotenv.Load()
 	if dotenv != nil {
@@ -77,6 +95,7 @@ func main() {
 	commentRouter.PUT("/:id", commentController.UpdateComment)
 	commentRouter.DELETE("/:id", commentController.DeleteComment)
 
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	if err := engine.Run(":3000"); err != nil {
 		panic("Error starting the server")
 	}

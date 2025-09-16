@@ -1,0 +1,846 @@
+definitions:
+  github_com_fatihesergg_go_social_internal_model.Comment:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      image:
+        $ref: '#/definitions/sql.NullString'
+      post_id:
+        type: integer
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+      user_id:
+        type: integer
+    type: object
+  github_com_fatihesergg_go_social_internal_model.Follow:
+    properties:
+      follow_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  github_com_fatihesergg_go_social_internal_model.Post:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Comment'
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      image:
+        $ref: '#/definitions/sql.NullString'
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+      user_id:
+        type: integer
+    type: object
+  github_com_fatihesergg_go_social_internal_model.User:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  github_com_fatihesergg_go_social_internal_util.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  github_com_fatihesergg_go_social_internal_util.SuccessResponse:
+    properties:
+      message:
+        type: string
+      result: {}
+    type: object
+  sql.NullString:
+    properties:
+      string:
+        type: string
+      valid:
+        description: Valid is true if String is not NULL
+        type: boolean
+    type: object
+info:
+  contact: {}
+paths:
+  /comments:
+    post:
+      consumes:
+      - application/json
+      description: Create a new comment on a post
+      parameters:
+      - description: Comment to create
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Comment'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new comment
+      tags:
+      - Comments
+  /comments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing comment by its ID
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Delete a comment
+      tags:
+      - Comments
+    put:
+      consumes:
+      - application/json
+      description: Update an existing comment by its ID
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated comment data
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Comment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Update a comment
+      tags:
+      - Comments
+  /comments/post/{post_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all comments associated with a specific post by its ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get comments for a specific post
+      tags:
+      - Comments
+  /feed:
+    get:
+      consumes:
+      - application/json
+      description: Get feed posts for the authenticated user
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get feed posts
+      tags:
+      - Feed
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and return a JWT token
+      parameters:
+      - description: User login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            password:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            - properties:
+                message:
+                  type: string
+                result:
+                  type: string
+              type: object
+        "400":
+          description: 'Bad Request: Invalid input'
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+            - properties:
+                error:
+                  type: string
+              type: object
+        "401":
+          description: 'Unauthorized: Invalid credentials'
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+            - properties:
+                error:
+                  type: string
+              type: object
+        "404":
+          description: 'Not Found: User not found'
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+            - properties:
+                error:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+            - properties:
+                error:
+                  type: string
+              type: object
+      summary: User login
+      tags:
+      - Users
+  /me:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the authenticated user's details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+        "401":
+          description: 'Unauthorized: Invalid or missing token'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: 'Not Found: User not found'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get current user
+      tags:
+      - Users
+  /posts:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all posts with optional pagination and search
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all posts
+      tags:
+      - Posts
+    post:
+      consumes:
+      - application/json
+      description: Create a new post with content and optional image
+      parameters:
+      - description: Post data
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new post
+      tags:
+      - Posts
+  /posts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing post by its ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Delete a post
+      tags:
+      - Posts
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single post by its ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a post by ID
+      tags:
+      - Posts
+    put:
+      consumes:
+      - application/json
+      description: Update the content and/or image of an existing post by its ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated post data
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Update an existing post
+      tags:
+      - Posts
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: User signup data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            - properties:
+                message:
+                  type: string
+                result:
+                  $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+              type: object
+        "400":
+          description: 'Bad Request: Invalid input or email/username already exists'
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+            - properties:
+                error:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+            - properties:
+                error:
+                  type: string
+              type: object
+      summary: User signup
+      tags:
+      - Users
+  /users/{id}/follow:
+    post:
+      consumes:
+      - application/json
+      description: Follow a user by their ID
+      parameters:
+      - description: User ID to follow
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Followed successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            - properties:
+                message:
+                  type: string
+                result:
+                  $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Follow'
+              type: object
+        "400":
+          description: 'Bad Request: ID is required'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Follow a user
+      tags:
+      - Users
+  /users/{id}/followers:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of followers for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+            type: array
+        "400":
+          description: 'Bad Request: ID is required'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: 'Not Found: No followers found'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get followers of a user by user ID
+      tags:
+      - Users
+  /users/{id}/following:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of users that a specific user is following
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+            type: array
+        "400":
+          description: 'Bad Request: ID is required'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: 'Not Found: No followings found'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get followings of a user by user ID
+      tags:
+      - Users
+  /users/{id}/posts:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve posts made by a specific user, only if the requester is
+        following that user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+            type: array
+        "400":
+          description: 'Bad Request: Invalid user ID'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "403":
+          description: 'Forbidden: Not following the user'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: 'Not Found: User not found or no posts found'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get posts of a user by user ID
+      tags:
+      - Users
+  /users/{id}/unfollow:
+    post:
+      consumes:
+      - application/json
+      description: Unfollow a user by their ID
+      parameters:
+      - description: User ID to unfollow
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Unfollowed successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            - properties:
+                message:
+                  type: string
+                result:
+                  $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Follow'
+              type: object
+        "400":
+          description: 'Bad Request: ID is required'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Unfollow a user
+      tags:
+      - Users
+securityDefinitions:
+  Bearer:
+    description: This is a simple social media API built with Go and Gin.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
