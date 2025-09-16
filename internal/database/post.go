@@ -9,9 +9,9 @@ import (
 )
 
 type BasePostStore interface {
-	GetPosts(pagination Pagination) ([]model.Post, error)
+	GetPosts(pagination Pagination, search Search) ([]model.Post, error)
 	GetPostByID(id int64) (*model.Post, error)
-	GetPostsByUserID(userID int64, pagination Pagination) ([]model.Post, error)
+	GetPostsByUserID(userID int64, pagination Pagination, search Search) ([]model.Post, error)
 	CreatePost(post model.Post) error
 	UpdatePost(post model.Post) error
 	DeletePost(id int64) error
@@ -25,13 +25,14 @@ func NewPostStore(db *sql.DB) BasePostStore {
 	return &PostStore{DB: db}
 }
 
-func (s *PostStore) GetPosts(pagination Pagination) ([]model.Post, error) {
+func (s *PostStore) GetPosts(pagination Pagination, search Search) ([]model.Post, error) {
 	var posts []model.Post
 	query := `
 	WITH limited_posts AS (
 		SELECT * FROM posts
+		WHERE content ILIKE '%' || $1 || '%'
 		ORDER BY created_at DESC
-		LIMIT $1 OFFSET $2
+		LIMIT $2 OFFSET $3
 	)
 	SELECT posts.id,posts.content,posts.user_id,posts.image,posts.created_at,posts.updated_at,
     post_user.id,post_user.name,post_user.last_name,post_user.username,post_user.email,
@@ -42,7 +43,7 @@ func (s *PostStore) GetPosts(pagination Pagination) ([]model.Post, error) {
     LEFT JOIN comments ON posts.id = comments.post_id
     LEFT JOIN users as comment_user ON comments.user_id = comment_user.id`
 
-	rows, err := s.DB.Query(query, pagination.Limit, pagination.Offset)
+	rows, err := s.DB.Query(query, search.Query, pagination.Limit, pagination.Offset)
 	if err != nil {
 		fmt.Println(err)
 		if err == sql.ErrNoRows {
@@ -147,15 +148,16 @@ func (s *PostStore) GetPostByID(id int64) (*model.Post, error) {
 
 }
 
-func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination) ([]model.Post, error) {
+func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination, search Search) ([]model.Post, error) {
 	posts := []model.Post{}
 
 	postQuery := `
 	WITH limited_posts AS (
 		SELECT * FROM posts
 		WHERE user_id = $1
+		AND content ILIKE '%' || $2 || '%'
 		ORDER BY created_at DESC
-		LIMIT $2 OFFSET $3
+		LIMIT $3 OFFSET $4
 	)
 	SELECT posts.id, posts.content, posts.user_id, posts.image, posts.created_at, posts.updated_at,
         users.id, users.name, users.last_name, users.username, users.email,
@@ -165,12 +167,9 @@ func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination) ([]mod
 		LEFT JOIN comments ON posts.id = comments.post_id
 		LEFT JOIN users as comment_user ON comments.user_id = comment_user.id`
 
-	rows, err := s.DB.Query(postQuery, userID, pagination.Limit, pagination.Offset)
+	rows, err := s.DB.Query(postQuery, userID, search.Query, pagination.Limit, pagination.Offset)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -200,6 +199,10 @@ func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination) ([]mod
 
 	for _, post := range postMap {
 		posts = append(posts, *post)
+	}
+
+	if len(posts) == 0 {
+		return nil, sql.ErrNoRows
 	}
 
 	return posts, nil

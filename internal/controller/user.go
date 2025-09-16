@@ -286,13 +286,17 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 	userID := c.MustGet("userID").(int)
 
 	pagination := database.NewPagination(c)
-
+	search := database.NewSearch(c)
 	for i := range followers {
 		followerID := followers[i].ID
 		if followerID == int64(userID) {
-			posts, err := uc.Storage.PostStore.GetPostsByUserID(user.ID, pagination)
+			posts, err := uc.Storage.PostStore.GetPostsByUserID(user.ID, pagination, search)
 			if err != nil {
 				c.JSON(500, gin.H{"error": "Internal server error"})
+				return
+			}
+			if posts == nil {
+				c.JSON(404, gin.H{"error": "No posts found"})
 				return
 			}
 

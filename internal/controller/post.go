@@ -21,7 +21,8 @@ func NewPostController(storage database.Storage) *PostController {
 
 func (pc PostController) GetPosts(c *gin.Context) {
 	pagination := database.NewPagination(c)
-	posts, err := pc.Storage.PostStore.GetPosts(pagination)
+	search := database.NewSearch(c)
+	posts, err := pc.Storage.PostStore.GetPosts(pagination, search)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return

@@ -11,6 +11,10 @@ type Pagination struct {
 	Offset int
 }
 
+type Search struct {
+	Query string
+}
+
 func NewPagination(c *gin.Context) Pagination {
 	limit := c.Query("limit")
 	offset := c.Query("offset")
@@ -31,5 +35,15 @@ func NewPagination(c *gin.Context) Pagination {
 	return Pagination{
 		Limit:  limitInt,
 		Offset: offsetInt,
+	}
+}
+
+func NewSearch(c *gin.Context) Search {
+	query := c.Query("search")
+	if query == "" {
+		query = ""
+	}
+	return Search{
+		Query: query,
 	}
 }
