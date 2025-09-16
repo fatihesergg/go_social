@@ -89,28 +89,3 @@ Go Social is a backend API for a social media application built with Go. It prov
     go run ./cmd/go_social/main.go
     ```
     The server will start, typically on port `3000`.
-
-## API Endpoints
-
-All endpoints are prefixed with `/api/v1`.
-
-| Method   | Endpoint               | Description                    | Authentication |
-| :------- | :--------------------- | :----------------------------- | :------------- |
-| `POST`   | `/signup`              | Register a new user            | None           |
-| `POST`   | `/login`               | Log in a user and get a JWT    | None           |
-| `GET`    | `/users/getMe`         | Get the current user's profile | Required       |
-| `GET`    | `/users/:id`           | Get a user's profile by ID     | Required       |
-| `POST`   | `/users/:id/follow`    | Follow a user                  | Required       |
-| `DELETE` | `/users/:id/unfollow`  | Unfollow a user                | Required       |
-| `GET`    | `/users/:id/followers` | Get a user's followers         | Required       |
-| `GET`    | `/users/:id/following` | Get users a user is following  | Required       |
-| `POST`   | `/posts`               | Create a new post              | Required       |
-| `GET`    | `/posts`               | Get all posts                  | Required       |
-| `GET`    | `/posts/:id`           | Get a single post by ID        | Required       |
-| `PUT`    | `/posts/:id`           | Update a post                  | Required       |
-| `DELETE` | `/posts/:id`           | Delete a post                  | Required       |
-| `POST`   | `/comments`            | Create a new comment           | Required       |
-| `GET`    | `/comments/:post_id`   | Get all comments for a post    | Required       |
-| `PUT`    | `/comments/:id`        | Update a comment               | Required       |
-| `DELETE` | `/comments/:id`        | Delete a comment               | Required       |
-| `GET`    | `/feed`                | Get the personalized user feed | Required       |
