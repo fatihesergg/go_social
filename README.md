@@ -43,7 +43,22 @@ Go Social is a backend API for a social media application built with Go. It prov
 - **Database**: PostgreSQL
 - **Authentication**: JWT (JSON Web Tokens)
 - **Database Migrations**: `golang-migrate`
+- **API Documentation**: `swag`
 - **Environment Management**: `godotenv`
+
+### Developer Experience
+
+- **Interactive API Documentation**: The entire API is documented using Swagger. The documentation is automatically generated from code comments, ensuring it's always up-to-date.
+
+## 📖 API Documentation
+
+This project uses `swag` to automatically generate interactive API documentation in the Swagger 2.0 format.
+
+Once the application is running, you can access the Swagger UI at:
+
+[http://localhost:3000/swagger/index.html](http://localhost:3000/swagger/index.html)
+
+The documentation provides a clear overview of all available endpoints, their parameters, and expected responses. You can also execute API requests directly from the UI, which is useful for testing and exploration.
 
 ## 🚀 Getting Started
 
