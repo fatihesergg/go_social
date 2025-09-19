@@ -2,7 +2,6 @@ package controller
 
 import (
 	"database/sql"
-	"fmt"
 	"strconv"
 
 	"github.com/fatihesergg/go_social/internal/database"
@@ -54,7 +53,7 @@ func (cc CommentController) CreateComment(c *gin.Context) {
 		UserID:  int64(userID),
 		Content: params.Content,
 	}
-	fmt.Println(comment)
+
 	if params.Image != "" {
 		comment.Image = sql.NullString{String: params.Image, Valid: true}
 	} else {
@@ -63,7 +62,7 @@ func (cc CommentController) CreateComment(c *gin.Context) {
 
 	err := cc.Storage.CommentStore.CreateComment(comment)
 	if err != nil {
-		fmt.Println(err)
+
 		c.JSON(500, gin.H{"error": "Error creating comment"})
 		return
 	}
@@ -99,7 +98,7 @@ func (cc CommentController) GetCommentsByPostID(c *gin.Context) {
 	}
 	comments, err := cc.Storage.CommentStore.GetCommentsByPostID(int64(intID))
 	if err != nil {
-		fmt.Println(err)
+
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
 	}

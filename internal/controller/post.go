@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/fatihesergg/go_social/internal/database"
@@ -123,7 +122,7 @@ func (pc PostController) CreatePost(c *gin.Context) {
 
 	err := pc.Storage.PostStore.CreatePost(post)
 	if err != nil {
-		fmt.Println(err)
+
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
 	}

@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -20,7 +19,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		token = token[7:] // Remove "Bearer " prefix
 		claims, err := util.ParseJWT(token)
 		if err != nil {
-			fmt.Println(err)
+
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			c.Abort()
 			return

@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/fatihesergg/go_social/internal/database"
@@ -79,19 +78,18 @@ func (uc UserController) Signup(c *gin.Context) {
 
 	existEmail, err := uc.Storage.UserStore.GetUserByEmail(user.Email)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("Error getting user by email")
+
 		return
 	}
 	if existEmail != nil {
 		c.JSON(400, gin.H{"error": "Email already exists"})
-		fmt.Println(err)
+
 		return
 	}
 	existUsername, err := uc.Storage.UserStore.GetUserByUsername(user.Username)
 	if err != nil {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
-		fmt.Println(err)
+
 		return
 	}
 	if existUsername != nil {
@@ -183,7 +181,7 @@ func (uc UserController) GetMe(c *gin.Context) {
 	intID := int64(id)
 	user, err := uc.Storage.UserStore.GetUserByID(intID)
 	if err != nil {
-		fmt.Println(err)
+
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
 	}
@@ -307,7 +305,7 @@ func (uc UserController) FollowUser(c *gin.Context) {
 
 	err = uc.Storage.FollowStore.FollowUser(model.UserID, model.FollowID)
 	if err != nil {
-		fmt.Println(err)
+
 		c.JSON(500, gin.H{"error": "Error following user"})
 		return
 	}

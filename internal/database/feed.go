@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/lib/pq"
@@ -29,14 +28,14 @@ func (fs FeedStore) GetFeed(userID int64, pagination Pagination, search Search) 
 	followersQuery := `SELECT follow_id FROM follows WHERE user_id = $1`
 	followersRows, err := fs.DB.Query(followersQuery, userID)
 	if err != nil {
-		fmt.Println(err)
+
 		return nil, err
 	}
 	defer followersRows.Close()
 	for followersRows.Next() {
 		var followerID int64
 		if err := followersRows.Scan(&followerID); err != nil {
-			fmt.Println(err)
+
 			return nil, err
 		}
 		followers = append(followers, followerID)
@@ -66,7 +65,7 @@ func (fs FeedStore) GetFeed(userID int64, pagination Pagination, search Search) 
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		fmt.Println(err)
+
 		return nil, err
 	}
 	defer rows.Close()

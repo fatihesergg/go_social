@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
@@ -45,7 +44,7 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search) ([]model.Post
 
 	rows, err := s.DB.Query(query, search.Query, pagination.Limit, pagination.Offset)
 	if err != nil {
-		fmt.Println(err)
+
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -88,14 +87,13 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search) ([]model.Post
 
 	}
 	if err := rows.Err(); err != nil {
-		fmt.Println(err)
+
 		return nil, err
 	}
 	for _, post := range postMap {
 		posts = append(posts, *post)
 	}
 
-	fmt.Println(posts)
 	return posts, nil
 }
 
@@ -182,7 +180,7 @@ func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination, search
 			&comment.User.ID, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email,
 		)
 		if err != nil {
-			fmt.Println(err)
+
 			return nil, err
 		}
 		if _, ok := postMap[post.ID]; !ok {
@@ -193,7 +191,7 @@ func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination, search
 		}
 	}
 	if err := rows.Err(); err != nil {
-		fmt.Println(err)
+
 		return nil, err
 	}
 
@@ -210,7 +208,7 @@ func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination, search
 
 func (s *PostStore) CreatePost(post model.Post) error {
 	var query string
-	fmt.Println(post)
+
 	if post.Image.Valid {
 		query = "INSERT INTO posts (content, user_id, image) VALUES ($1, $2, $3)"
 
