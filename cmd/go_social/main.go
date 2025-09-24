@@ -15,6 +15,11 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+type App struct {
+	Router  *gin.Engine
+	Storage *database.Storage
+}
+
 // @securityDefinitions.apikey	Bearer
 // @in							header
 // @name						Authorization
@@ -25,7 +30,6 @@ import (
 // @BasePath					/api/v1
 func main() {
 	engine := gin.Default()
-	base := engine.Group("/api/v1")
 
 	// Swagger info
 	docs.SwaggerInfo.BasePath = "/api/v1"
@@ -57,6 +61,14 @@ func main() {
 	feedStore := database.NewFeedStore(db)
 
 	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore)
+
+	rateLimiter := middleware.NewRateLimiter(1, 5)
+	engine.Use(rateLimiter.TokenBucketMiddleware())
+	app := App{
+		Router:  engine,
+		Storage: storage,
+	}
+	base := app.Router.Group("/api/v1")
 
 	userController := controller.UserController{Storage: *storage}
 	postController := controller.PostController{Storage: *storage}
@@ -96,7 +108,7 @@ func main() {
 	commentRouter.DELETE("/:id", commentController.DeleteComment)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	if err := engine.Run(":3000"); err != nil {
+	if err := app.Router.Run(":3000"); err != nil {
 		panic("Error starting the server")
 	}
 
