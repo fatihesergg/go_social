@@ -901,6 +901,83 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/reset_password": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Allow authenticated users to reset their password by providing the old and new passwords",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Reset user password",
+                "parameters": [
+                    {
+                        "description": "Old and new passwords",
+                        "name": "passwords",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "new_password": {
+                                    "type": "string"
+                                },
+                                "old_password": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid input or incorrect old password",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: User not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}/follow": {
             "post": {
                 "security": [
@@ -1254,9 +1331,6 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -1297,9 +1371,6 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -1311,9 +1382,6 @@ const docTemplate = `{
                 },
                 "email": {
                     "type": "string"
-                },
-                "id": {
-                    "type": "integer"
                 },
                 "last_name": {
                     "type": "string"

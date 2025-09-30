@@ -62,7 +62,8 @@ func main() {
 
 	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore)
 
-	rateLimiter := middleware.NewRateLimiter(1, 5)
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	rateLimiter := middleware.NewRateLimiter(1, 10)
 	engine.Use(rateLimiter.TokenBucketMiddleware())
 	app := App{
 		Router:  engine,
@@ -87,6 +88,7 @@ func main() {
 	userRouter.DELETE("/:id/unfollow", userController.UnfollowUser)
 	userRouter.GET("/:id/followers", userController.GetFollowerByUserID)
 	userRouter.GET("/:id/following", userController.GetFollowingByUserID)
+	userRouter.POST("/reset_password", userController.ResetPassword)
 
 	postRouter := base.Group("/posts")
 	postRouter.Use(middleware.AuthMiddleware())
@@ -107,7 +109,6 @@ func main() {
 	commentRouter.PUT("/:id", commentController.UpdateComment)
 	commentRouter.DELETE("/:id", commentController.DeleteComment)
 
-	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	if err := app.Router.Run(":3000"); err != nil {
 		panic("Error starting the server")
 	}

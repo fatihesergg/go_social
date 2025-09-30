@@ -416,3 +416,60 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 
 	c.JSON(403, gin.H{"error": util.NotFollowingError})
 }
+
+// ResetPassword godoc
+//
+//	@Summary		Reset user password
+//	@Description	Allow authenticated users to reset their password by providing the old and new passwords
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Param			passwords	body		object{old_password=string,new_password=string}	true	"Old and new passwords"
+//	@Success		200			{object}	util.SuccessResponse{message=string}			"Password updated successfully"
+//	@Failure		400			{object}	util.ErrorResponse								"Bad Request: Invalid input or incorrect old password"
+//	@Failure		404			{object}	util.ErrorResponse								"Not Found: User not found"
+//	@Failure		500			{object}	util.ErrorResponse								"Internal Server Error"
+//	@Security		Bearer
+//	@Router			/users/reset_password [post]
+func (uc UserController) ResetPassword(c *gin.Context) {
+
+	var params struct {
+		OldPassword string `json:"old_password" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required"`
+	}
+	err := c.ShouldBind(&params)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	userID := c.MustGet("userID").(int)
+
+	user, err := uc.Storage.UserStore.GetUserByID(int64(userID))
+	if err != nil {
+		c.JSON(500, gin.H{"error": util.InternalServerError})
+		return
+	}
+	if user == nil {
+		c.JSON(404, gin.H{"error": util.UserNotFoundError})
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.OldPassword)); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid password"})
+		return
+	}
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(params.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Something went wrong"})
+		return
+	}
+	user.Password = string(hashedPass)
+
+	err = uc.Storage.UserStore.UpdateUser(*user)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error updating password"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Password updated successfully"})
+}
