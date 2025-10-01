@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 
 	docs "github.com/fatihesergg/go_social/docs"
@@ -43,7 +44,15 @@ func main() {
 		panic("Error loading .env file")
 	}
 
-	DSN := os.Getenv("DATABASE_URI")
+	pgUser := os.Getenv("POSTGRES_USER")
+	pgPassword := os.Getenv("POSTGRES_PASSWORD")
+	pgDB := os.Getenv("POSTGRES_DB")
+
+	if pgUser == "" || pgPassword == "" || pgDB == "" {
+		panic("Database environment variables are not set")
+	}
+
+	DSN := fmt.Sprintf("postgres://%s:%s@db:5432/%s?sslmode=disable", pgUser, pgPassword, pgDB)
 
 	if os.Getenv("JWT_SECRET") == "" {
 		panic("JWT_SECRET is not set")

@@ -4,18 +4,24 @@ services:
     depends_on:
       - db
     container_name: go_social
+    env_file:
+      - .env
     ports:
-      - "3000:3000"
+      - "3000:3000"    
+    restart: always
+
   db:
     image: postgres:latest
     restart: always
     container_name: go_social_db
-    environment:
-      - POSTGRES_USER=go_social
-      - POSTGRES_PASSWORD=go_social
-      - POSTGRES_DB=go_social
+    env_file:
+      - .env
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
         - db_data:/var/lib/postgresql/data
 volumes:

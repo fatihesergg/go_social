@@ -15,14 +15,11 @@ FROM golang:1.24-alpine
 
 WORKDIR /app
 
-COPY .env .env
 COPY --from=builder /app/app .
 COPY --from=builder /go/bin/migrate /usr/local/bin/migrate
 
 COPY ./internal/migration ./internal/migration
+COPY .env ./.env
 
 EXPOSE 3000
-
-
-CMD source .env && migrate -database "postgres://go_social:go_social@db:5432/go_social?sslmode=disable"    -path ./internal/migration up && ./app
-
+CMD ["sh", "-c", "migrate -path ./internal/migration -database \"postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable\" up || exit 1 && ./app"]
