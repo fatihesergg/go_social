@@ -59,8 +59,9 @@ func main() {
 	commentStore := database.NewCommentStore(db)
 	followStore := database.NewFollowStore(db)
 	feedStore := database.NewFeedStore(db)
+	likeStore := database.NewLikeStore(db)
 
-	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore)
+	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore, likeStore)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	rateLimiter := middleware.NewRateLimiter(1, 10)
@@ -75,6 +76,7 @@ func main() {
 	postController := controller.PostController{Storage: *storage}
 	commentController := controller.CommentController{Storage: *storage}
 	feedController := controller.FeedController{Storage: *storage}
+	likeController := controller.LikeController{Storage: *storage}
 
 	base.POST("/signup", userController.Signup)
 	base.POST("/login", userController.Login)
@@ -108,6 +110,11 @@ func main() {
 	commentRouter.GET("/:post_id", commentController.GetCommentsByPostID)
 	commentRouter.PUT("/:id", commentController.UpdateComment)
 	commentRouter.DELETE("/:id", commentController.DeleteComment)
+
+	likeRouter := base.Group("/likes")
+	likeRouter.Use(middleware.AuthMiddleware())
+	likeRouter.POST("/", likeController.LikePost)
+	likeRouter.DELETE("/:id", likeController.UnlikePost)
 
 	if err := app.Router.Run(":3000"); err != nil {
 		panic("Error starting the server")
