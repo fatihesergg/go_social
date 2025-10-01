@@ -12,6 +12,7 @@ Go Social is a backend API for a social media application built with Go. It prov
 - **Social Graph**: Users can follow and unfollow each other.
 - **Follower/Following Lists**: View lists of who a user follows and who follows them.
 - **Post Management**: Full CRUD (Create, Read, Update, Delete) operations for posts.
+- **Like Post**: Create and Delete oprations for likes on posts.
 - **Comment System**: Full CRUD operations for comments on posts.
 - **Personalized Feed**: A user-specific feed that aggregates posts from the users they follow.
 
@@ -45,6 +46,7 @@ Go Social is a backend API for a social media application built with Go. It prov
 - **Database Migrations**: `golang-migrate`
 - **API Documentation**: `swag`
 - **Environment Management**: `godotenv`
+- **Deployment**: `docker` and `docker-compose`
 
 ### Developer Experience
 
