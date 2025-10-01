@@ -64,10 +64,7 @@ The documentation provides a clear overview of all available endpoints, their pa
 
 ### Prerequisites
 
-- Go (1.21 or later)
-- PostgreSQL
-- `golang-migrate` CLI
-- A running PostgreSQL instance.
+- Docker and Docker Compose
 
 ### Installation & Setup
 
@@ -78,29 +75,18 @@ The documentation provides a clear overview of all available endpoints, their pa
     cd go_social
     ```
 
-2.  **Install dependencies:**
-
-    ```bash
-    go mod tidy
-    ```
-
-3.  **Configure Environment Variables:**
+2.  **Configure Environment Variables:**
     Create a `.env` file in the root directory and add the following variables:
 
     ```env
-    DATABASE_URI="postgres://user:password@localhost:5432/go_social?sslmode=disable"
+    POSTGRES_USER="postgres user name"
+    POSTGRES_PASSWORD="postgres user's password"
+    POSTGRES_DB="postgres database name"
     JWT_SECRET="your-super-secret-key"
     ```
 
-4.  **Run Database Migrations:**
-    Apply all pending migrations to set up your database schema.
-
+3.  **Run containers with docker-compose:**
     ```bash
-    migrate -path ./internal/migration -database "$DATABASE_URI" up
+    docker compose up
     ```
-
-5.  **Run the Application:**
-    ```bash
-    go run ./cmd/go_social/main.go
-    ```
-    The server will start, typically on port `3000`.
+    The server will start on port `3000`.
