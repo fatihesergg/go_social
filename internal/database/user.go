@@ -28,7 +28,7 @@ func (s *UserStore) GetUserByID(id uuid.UUID) (*model.User, error) {
 	user := &model.User{}
 
 	query := "SELECT id,name,last_name,username,email,password,avatar,created_at,updated_at FROM users WHERE id = $1"
-	row := s.DB.QueryRow(query, id)
+	row := s.DB.QueryRow(query, id.String())
 
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.Avatar, &user.CreatedAt, &user.UpdatedAt)
 
@@ -44,10 +44,10 @@ func (s *UserStore) GetUserByID(id uuid.UUID) (*model.User, error) {
 func (s *UserStore) GetUserByUsername(username string) (*model.User, error) {
 	user := &model.User{}
 
-	query := "SELECT * FROM users WHERE username = $1"
+	query := "SELECT id,name,last_name,username,email,password,avatar,created_at,updated_at FROM users WHERE username = $1"
 	row := s.DB.QueryRow(query, username)
 
-	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt, &user.Avatar)
+	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.Avatar, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -61,7 +61,7 @@ func (s *UserStore) GetUserByUsername(username string) (*model.User, error) {
 func (s *UserStore) GetUserByEmail(email string) (*model.User, error) {
 	user := &model.User{}
 
-	query := "SELECT * FROM users WHERE email = $1"
+	query := "SELECT id, name, last_name, username, email, password, created_at, updated_at, avatar FROM users WHERE email = $1"
 	row := s.DB.QueryRow(query, email)
 
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt, &user.Avatar)
@@ -76,8 +76,9 @@ func (s *UserStore) GetUserByEmail(email string) (*model.User, error) {
 }
 
 func (s *UserStore) CreateUser(user model.User) error {
+	var id uuid.UUID
 	query := "INSERT INTO users (name, last_name, username, email, password, avatar) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
-	err := s.DB.QueryRow(query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.Avatar).Scan(&user.ID)
+	err := s.DB.QueryRow(query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.Avatar).Scan(&id)
 	if err != nil {
 
 		return err
