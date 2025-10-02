@@ -24,7 +24,7 @@ func NewFollowStore(db *sql.DB) BaseFollowStore {
 
 func (s FollowStore) GetFollowerByUserID(userID uuid.UUID) ([]model.Follow, error) {
 	var follows []model.Follow
-	query := "SELECT id, user_id, follow_id FROM follows WHERE user_id = $1"
+	query := "SELECT id, user_id, follow_id FROM follows WHERE follow_id = $1"
 	rows, err := s.db.Query(query, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -49,7 +49,7 @@ func (s FollowStore) GetFollowerByUserID(userID uuid.UUID) ([]model.Follow, erro
 
 func (s FollowStore) GetFollowingByUserID(userID uuid.UUID) ([]model.Follow, error) {
 	var follows []model.Follow
-	query := "SELECT id, user_id, follow_id FROM follows WHERE follow_id = $1"
+	query := "SELECT id, user_id, follow_id FROM follows WHERE user_id = $1"
 	rows, err := s.db.Query(query, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
