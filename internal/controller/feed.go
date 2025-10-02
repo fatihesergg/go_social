@@ -7,6 +7,7 @@ import (
 	_ "github.com/fatihesergg/go_social/internal/model"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type FeedController struct {
@@ -37,11 +38,11 @@ func NewFeedController(storage database.Storage) FeedController {
 //	@Security		Bearer
 //	@Router			/feed [get]
 func (fc FeedController) GetFeed(c *gin.Context) {
-	userID := c.MustGet("userID").(int)
+	userID := c.MustGet("userID").(uuid.UUID)
 
 	search := database.NewSearch(c)
 	pagination := database.NewPagination(c)
-	posts, err := fc.Storage.FeedStore.GetFeed(int64(userID), pagination, search)
+	posts, err := fc.Storage.FeedStore.GetFeed(userID, pagination, search)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(404, gin.H{"error": util.PostNotFoundError})

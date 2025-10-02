@@ -2,17 +2,17 @@ package util
 
 import (
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
-func CreateJsonWebToken(userID int64) (string, error) {
+func CreateJsonWebToken(userID uuid.UUID) (string, error) {
 
 	claims := jwt.RegisteredClaims{
 		Issuer:    "go_social",
-		Subject:   strconv.FormatInt(userID, 10),
+		Subject:   userID.String(),
 		Audience:  jwt.ClaimStrings{"go_social_user"},
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
 		NotBefore: jwt.NewNumericDate(time.Now()),

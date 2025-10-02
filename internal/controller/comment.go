@@ -2,7 +2,6 @@ package controller
 
 import (
 	"database/sql"
-	"strconv"
 
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/model"
@@ -38,19 +37,19 @@ func NewCommentController(storage database.Storage) *CommentController {
 //	@Router			/comments [post]
 func (cc CommentController) CreateComment(c *gin.Context) {
 	var params struct {
-		PostID  int64  `json:"post_id" binding:"required"`
-		Content string `json:"content" binding:"required"`
-		Image   string `json:"image"`
+		PostID  uuid.UUID `json:"post_id" binding:"required"`
+		Content string    `json:"content" binding:"required"`
+		Image   string    `json:"image"`
 	}
 	if err := c.ShouldBindJSON(&params); err != nil {
 		c.JSON(400, gin.H{"error": "Invalid input"})
 		return
 	}
-	userID := c.MustGet("userID").(int)
+	userID := c.MustGet("userID").(uuid.UUID)
 	comment := model.Comment{
 		ID:      uuid.New(),
 		PostID:  params.PostID,
-		UserID:  int64(userID),
+		UserID:  userID,
 		Content: params.Content,
 	}
 
@@ -91,12 +90,12 @@ func (cc CommentController) GetCommentsByPostID(c *gin.Context) {
 		c.JSON(400, gin.H{"error": util.IDRequiredError})
 		return
 	}
-	intID, err := strconv.Atoi(id)
+	postID, err := uuid.Parse(id)
 	if err != nil {
 		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
 		return
 	}
-	comments, err := cc.Storage.CommentStore.GetCommentsByPostID(int64(intID))
+	comments, err := cc.Storage.CommentStore.GetCommentsByPostID(postID)
 	if err != nil {
 
 		c.JSON(500, gin.H{"error": util.InternalServerError})

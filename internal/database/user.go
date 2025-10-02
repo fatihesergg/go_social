@@ -4,15 +4,16 @@ import (
 	"database/sql"
 
 	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/google/uuid"
 )
 
 type BaseUserStore interface {
-	GetUserByID(id int64) (*model.User, error)
+	GetUserByID(id uuid.UUID) (*model.User, error)
 	GetUserByUsername(username string) (*model.User, error)
 	GetUserByEmail(email string) (*model.User, error)
 	CreateUser(user model.User) error
 	UpdateUser(user model.User) error
-	DeleteUser(id int64) error
+	DeleteUser(id uuid.UUID) error
 }
 
 type UserStore struct {
@@ -23,7 +24,7 @@ func NewUserStore(db *sql.DB) BaseUserStore {
 	return &UserStore{DB: db}
 }
 
-func (s *UserStore) GetUserByID(id int64) (*model.User, error) {
+func (s *UserStore) GetUserByID(id uuid.UUID) (*model.User, error) {
 	user := &model.User{}
 
 	query := "SELECT id,name,last_name,username,email,password,avatar,created_at,updated_at FROM users WHERE id = $1"
@@ -93,7 +94,7 @@ func (s *UserStore) UpdateUser(user model.User) error {
 	return nil
 }
 
-func (s *UserStore) DeleteUser(id int64) error {
+func (s *UserStore) DeleteUser(id uuid.UUID) error {
 	query := "DELETE FROM users WHERE id = $1"
 	_, err := s.DB.Exec(query, id)
 	if err != nil {

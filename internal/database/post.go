@@ -9,11 +9,11 @@ import (
 
 type BasePostStore interface {
 	GetPosts(pagination Pagination, search Search) ([]model.Post, error)
-	GetPostByID(id int64) (*model.Post, error)
-	GetPostsByUserID(userID int64, pagination Pagination, search Search) ([]model.Post, error)
+	GetPostByID(id uuid.UUID) (*model.Post, error)
+	GetPostsByUserID(userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error)
 	CreatePost(post model.Post) error
 	UpdatePost(post model.Post) error
-	DeletePost(id int64) error
+	DeletePost(id uuid.UUID) error
 }
 
 type PostStore struct {
@@ -51,38 +51,25 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search) ([]model.Post
 		return nil, err
 	}
 	defer rows.Close()
-	postMap := make(map[int64]*model.Post)
+	postMap := make(map[uuid.UUID]*model.Post)
 	for rows.Next() {
 		post := model.Post{}
 		comment := model.Comment{}
-		var commentID uuid.UUID
-		var commentPostID, commentUserID, commentUsersID sql.NullInt64
-		var commentContent, commentImage sql.NullString
-		var commentUserName, commentUserLastName, commentUserUsername, commentUserEmail sql.NullString
 
 		err := rows.Scan(&post.ID, &post.Content, &post.UserID, &post.Image, &post.CreatedAt, &post.UpdatedAt,
 			&post.User.ID, &post.User.Name, &post.User.LastName, &post.User.Username, &post.User.Email,
-			&commentID, &commentPostID, &commentUserID, &commentContent, &commentImage,
-			&commentUsersID, &commentUserName, &commentUserLastName, &commentUserUsername, &commentUserEmail)
+			&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.Image,
+			&comment.User.ID, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email,
+		)
 		if err != nil {
 			return nil, err
 		}
 		if _, ok := postMap[post.ID]; !ok {
 			postMap[post.ID] = &post
 		}
-		if commentID != uuid.Nil {
-			comment.ID = commentID
-			comment.PostID = commentPostID.Int64
-			comment.UserID = commentUserID.Int64
-			comment.Content = commentContent.String
-			comment.Image = sql.NullString{String: commentImage.String, Valid: commentImage.Valid}
-			comment.User.ID = commentUsersID.Int64
-			comment.User.Name = commentUserName.String
-			comment.User.LastName = commentUserLastName.String
-			comment.User.Username = commentUserUsername.String
-			comment.User.Email = commentUserEmail.String
 
-			postMap[comment.PostID].Comments = append(postMap[comment.PostID].Comments, comment)
+		if comment.User.ID != uuid.Nil {
+			postMap[post.ID].Comments = append(postMap[post.ID].Comments, comment)
 		}
 
 	}
@@ -97,7 +84,7 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search) ([]model.Post
 	return posts, nil
 }
 
-func (s *PostStore) GetPostByID(id int64) (*model.Post, error) {
+func (s *PostStore) GetPostByID(id uuid.UUID) (*model.Post, error) {
 	post := &model.Post{}
 
 	// First query: Get post details
@@ -146,7 +133,7 @@ func (s *PostStore) GetPostByID(id int64) (*model.Post, error) {
 
 }
 
-func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination, search Search) ([]model.Post, error) {
+func (s *PostStore) GetPostsByUserID(userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error) {
 	posts := []model.Post{}
 
 	postQuery := `
@@ -171,7 +158,7 @@ func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination, search
 		return nil, err
 	}
 	defer rows.Close()
-	postMap := make(map[int64]*model.Post)
+	postMap := make(map[uuid.UUID]*model.Post)
 	for rows.Next() {
 		post := model.Post{}
 		comment := model.Comment{}
@@ -186,7 +173,7 @@ func (s *PostStore) GetPostsByUserID(userID int64, pagination Pagination, search
 		if _, ok := postMap[post.ID]; !ok {
 			postMap[post.ID] = &post
 		}
-		if comment.User.ID != 0 {
+		if comment.User.ID != uuid.Nil {
 			postMap[post.ID].Comments = append(postMap[post.ID].Comments, comment)
 		}
 	}
@@ -245,7 +232,7 @@ func (s *PostStore) UpdatePost(post model.Post) error {
 	return nil
 }
 
-func (s *PostStore) DeletePost(id int64) error {
+func (s *PostStore) DeletePost(id uuid.UUID) error {
 	query := "DELETE FROM posts WHERE id = $1"
 	_, err := s.DB.Exec(query, id)
 	if err != nil {

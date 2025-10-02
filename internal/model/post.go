@@ -1,11 +1,15 @@
 package model
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/google/uuid"
+)
 
 type Post struct {
-	ID        int64          `json:"id"`
+	ID        uuid.UUID      `json:"id"`
 	Content   string         `json:"content"`
-	UserID    int64          `json:"-"`
+	UserID    uuid.UUID      `json:"-"`
 	Image     sql.NullString `json:"image"`
 	CreatedAt string         `json:"created_at"`
 	UpdatedAt string         `json:"updated_at"`

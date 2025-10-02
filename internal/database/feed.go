@@ -4,11 +4,12 @@ import (
 	"database/sql"
 
 	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
 type BaseFeedStore interface {
-	GetFeed(userID int64, pagination Pagination, search Search) ([]model.Post, error)
+	GetFeed(userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error)
 }
 
 type FeedStore struct {
@@ -21,7 +22,7 @@ func NewFeedStore(db *sql.DB) BaseFeedStore {
 	}
 }
 
-func (fs FeedStore) GetFeed(userID int64, pagination Pagination, search Search) ([]model.Post, error) {
+func (fs FeedStore) GetFeed(userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error) {
 	var posts []model.Post
 
 	followers := []int64{}
@@ -69,7 +70,7 @@ func (fs FeedStore) GetFeed(userID int64, pagination Pagination, search Search) 
 		return nil, err
 	}
 	defer rows.Close()
-	postMap := make(map[int64]*model.Post)
+	postMap := make(map[uuid.UUID]*model.Post)
 	for rows.Next() {
 		post := model.Post{}
 		comment := model.Comment{}

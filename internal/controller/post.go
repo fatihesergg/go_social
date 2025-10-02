@@ -1,12 +1,11 @@
 package controller
 
 import (
-	"strconv"
-
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type PostController struct {
@@ -69,12 +68,14 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 		c.JSON(400, gin.H{"error": util.IDRequiredError})
 		return
 	}
-	intID, err := strconv.Atoi(id)
+
+	postID, err := uuid.Parse(id)
+
 	if err != nil {
 		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
 		return
 	}
-	post, err := pc.Storage.PostStore.GetPostByID(int64(intID))
+	post, err := pc.Storage.PostStore.GetPostByID(postID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
@@ -116,9 +117,9 @@ func (pc PostController) CreatePost(c *gin.Context) {
 	if params.Image != "" {
 		post.Image.String = params.Image
 	}
-	userID := c.MustGet("userID").(int)
+	userID := c.MustGet("userID").(uuid.UUID)
 
-	post.UserID = int64(userID)
+	post.UserID = userID
 
 	err := pc.Storage.PostStore.CreatePost(post)
 	if err != nil {
@@ -161,13 +162,13 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 		c.JSON(400, gin.H{"error": util.IDRequiredError})
 		return
 	}
-	intID, err := strconv.Atoi(id)
+	postID, err := uuid.Parse(id)
 	if err != nil {
 		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
 		return
 	}
 
-	existPost, err := pc.Storage.PostStore.GetPostByID(int64(intID))
+	existPost, err := pc.Storage.PostStore.GetPostByID(postID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
@@ -176,12 +177,12 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 		c.JSON(404, gin.H{"error": util.PostNotFoundError})
 		return
 	}
-	if existPost.UserID != int64(c.MustGet("userID").(int)) {
+	if existPost.UserID != c.MustGet("userID").(uuid.UUID) {
 		c.JSON(403, gin.H{"error": util.UnauthorizedError})
 		return
 	}
 	post := model.Post{
-		ID:      int64(intID),
+		ID:      postID,
 		Content: params.Content,
 	}
 
@@ -222,12 +223,12 @@ func (pc PostController) DeletePost(c *gin.Context) {
 		c.JSON(400, gin.H{"error": util.IDRequiredError})
 		return
 	}
-	idInt, err := strconv.Atoi(id)
+	postID, err := uuid.Parse(id)
 	if err != nil {
 		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
 		return
 	}
-	post, err := pc.Storage.PostStore.GetPostByID(int64(idInt))
+	post, err := pc.Storage.PostStore.GetPostByID(postID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
@@ -236,12 +237,12 @@ func (pc PostController) DeletePost(c *gin.Context) {
 		c.JSON(404, gin.H{"error": util.PostNotFoundError})
 		return
 	}
-	if post.UserID != int64(c.MustGet("userID").(int)) {
+	if post.UserID != c.MustGet("userID").(uuid.UUID) {
 		c.JSON(403, gin.H{"error": util.UnauthorizedError})
 		return
 	}
 
-	err = pc.Storage.PostStore.DeletePost(int64(idInt))
+	err = pc.Storage.PostStore.DeletePost(postID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error deleting post"})
 		return

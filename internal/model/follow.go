@@ -1,7 +1,9 @@
 package model
 
+import "github.com/google/uuid"
+
 type Follow struct {
-	ID       int64 `json:"-"`
-	UserID   int64 `json:"user_id"`
-	FollowID int64 `json:"follow_id"`
+	ID       uuid.UUID `json:"-"`
+	UserID   uuid.UUID `json:"user_id"`
+	FollowID uuid.UUID `json:"follow_id"`
 }

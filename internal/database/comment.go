@@ -8,7 +8,7 @@ import (
 )
 
 type BaseCommentStore interface {
-	GetCommentsByPostID(postID int64) ([]model.Comment, error)
+	GetCommentsByPostID(postID uuid.UUID) ([]model.Comment, error)
 	GetCommentByID(id uuid.UUID) (*model.Comment, error)
 	CreateComment(comment model.Comment) error
 	UpdateComment(comment model.Comment) error
@@ -25,7 +25,7 @@ func NewCommentStore(db *sql.DB) BaseCommentStore {
 	}
 }
 
-func (cs CommentStore) GetCommentsByPostID(postID int64) ([]model.Comment, error) {
+func (cs CommentStore) GetCommentsByPostID(postID uuid.UUID) ([]model.Comment, error) {
 	var commets []model.Comment
 	query := `SELECT comments.id,comments.post_id,comments.user_id,comments.content,comments.image,comments.created_at,comments.updated_at,
 	users.name,users.last_name,users.username,users.email

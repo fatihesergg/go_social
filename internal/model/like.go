@@ -1,7 +1,14 @@
 package model
 
-type Like struct {
-	ID     int64 `json:"id"`
-	PostID int64 `json:"post_id"`
-	UserID int64 `json:"user_id"`
+import "github.com/google/uuid"
+
+type PostLike struct {
+	ID     uuid.UUID `json:"id"`
+	PostID uuid.UUID `json:"post_id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+type CommentLike struct {
+	ID        uuid.UUID `json:"id"`
+	CommentID uuid.UUID `json:"comment_id"`
+	UserID    uuid.UUID `json:"user_id"`
 }

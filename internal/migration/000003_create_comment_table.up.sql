@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS comments (
     id UUID PRIMARY KEY,
-    post_id INT NOT NULL,
-    user_id INT NOT NULL,
+    post_id UUID NOT NULL,
+    user_id UUID NOT NULL,
     content TEXT NOT NULL,
     image TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

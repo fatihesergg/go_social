@@ -1,12 +1,11 @@
 package controller
 
 import (
-	"strconv"
-
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,13 +19,13 @@ func (uc UserController) GetUserByID(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "ID is required"})
 		return
 	}
-	idInt, err := strconv.ParseInt(id, 10, 64)
+	userID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(400, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	user, err := uc.Storage.UserStore.GetUserByID(idInt)
+	user, err := uc.Storage.UserStore.GetUserByID(userID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
@@ -177,9 +176,8 @@ func (uc UserController) Login(c *gin.Context) {
 //	@Security		Bearer
 //	@Router			/me [get]
 func (uc UserController) GetMe(c *gin.Context) {
-	id := c.MustGet("userID").(int)
-	intID := int64(id)
-	user, err := uc.Storage.UserStore.GetUserByID(intID)
+	id := c.MustGet("userID").(uuid.UUID)
+	user, err := uc.Storage.UserStore.GetUserByID(id)
 	if err != nil {
 
 		c.JSON(500, gin.H{"error": util.InternalServerError})
@@ -214,13 +212,13 @@ func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "ID is required"})
 		return
 	}
-	idInt, err := strconv.ParseInt(id, 10, 64)
+	userID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(400, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	followers, err := uc.Storage.FollowStore.GetFollowerByUserID(idInt)
+	followers, err := uc.Storage.FollowStore.GetFollowerByUserID(userID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
@@ -254,13 +252,15 @@ func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "ID is required"})
 		return
 	}
-	idInt, err := strconv.ParseInt(id, 10, 64)
+
+	userID, err := uuid.Parse(id)
+
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(400, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	followings, err := uc.Storage.FollowStore.GetFollowingByUserID(idInt)
+	followings, err := uc.Storage.FollowStore.GetFollowingByUserID(userID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
@@ -293,14 +293,15 @@ func (uc UserController) FollowUser(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "ID is required"})
 		return
 	}
-	idInt, err := strconv.ParseInt(id, 10, 64)
+	userID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(400, gin.H{"error": "Invalid user ID"})
 		return
 	}
+
 	model := model.Follow{
-		UserID:   idInt,
-		FollowID: int64(c.MustGet("userID").(int)),
+		UserID:   userID,
+		FollowID: c.MustGet("userID").(uuid.UUID),
 	}
 
 	err = uc.Storage.FollowStore.FollowUser(model.UserID, model.FollowID)
@@ -331,14 +332,14 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "ID is required"})
 		return
 	}
-	idInt, err := strconv.ParseInt(id, 10, 64)
+	userID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(400, gin.H{"error": "Invalid user ID"})
 		return
 	}
 	model := model.Follow{
-		UserID:   idInt,
-		FollowID: int64(c.MustGet("userID").(int)),
+		UserID:   userID,
+		FollowID: c.MustGet("userID").(uuid.UUID),
 	}
 	err = uc.Storage.FollowStore.UnFollowUser(model.UserID, model.FollowID)
 	if err != nil {
@@ -369,14 +370,14 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 func (uc UserController) GetUsersPosts(c *gin.Context) {
 	id := c.Param("id")
 
-	idInt, err := strconv.Atoi(id)
+	userID, err := uuid.Parse(id)
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	user, err := uc.Storage.UserStore.GetUserByID(int64(idInt))
+	user, err := uc.Storage.UserStore.GetUserByID(userID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
@@ -392,13 +393,11 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
 	}
-	userID := c.MustGet("userID").(int)
-
 	pagination := database.NewPagination(c)
 	search := database.NewSearch(c)
 	for i := range followers {
 		followerID := followers[i].ID
-		if followerID == int64(userID) {
+		if followerID == userID {
 			posts, err := uc.Storage.PostStore.GetPostsByUserID(user.ID, pagination, search)
 			if err != nil {
 				c.JSON(500, gin.H{"error": util.InternalServerError})
@@ -443,9 +442,9 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	userID := c.MustGet("userID").(int)
+	userID := c.MustGet("userID").(uuid.UUID)
 
-	user, err := uc.Storage.UserStore.GetUserByID(int64(userID))
+	user, err := uc.Storage.UserStore.GetUserByID(userID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
