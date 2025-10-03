@@ -11,7 +11,7 @@ type User struct {
 	Name      string    `json:"name"`
 	LastName  string    `json:"last_name"`
 	Username  string    `json:"username"`
-	Email     string    `json:"email"`
+	Email     string    `json:"-"`
 	Password  string    `json:"-"`
 	Avatar    *string   `json:"avatar"`
 	CreatedAt time.Time `json:"-"`

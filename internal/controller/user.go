@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"fmt"
+
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/fatihesergg/go_social/internal/util"
@@ -66,7 +68,7 @@ func (uc UserController) Signup(c *gin.Context) {
 		return
 	}
 
-	user := model.User{
+	user := &model.User{
 		Name:     params.Name,
 		LastName: params.LastName,
 		Email:    params.Email,
@@ -139,6 +141,7 @@ func (uc UserController) Login(c *gin.Context) {
 
 	user, err := uc.Storage.UserStore.GetUserByEmail(params.Email)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
 	}
@@ -464,7 +467,7 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 	}
 	user.Password = string(hashedPass)
 
-	err = uc.Storage.UserStore.UpdateUser(*user)
+	err = uc.Storage.UserStore.UpdateUser(user)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error updating password"})
 		return

@@ -11,8 +11,8 @@ type BaseUserStore interface {
 	GetUserByID(id uuid.UUID) (*model.User, error)
 	GetUserByUsername(username string) (*model.User, error)
 	GetUserByEmail(email string) (*model.User, error)
-	CreateUser(user model.User) error
-	UpdateUser(user model.User) error
+	CreateUser(user *model.User) error
+	UpdateUser(user *model.User) error
 	DeleteUser(id uuid.UUID) error
 }
 
@@ -75,7 +75,7 @@ func (s *UserStore) GetUserByEmail(email string) (*model.User, error) {
 	return user, nil
 }
 
-func (s *UserStore) CreateUser(user model.User) error {
+func (s *UserStore) CreateUser(user *model.User) error {
 	var id uuid.UUID
 	query := "INSERT INTO users (name, last_name, username, email, password, avatar) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
 	err := s.DB.QueryRow(query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.Avatar).Scan(&id)
@@ -86,9 +86,9 @@ func (s *UserStore) CreateUser(user model.User) error {
 	return nil
 }
 
-func (s *UserStore) UpdateUser(user model.User) error {
-	query := "UPDATE users SET name = $1, last_name = $2, username = $3, email = $4, password = $5, avatar = $6 WHERE id = $7"
-	_, err := s.DB.Exec(query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.Avatar, user.ID)
+func (s *UserStore) UpdateUser(user *model.User) error {
+	query := "UPDATE users SET name = $1, last_name = $2, username = $3, email = $4, password = $5 WHERE id = $6"
+	_, err := s.DB.Exec(query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.ID.String())
 	if err != nil {
 		return err
 	}

@@ -111,7 +111,7 @@ func (pc PostController) CreatePost(c *gin.Context) {
 		return
 	}
 
-	post := model.Post{
+	post := &model.Post{
 		Content: params.Content,
 	}
 	if params.Image != "" {
@@ -181,7 +181,7 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 		c.JSON(403, gin.H{"error": util.UnauthorizedError})
 		return
 	}
-	post := model.Post{
+	post := &model.Post{
 		ID:      postID,
 		Content: params.Content,
 	}
