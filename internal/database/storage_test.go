@@ -17,7 +17,7 @@ import (
 var testDB *sql.DB
 var testStorage *Storage
 
-func NewInMemoryStorageForTest() *Storage {
+func NewPostgresTestDB() *Storage {
 	godotenv.Load("../../.env")
 
 	testDSN := os.Getenv("TEST_DB_URL")
@@ -699,7 +699,7 @@ func TestCommentStore_DeleteComment(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	testStorage = NewInMemoryStorageForTest()
+	testStorage = NewPostgresTestDB()
 	testDB = testStorage.UserStore.(*UserStore).DB
 	cleanupAllTables()
 	code := m.Run()
