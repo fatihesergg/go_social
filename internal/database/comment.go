@@ -10,8 +10,8 @@ import (
 type BaseCommentStore interface {
 	GetCommentsByPostID(postID uuid.UUID) ([]model.Comment, error)
 	GetCommentByID(id uuid.UUID) (*model.Comment, error)
-	CreateComment(comment model.Comment) error
-	UpdateComment(comment model.Comment) error
+	CreateComment(comment *model.Comment) error
+	UpdateComment(comment *model.Comment) error
 	DeleteComment(id uuid.UUID) error
 }
 
@@ -26,12 +26,15 @@ func NewCommentStore(db *sql.DB) BaseCommentStore {
 }
 
 func (cs CommentStore) GetCommentsByPostID(postID uuid.UUID) ([]model.Comment, error) {
-	var commets []model.Comment
+	var comments []model.Comment
 	query := `SELECT comments.id,comments.post_id,comments.user_id,comments.content,comments.image,comments.created_at,comments.updated_at,
 	users.name,users.last_name,users.username,users.email
 	FROM comments JOIN users ON comments.user_id = users.id WHERE comments.post_id = $1`
 	rows, err := cs.db.Query(query, postID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -44,50 +47,45 @@ func (cs CommentStore) GetCommentsByPostID(postID uuid.UUID) ([]model.Comment, e
 		if err != nil {
 			return nil, err
 		}
-		commets = append(commets, comment)
+		comments = append(comments, comment)
 	}
 	if rows.Err() != nil {
 		return nil, err
 	}
 
-	return commets, nil
+	return comments, nil
 
 }
 func (cs CommentStore) GetCommentByID(id uuid.UUID) (*model.Comment, error) {
-	var commet model.Comment
-	query := `SELECT comments.id,comments.post_id,comment.user_id,comments.content,comments.image,comments.created_at,comments.updated_at
+	var comment model.Comment
+	query := `SELECT comments.id,comments.post_id,comments.user_id,comments.content,comments.image,comments.created_at,comments.updated_at,
 		users.name,users.last_name,users.username,users.email	
-	FROM comments JOIN users ON comments.user_id = users.id
-		WHERE comments.id = $1`
-	err := cs.db.QueryRow(query, id).Scan(&commet.ID, &commet.PostID, &commet.UserID, &commet.Content, &commet.Image, &commet.CreatedAt, &commet.UpdatedAt, &commet.User.Name, &commet.User.LastName, &commet.User.Username, &commet.User.Email)
+	FROM comments 
+	JOIN users ON comments.user_id = users.id
+	WHERE comments.id = $1`
+	err := cs.db.QueryRow(query, id).Scan(&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.Image, &comment.CreatedAt, &comment.UpdatedAt, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
-	return &commet, nil
+	return &comment, nil
 }
 
-func (cs CommentStore) CreateComment(comment model.Comment) error {
-	var query string
-	if comment.Image.Valid {
-		query = "INSERT INTO comments (id,post_id, user_id, content, image) VALUES ($1, $2, $3, $4, $5)"
-		_, err := cs.db.Exec(query, comment.ID, comment.PostID, comment.UserID, comment.Content, comment.Image)
-		if err != nil {
-			return err
-		}
+func (cs CommentStore) CreateComment(comment *model.Comment) error {
 
-	} else {
-		query = "INSERT INTO comments (id,post_id, user_id, content) VALUES ($1, $2, $3,$4)"
-		_, err := cs.db.Exec(query, comment.ID, comment.PostID, comment.UserID, comment.Content)
-		if err != nil {
-			return err
-		}
+	query := "INSERT INTO comments (post_id, user_id, content) VALUES ($1, $2, $3)"
+	_, err := cs.db.Exec(query, comment.PostID, comment.UserID, comment.Content)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func (cs CommentStore) UpdateComment(comment model.Comment) error {
-	query := "UPDATE comments SET content = $1, image = $2 WHERE id = $3"
-	_, err := cs.db.Exec(query, comment.Content, comment.Image, comment.ID)
+func (cs CommentStore) UpdateComment(comment *model.Comment) error {
+	query := "UPDATE comments SET content = $1 WHERE id = $2"
+	_, err := cs.db.Exec(query, comment.Content, comment.ID)
 	if err != nil {
 		return err
 	}

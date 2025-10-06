@@ -46,7 +46,7 @@ func (cc CommentController) CreateComment(c *gin.Context) {
 		return
 	}
 	userID := c.MustGet("userID").(uuid.UUID)
-	comment := model.Comment{
+	comment := &model.Comment{
 		ID:      uuid.New(),
 		PostID:  params.PostID,
 		UserID:  userID,
@@ -159,7 +159,7 @@ func (cc CommentController) UpdateComment(c *gin.Context) {
 	} else {
 		comment.Image = sql.NullString{}
 	}
-	err = cc.Storage.CommentStore.UpdateComment(*comment)
+	err = cc.Storage.CommentStore.UpdateComment(comment)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error updating comment"})
 		return

@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"fmt"
-
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/fatihesergg/go_social/internal/util"
@@ -141,7 +139,6 @@ func (uc UserController) Login(c *gin.Context) {
 
 	user, err := uc.Storage.UserStore.GetUserByEmail(params.Email)
 	if err != nil {
-		fmt.Println(err)
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
 	}
