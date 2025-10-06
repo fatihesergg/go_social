@@ -230,24 +230,14 @@ func (s *PostStore) GetPostsByUserID(userID uuid.UUID, pagination Pagination, se
 }
 
 func (s *PostStore) CreatePost(post *model.Post) error {
-	var query string
 
-	if post.Image.Valid {
-		query = "INSERT INTO posts (content, user_id, image) VALUES ($1, $2, $3)"
+	query := "INSERT INTO posts (content, user_id) VALUES ($1, $2)"
 
-		_, err := s.DB.Exec(query, post.Content, post.UserID.String(), post.Image)
-		if err != nil {
-			return err
-		}
-
-	} else {
-		query = "INSERT INTO posts (content, user_id) VALUES ($1, $2)"
-
-		_, err := s.DB.Exec(query, post.Content, post.UserID.String())
-		if err != nil {
-			return err
-		}
+	_, err := s.DB.Exec(query, post.Content, post.UserID.String())
+	if err != nil {
+		return err
 	}
+
 	return nil
 }
 
