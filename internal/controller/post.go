@@ -118,7 +118,6 @@ func (pc PostController) CreatePost(c *gin.Context) {
 		post.Image.String = params.Image
 	}
 	userID := c.MustGet("userID").(uuid.UUID)
-
 	post.UserID = userID
 
 	err := pc.Storage.PostStore.CreatePost(post)
@@ -128,7 +127,7 @@ func (pc PostController) CreatePost(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, gin.H{"result": post})
+	c.JSON(201, gin.H{"message": "Post created succesfully"})
 
 }
 
@@ -197,7 +196,7 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Error updating post"})
 		return
 	}
-	c.JSON(200, gin.H{"result": post})
+	c.JSON(200, gin.H{"message": "Post updated succesfully"})
 
 }
 
