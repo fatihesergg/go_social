@@ -2,10 +2,10 @@ package middleware
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -24,7 +24,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		userID, _ := strconv.Atoi(claims.Subject)
+		userID, _ := uuid.Parse(claims.Subject)
 		c.Set("userID", userID)
 		c.Next()
 	}
