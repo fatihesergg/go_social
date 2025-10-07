@@ -40,7 +40,7 @@ func (lc LikeController) LikePost(c *gin.Context) {
 		return
 	}
 
-	err = lc.Storage.LikeStore.LikePost(model.PostLike{
+	err = lc.Storage.LikeStore.LikePost(&model.PostLike{
 		PostID: params.PostID,
 		UserID: userID,
 	})
@@ -106,7 +106,7 @@ func (lc *LikeController) LikeComment(c *gin.Context) {
 		return
 
 	}
-	err = lc.Storage.LikeStore.LikeComment(model.CommentLike{
+	err = lc.Storage.LikeStore.LikeComment(&model.CommentLike{
 		CommentID: params.CommentID,
 		UserID:    userID,
 	})
