@@ -8,8 +8,8 @@ import (
 )
 
 type BaseLikeStore interface {
-	LikePost(like model.PostLike) error
-	LikeComment(like model.CommentLike) error
+	LikePost(like *model.PostLike) error
+	LikeComment(like *model.CommentLike) error
 	UnlikePost(postID uuid.UUID, userID uuid.UUID) error
 	UnlikeComment(commentID uuid.UUID, userID uuid.UUID) error
 	IsPostLiked(postID uuid.UUID, userID uuid.UUID) (bool, error)
@@ -24,13 +24,13 @@ func NewLikeStore(db *sql.DB) BaseLikeStore {
 	return &LikeStore{DB: db}
 }
 
-func (s *LikeStore) LikePost(like model.PostLike) error {
+func (s *LikeStore) LikePost(like *model.PostLike) error {
 	query := `INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2)`
 	_, err := s.DB.Exec(query, like.PostID, like.UserID)
 	return err
 }
 
-func (s *LikeStore) LikeComment(like model.CommentLike) error {
+func (s *LikeStore) LikeComment(like *model.CommentLike) error {
 	query := `INSERT INTO comment_likes (comment_id, user_id) VALUES ($1, $2)`
 	_, err := s.DB.Exec(query, like.CommentID, like.UserID)
 	return err

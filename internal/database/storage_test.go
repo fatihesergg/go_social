@@ -17,7 +17,7 @@ import (
 var testDB *sql.DB
 var testStorage *Storage
 
-func NewPostgresTestDB() *Storage {
+func NewPostgresTestStorage() *Storage {
 	godotenv.Load("../../.env")
 
 	testDSN := os.Getenv("TEST_DB_URL")
@@ -92,6 +92,12 @@ func AssertIntEqual(t *testing.T, expected, actual int) {
 	}
 }
 
+func AssertBoolEqual(t *testing.T, expected, actual bool) {
+	if expected != actual {
+		t.Errorf("Expected bool %v, got %v", expected, actual)
+	}
+}
+
 func cleanupAllTables() {
 	tables := []string{"posts", "post_likes", "comments", "comment_likes", "users"}
 	for _, table := range tables {
@@ -137,6 +143,19 @@ func createTestComment(t *testing.T, content string, postID, userID uuid.UUID) *
 		PostID:  postID,
 		UserID:  userID,
 		Content: content,
+	}
+}
+
+func createTestLikePost(t *testing.T, postID, userID uuid.UUID) *model.PostLike {
+	return &model.PostLike{
+		PostID: postID,
+		UserID: userID,
+	}
+}
+func createTestLikeComment(t *testing.T, commentID, userID uuid.UUID) *model.CommentLike {
+	return &model.CommentLike{
+		CommentID: commentID,
+		UserID:    userID,
 	}
 }
 
@@ -696,10 +715,200 @@ func TestCommentStore_DeleteComment(t *testing.T) {
 	AssertNoError(t, err)
 	AssertNil(t, deletedComment)
 
+	t.Cleanup(func() {
+		_ = testStorage.UserStore.DeleteUser(existUser.ID)
+	})
+}
+
+func TestLikeStore_LikePost(t *testing.T) {
+	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
+
+	err := testStorage.UserStore.CreateUser(user)
+	AssertNoError(t, err)
+
+	existUser, err := testStorage.UserStore.GetUserByUsername("test")
+	AssertNoError(t, err)
+	AssertNotNil(t, existUser)
+
+	post := createTestPost(t, "test", existUser.ID)
+
+	err = testStorage.PostStore.CreatePost(post)
+	AssertNoError(t, err)
+
+	pagination := createTestPagination(t)
+	search := createTestSearch(t, "")
+	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
+	AssertNoError(t, err)
+	AssertIntEqual(t, 1, len(existPosts))
+
+	first := existPosts[0]
+
+	like := createTestLikePost(t, first.ID, existUser.ID)
+
+	err = testStorage.LikeStore.LikePost(like)
+	AssertNoError(t, err)
+	isLiked, err := testStorage.LikeStore.IsPostLiked(first.ID, existUser.ID)
+	AssertNoError(t, err)
+	AssertBoolEqual(t, true, isLiked)
+
+	t.Cleanup(func() {
+
+		_ = testStorage.PostStore.DeletePost(first.ID)
+		_ = testStorage.LikeStore.UnlikePost(first.ID, existUser.ID)
+		_ = testStorage.UserStore.DeleteUser(existUser.ID)
+	})
+}
+
+func TestLikeStore_UnlikePost(t *testing.T) {
+	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
+
+	err := testStorage.UserStore.CreateUser(user)
+	AssertNoError(t, err)
+
+	existUser, err := testStorage.UserStore.GetUserByUsername("test")
+	AssertNoError(t, err)
+	AssertNotNil(t, existUser)
+
+	post := createTestPost(t, "test", existUser.ID)
+
+	err = testStorage.PostStore.CreatePost(post)
+	AssertNoError(t, err)
+
+	pagination := createTestPagination(t)
+	search := createTestSearch(t, "")
+	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
+	AssertNoError(t, err)
+	AssertIntEqual(t, 1, len(existPosts))
+
+	first := existPosts[0]
+
+	like := createTestLikePost(t, first.ID, existUser.ID)
+
+	err = testStorage.LikeStore.LikePost(like)
+	AssertNoError(t, err)
+	isLiked, err := testStorage.LikeStore.IsPostLiked(first.ID, existUser.ID)
+	AssertNoError(t, err)
+	AssertBoolEqual(t, true, isLiked)
+
+	err = testStorage.LikeStore.UnlikePost(first.ID, existUser.ID)
+	AssertNoError(t, err)
+	isLiked, err = testStorage.LikeStore.IsPostLiked(first.ID, existUser.ID)
+	AssertNoError(t, err)
+	AssertBoolEqual(t, false, isLiked)
+
+	t.Cleanup(func() {
+
+		_ = testStorage.PostStore.DeletePost(first.ID)
+		_ = testStorage.UserStore.DeleteUser(existUser.ID)
+	})
+}
+
+func TestLikeStore_LikeComment(t *testing.T) {
+	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
+
+	err := testStorage.UserStore.CreateUser(user)
+	AssertNoError(t, err)
+
+	existUser, err := testStorage.UserStore.GetUserByUsername("test")
+	AssertNoError(t, err)
+	AssertNotNil(t, existUser)
+
+	post := createTestPost(t, "test", existUser.ID)
+
+	err = testStorage.PostStore.CreatePost(post)
+	AssertNoError(t, err)
+
+	pagination := createTestPagination(t)
+	search := createTestSearch(t, "")
+	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
+	AssertNoError(t, err)
+	AssertIntEqual(t, 1, len(existPosts))
+
+	first := existPosts[0]
+
+	comment := createTestComment(t, "test", first.ID, existUser.ID)
+
+	err = testStorage.CommentStore.CreateComment(comment)
+	AssertNoError(t, err)
+
+	existComments, err := testStorage.CommentStore.GetCommentsByPostID(first.ID)
+	AssertNoError(t, err)
+	AssertIntEqual(t, 1, len(existComments))
+	firstComment := existComments[0]
+
+	like := createTestLikeComment(t, firstComment.ID, existUser.ID)
+
+	err = testStorage.LikeStore.LikeComment(like)
+	AssertNoError(t, err)
+	isLiked, err := testStorage.LikeStore.IsCommentLiked(firstComment.ID, existUser.ID)
+	AssertNoError(t, err)
+	AssertBoolEqual(t, true, isLiked)
+
+	t.Cleanup(func() {
+
+		_ = testStorage.PostStore.DeletePost(first.ID)
+		_ = testStorage.CommentStore.DeleteComment(firstComment.ID)
+		_ = testStorage.LikeStore.UnlikeComment(first.ID, existUser.ID)
+		_ = testStorage.UserStore.DeleteUser(existUser.ID)
+	})
+}
+
+func TestLikeStore_UnlikeComment(t *testing.T) {
+	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
+
+	err := testStorage.UserStore.CreateUser(user)
+	AssertNoError(t, err)
+
+	existUser, err := testStorage.UserStore.GetUserByUsername("test")
+	AssertNoError(t, err)
+	AssertNotNil(t, existUser)
+
+	post := createTestPost(t, "test", existUser.ID)
+
+	err = testStorage.PostStore.CreatePost(post)
+	AssertNoError(t, err)
+
+	pagination := createTestPagination(t)
+	search := createTestSearch(t, "")
+	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
+	AssertNoError(t, err)
+	AssertIntEqual(t, 1, len(existPosts))
+
+	first := existPosts[0]
+
+	comment := createTestComment(t, "test", first.ID, existUser.ID)
+
+	err = testStorage.CommentStore.CreateComment(comment)
+	AssertNoError(t, err)
+
+	existComments, err := testStorage.CommentStore.GetCommentsByPostID(first.ID)
+	AssertNoError(t, err)
+	AssertIntEqual(t, 1, len(existComments))
+	firstComment := existComments[0]
+
+	like := createTestLikeComment(t, firstComment.ID, existUser.ID)
+
+	err = testStorage.LikeStore.LikeComment(like)
+	AssertNoError(t, err)
+	isLiked, err := testStorage.LikeStore.IsCommentLiked(firstComment.ID, existUser.ID)
+	AssertNoError(t, err)
+	AssertBoolEqual(t, true, isLiked)
+
+	err = testStorage.LikeStore.UnlikeComment(firstComment.ID, existUser.ID)
+	AssertNoError(t, err)
+	isLiked, err = testStorage.LikeStore.IsCommentLiked(first.ID, existUser.ID)
+	AssertNoError(t, err)
+	AssertBoolEqual(t, false, isLiked)
+
+	t.Cleanup(func() {
+
+		_ = testStorage.PostStore.DeletePost(first.ID)
+		_ = testStorage.UserStore.DeleteUser(existUser.ID)
+	})
 }
 
 func TestMain(m *testing.M) {
-	testStorage = NewPostgresTestDB()
+	testStorage = NewPostgresTestStorage()
 	testDB = testStorage.UserStore.(*UserStore).DB
 	cleanupAllTables()
 	code := m.Run()
