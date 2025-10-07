@@ -81,11 +81,11 @@ func main() {
 	}
 	base := app.Router.Group("/api/v1")
 
-	userController := controller.UserController{Storage: *storage}
-	postController := controller.PostController{Storage: *storage}
-	commentController := controller.CommentController{Storage: *storage}
-	feedController := controller.FeedController{Storage: *storage}
-	likeController := controller.LikeController{Storage: *storage}
+	userController := controller.NewUserController(storage)
+	postController := controller.NewPostController(storage)
+	commentController := controller.NewCommentController(storage)
+	feedController := controller.NewFeedController(storage)
+	likeController := controller.NewLikeController(storage)
 
 	base.POST("/signup", userController.Signup)
 	base.POST("/login", userController.Login)

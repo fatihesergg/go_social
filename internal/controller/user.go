@@ -10,7 +10,13 @@ import (
 )
 
 type UserController struct {
-	Storage database.Storage
+	Storage *database.Storage
+}
+
+func NewUserController(storage *database.Storage) *UserController {
+	return &UserController{
+		Storage: storage,
+	}
 }
 
 func (uc UserController) GetUserByID(c *gin.Context) {

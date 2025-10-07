@@ -11,10 +11,10 @@ import (
 )
 
 type CommentController struct {
-	Storage database.Storage
+	Storage *database.Storage
 }
 
-func NewCommentController(storage database.Storage) *CommentController {
+func NewCommentController(storage *database.Storage) *CommentController {
 	return &CommentController{
 		Storage: storage,
 	}

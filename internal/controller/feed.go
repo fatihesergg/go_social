@@ -11,11 +11,11 @@ import (
 )
 
 type FeedController struct {
-	Storage database.Storage
+	Storage *database.Storage
 }
 
-func NewFeedController(storage database.Storage) FeedController {
-	return FeedController{
+func NewFeedController(storage *database.Storage) *FeedController {
+	return &FeedController{
 		Storage: storage,
 	}
 }

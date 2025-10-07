@@ -9,10 +9,10 @@ import (
 )
 
 type LikeController struct {
-	Storage database.Storage
+	Storage *database.Storage
 }
 
-func NewLikeController(storage database.Storage) *LikeController {
+func NewLikeController(storage *database.Storage) *LikeController {
 	return &LikeController{
 		Storage: storage,
 	}
