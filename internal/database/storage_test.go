@@ -58,6 +58,7 @@ func NewPostgresTestStorage() *Storage {
 }
 
 func AssertNoError(t *testing.T, err error) {
+	t.Helper()
 	if err != nil {
 		t.Errorf("Expected no error, but got: %v", err)
 	}
@@ -65,7 +66,7 @@ func AssertNoError(t *testing.T, err error) {
 
 func AssertNil(t *testing.T, obj any) {
 	// nil interface !!!
-
+	t.Helper()
 	switch v := obj.(type) {
 	case *model.User:
 		if v != nil {
@@ -75,24 +76,28 @@ func AssertNil(t *testing.T, obj any) {
 }
 
 func AssertNotNil(t *testing.T, obj any) {
+	t.Helper()
 	if obj == nil {
 		t.Errorf("Expected not nil, but got nil")
 	}
 }
 
 func AssertStringEqual(t *testing.T, expected, actual string) {
+	t.Helper()
 	if expected != actual {
 		t.Errorf("Expected string %s, got %s", expected, actual)
 	}
 }
 
 func AssertIntEqual(t *testing.T, expected, actual int) {
+	t.Helper()
 	if expected != actual {
 		t.Errorf("Expected int %d, got %d", expected, actual)
 	}
 }
 
 func AssertBoolEqual(t *testing.T, expected, actual bool) {
+	t.Helper()
 	if expected != actual {
 		t.Errorf("Expected bool %v, got %v", expected, actual)
 	}
@@ -108,6 +113,7 @@ func cleanupAllTables() {
 }
 
 func createTestPagination(t *testing.T) Pagination {
+	t.Helper()
 	return Pagination{
 		Limit:  20,
 		Offset: 0,
@@ -115,12 +121,14 @@ func createTestPagination(t *testing.T) Pagination {
 }
 
 func createTestSearch(t *testing.T, query string) Search {
+	t.Helper()
 	return Search{
 		Query: query,
 	}
 }
 
 func createTestUser(t *testing.T, name, lastName, username, email, password string) *model.User {
+	t.Helper()
 	return &model.User{
 		Name:     name,
 		LastName: lastName,
@@ -131,6 +139,7 @@ func createTestUser(t *testing.T, name, lastName, username, email, password stri
 }
 
 func createTestPost(t *testing.T, content string, userID uuid.UUID) *model.Post {
+	t.Helper()
 	return &model.Post{
 		Content: content,
 		UserID:  userID,
@@ -138,6 +147,7 @@ func createTestPost(t *testing.T, content string, userID uuid.UUID) *model.Post 
 }
 
 func createTestComment(t *testing.T, content string, postID, userID uuid.UUID) *model.Comment {
+	t.Helper()
 
 	return &model.Comment{
 		PostID:  postID,
@@ -147,12 +157,14 @@ func createTestComment(t *testing.T, content string, postID, userID uuid.UUID) *
 }
 
 func createTestLikePost(t *testing.T, postID, userID uuid.UUID) *model.PostLike {
+	t.Helper()
 	return &model.PostLike{
 		PostID: postID,
 		UserID: userID,
 	}
 }
 func createTestLikeComment(t *testing.T, commentID, userID uuid.UUID) *model.CommentLike {
+	t.Helper()
 	return &model.CommentLike{
 		CommentID: commentID,
 		UserID:    userID,
