@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/fatihesergg/go_social/internal/model/dto"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -58,17 +59,10 @@ func (uc UserController) GetUserByID(c *gin.Context) {
 //	@Failure		500		{object}	util.ErrorResponse{error=string}						"Internal Server Error"
 //	@Router			/signup [post]
 func (uc UserController) Signup(c *gin.Context) {
-	var params struct {
-		Name     string  `json:"name" binding:"required"`
-		LastName string  `json:"last_name" binding:"required"`
-		Email    string  `json:"email" binding:"required,email"`
-		Avatar   *string `json:"avatar"`
-		Username string  `json:"username" binding:"required"`
-		Password string  `json:"password" binding:"required"`
-	}
+	var params dto.CreateUserDTO
 
 	if err := c.ShouldBindJSON(&params); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		util.HandleBindError(c, err)
 		return
 	}
 
@@ -133,13 +127,10 @@ func (uc UserController) Signup(c *gin.Context) {
 //	@Failure		500			{object}	util.ErrorResponse{error=string}					"Internal Server Error"
 //	@Router			/login [post]
 func (uc UserController) Login(c *gin.Context) {
-	var params struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-	}
+	var params dto.LoginUserDTO
 
 	if err := c.ShouldBindJSON(&params); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		util.HandleBindError(c, err)
 		return
 	}
 
@@ -438,13 +429,9 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 //	@Router			/users/reset_password [post]
 func (uc UserController) ResetPassword(c *gin.Context) {
 
-	var params struct {
-		OldPassword string `json:"old_password" binding:"required"`
-		NewPassword string `json:"new_password" binding:"required"`
-	}
-	err := c.ShouldBind(&params)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid request"})
+	var params dto.ResetUserPasswordDTO
+	if err := c.ShouldBindJSON(&params); err != nil {
+		util.HandleBindError(c, err)
 		return
 	}
 

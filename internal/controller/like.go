@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/fatihesergg/go_social/internal/model/dto"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,11 +21,9 @@ func NewLikeController(storage *database.Storage) *LikeController {
 
 func (lc LikeController) LikePost(c *gin.Context) {
 
-	var params struct {
-		PostID uuid.UUID `json:"post_id" binding:"required"`
-	}
+	var params dto.CreatePostLikeDTO
 	if err := c.ShouldBindJSON(&params); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid input"})
+		util.HandleBindError(c, err)
 		return
 	}
 
@@ -85,12 +84,10 @@ func (lc LikeController) UnlikePost(c *gin.Context) {
 }
 
 func (lc *LikeController) LikeComment(c *gin.Context) {
-	var params struct {
-		CommentID uuid.UUID `json:"comment_id" binding:"required"`
-	}
+	var params dto.CreateCommentLikeDTO
 
-	if err := c.ShouldBind(&params); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid input"})
+	if err := c.ShouldBindJSON(&params); err != nil {
+		util.HandleBindError(c, err)
 		return
 	}
 

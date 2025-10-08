@@ -1,9 +1,12 @@
 package util
 
 import (
+	"fmt"
 	"os"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -44,4 +47,37 @@ func ParseJWT(token string) (*jwt.RegisteredClaims, error) {
 		return nil, jwt.ErrSignatureInvalid
 	}
 	return claims, nil
+}
+
+func HandleBindError(c *gin.Context, err error) {
+
+	validationErrors, ok := err.(validator.ValidationErrors)
+	if !ok {
+		c.JSON(400, gin.H{"error": "invalid input"})
+	}
+
+	result := make(map[string]string)
+
+	for _, fe := range validationErrors {
+		errMsg := GetErrorMessage(fe)
+		result[fe.Field()] = errMsg
+
+	}
+	c.JSON(400, gin.H{"error": result})
+}
+
+func GetErrorMessage(fe validator.FieldError) string {
+	switch fe.Tag() {
+	case "required":
+		return "required"
+	case "alphanum":
+		return "should be alpanumeric"
+	case "uuid":
+		return "should be uuid"
+	case "email":
+		return "should be valid email"
+	case "lte":
+		return fmt.Sprintf("should less than or equal to %s", fe.Param())
+	}
+	return "not valid"
 }

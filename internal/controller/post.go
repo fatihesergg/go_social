@@ -3,16 +3,17 @@ package controller
 import (
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/fatihesergg/go_social/internal/model/dto"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type PostController struct {
-	Storage database.Storage
+	Storage *database.Storage
 }
 
-func NewPostController(storage database.Storage) *PostController {
+func NewPostController(storage *database.Storage) *PostController {
 	return &PostController{
 		Storage: storage,
 	}
@@ -102,12 +103,9 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 //	@Router			/posts [post]
 //	@Security		Bearer
 func (pc PostController) CreatePost(c *gin.Context) {
-	var params struct {
-		Content string `json:"content" binding:"required"`
-		Image   string `json:"image"`
-	}
+	var params dto.CreatePostDTO
 	if err := c.ShouldBindJSON(&params); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid request"})
+		util.HandleBindError(c, err)
 		return
 	}
 
@@ -148,12 +146,9 @@ func (pc PostController) CreatePost(c *gin.Context) {
 //	@Router			/posts/{id} [put]
 //	@Security		Bearer
 func (pc PostController) UpdatePost(c *gin.Context) {
-	var params struct {
-		Content string `json:"content" binding:"required"`
-		Image   string `json:"image"`
-	}
+	var params dto.UpdatePostDTO
 	if err := c.ShouldBindJSON(&params); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid request"})
+		util.HandleBindError(c, err)
 		return
 	}
 	id := c.Param("id")

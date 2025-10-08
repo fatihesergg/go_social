@@ -5,6 +5,7 @@ import (
 
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/fatihesergg/go_social/internal/model/dto"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -36,13 +37,9 @@ func NewCommentController(storage *database.Storage) *CommentController {
 //	@Security		Bearer
 //	@Router			/comments [post]
 func (cc CommentController) CreateComment(c *gin.Context) {
-	var params struct {
-		PostID  uuid.UUID `json:"post_id" binding:"required"`
-		Content string    `json:"content" binding:"required"`
-		Image   string    `json:"image"`
-	}
+	var params dto.CreateCommentDTO
 	if err := c.ShouldBindJSON(&params); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid input"})
+		util.HandleBindError(c, err)
 		return
 	}
 	userID := c.MustGet("userID").(uuid.UUID)
@@ -125,10 +122,7 @@ func (cc CommentController) GetCommentsByPostID(c *gin.Context) {
 //	@Security		Bearer
 //	@Router			/comments/{id} [put]
 func (cc CommentController) UpdateComment(c *gin.Context) {
-	var params struct {
-		Content string `json:"content" binding:"required"`
-		Image   string `json:"image"`
-	}
+	var params dto.UpdateCommentDTO
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(400, gin.H{"error": util.IDRequiredError})
@@ -141,7 +135,7 @@ func (cc CommentController) UpdateComment(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&params); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid input"})
+		util.HandleBindError(c, err)
 		return
 	}
 	comment, err := cc.Storage.CommentStore.GetCommentByID(commentID)
