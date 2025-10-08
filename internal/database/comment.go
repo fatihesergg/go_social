@@ -70,6 +70,9 @@ func (cs CommentStore) GetCommentByID(id uuid.UUID) (*model.Comment, error) {
 		}
 		return nil, err
 	}
+	if comment.ID == uuid.Nil {
+		return nil, nil
+	}
 	return &comment, nil
 }
 

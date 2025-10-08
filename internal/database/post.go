@@ -153,6 +153,9 @@ func (s *PostStore) GetPostByID(id uuid.UUID) (*model.Post, error) {
 
 		return nil, err
 	}
+	if post.ID == uuid.Nil {
+		return nil, nil
+	}
 	return post, nil
 
 }

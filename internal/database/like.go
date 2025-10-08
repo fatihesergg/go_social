@@ -46,26 +46,20 @@ func (s *LikeStore) UnlikeComment(commentID uuid.UUID, userID uuid.UUID) error {
 	return err
 }
 func (s *LikeStore) IsPostLiked(postID uuid.UUID, userID uuid.UUID) (bool, error) {
-	var like model.PostLike
-	query := `SELECT * FROM post_likes WHERE post_id = $1 AND user_id = $2`
-	err := s.DB.QueryRow(query, postID, userID).Scan(&like.ID, &like.PostID, &like.UserID)
+	var result bool
+	query := `SELECT EXISTS ( SELECT  1 FROM post_likes WHERE post_id = $1 AND user_id = $2)`
+	err := s.DB.QueryRow(query, postID, userID).Scan(&result)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
-		}
 		return false, err
 	}
-	return true, nil
+	return result, nil
 }
 func (s *LikeStore) IsCommentLiked(commentID uuid.UUID, userID uuid.UUID) (bool, error) {
-	var like model.CommentLike
-	query := `SELECT * FROM comment_likes WHERE comment_id = $1 AND user_id = $2`
-	err := s.DB.QueryRow(query, commentID, userID).Scan(&like.ID, &like.CommentID, &like.UserID)
+	var result bool
+	query := `SELECT EXISTS (SELECT 1 FROM comment_likes WHERE comment_id = $1 AND user_id = $2)`
+	err := s.DB.QueryRow(query, commentID, userID).Scan(&result)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
-		}
 		return false, err
 	}
-	return true, nil
+	return result, nil
 }
