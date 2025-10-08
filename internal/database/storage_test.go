@@ -12,6 +12,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
 )
 
 var testDB *sql.DB
@@ -54,52 +55,6 @@ func NewPostgresTestStorage() *Storage {
 		FollowStore:  NewFollowStore(db),
 		FeedStore:    NewFeedStore(db),
 		LikeStore:    NewLikeStore(db),
-	}
-}
-
-func AssertNoError(t *testing.T, err error) {
-	t.Helper()
-	if err != nil {
-		t.Errorf("Expected no error, but got: %v", err)
-	}
-}
-
-func AssertNil(t *testing.T, obj any) {
-	// nil interface !!!
-	t.Helper()
-	switch v := obj.(type) {
-	case *model.User:
-		if v != nil {
-			t.Errorf("Expected nil, but got: %v", v)
-		}
-	}
-}
-
-func AssertNotNil(t *testing.T, obj any) {
-	t.Helper()
-	if obj == nil {
-		t.Errorf("Expected not nil, but got nil")
-	}
-}
-
-func AssertStringEqual(t *testing.T, expected, actual string) {
-	t.Helper()
-	if expected != actual {
-		t.Errorf("Expected string %s, got %s", expected, actual)
-	}
-}
-
-func AssertIntEqual(t *testing.T, expected, actual int) {
-	t.Helper()
-	if expected != actual {
-		t.Errorf("Expected int %d, got %d", expected, actual)
-	}
-}
-
-func AssertBoolEqual(t *testing.T, expected, actual bool) {
-	t.Helper()
-	if expected != actual {
-		t.Errorf("Expected bool %v, got %v", expected, actual)
 	}
 }
 
@@ -170,22 +125,21 @@ func createTestLikeComment(t *testing.T, commentID, userID uuid.UUID) *model.Com
 		UserID:    userID,
 	}
 }
-
 func TestUserStore_CreateUser(t *testing.T) {
 
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
-	AssertStringEqual(t, user.Name, existUser.Name)
-	AssertStringEqual(t, user.LastName, existUser.LastName)
-	AssertStringEqual(t, user.Username, existUser.Username)
-	AssertStringEqual(t, user.Email, existUser.Email)
-	AssertStringEqual(t, user.Password, existUser.Password)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
+	assert.Equal(t, user.Name, existUser.Name)
+	assert.Equal(t, user.LastName, existUser.LastName)
+	assert.Equal(t, user.Username, existUser.Username)
+	assert.Equal(t, user.Email, existUser.Email)
+	assert.Equal(t, user.Password, existUser.Password)
 
 	t.Cleanup(func() {
 		_ = testStorage.UserStore.DeleteUser(existUser.ID)
@@ -196,11 +150,11 @@ func TestUserStore_UpdateUser(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	existUser.Name = "test_update"
 	existUser.LastName = "test_update"
@@ -209,16 +163,16 @@ func TestUserStore_UpdateUser(t *testing.T) {
 	existUser.Password = "test_update"
 
 	err = testStorage.UserStore.UpdateUser(existUser)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	updatedUser, err := testStorage.UserStore.GetUserByUsername("test_update")
-	AssertNoError(t, err)
-	AssertNotNil(t, updatedUser)
-	AssertStringEqual(t, existUser.Name, updatedUser.Name)
-	AssertStringEqual(t, existUser.LastName, updatedUser.LastName)
-	AssertStringEqual(t, existUser.Username, updatedUser.Username)
-	AssertStringEqual(t, existUser.Email, updatedUser.Email)
-	AssertStringEqual(t, existUser.Password, updatedUser.Password)
+	assert.NoError(t, err)
+	assert.NotNil(t, updatedUser)
+	assert.Equal(t, existUser.Name, updatedUser.Name)
+	assert.Equal(t, existUser.LastName, updatedUser.LastName)
+	assert.Equal(t, existUser.Username, updatedUser.Username)
+	assert.Equal(t, existUser.Email, updatedUser.Email)
+	assert.Equal(t, existUser.Password, updatedUser.Password)
 
 	t.Cleanup(func() {
 		_ = testStorage.UserStore.DeleteUser(updatedUser.ID)
@@ -229,37 +183,37 @@ func TestUserStore_DeleteUser(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	err = testStorage.UserStore.DeleteUser(existUser.ID)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	deletedUser, err := testStorage.UserStore.GetUserByUsername(existUser.Username)
-	AssertNoError(t, err)
-	AssertNil(t, deletedUser)
+	assert.NoError(t, err)
+	assert.Nil(t, deletedUser)
 }
 
 func TestUserStore_GetUserByUserID(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	existUser, err = testStorage.UserStore.GetUserByID(existUser.ID)
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
-	AssertStringEqual(t, user.Name, existUser.Name)
-	AssertStringEqual(t, user.LastName, existUser.LastName)
-	AssertStringEqual(t, user.Username, existUser.Username)
-	AssertStringEqual(t, user.Email, existUser.Email)
-	AssertStringEqual(t, user.Password, existUser.Password)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
+	assert.Equal(t, user.Name, existUser.Name)
+	assert.Equal(t, user.LastName, existUser.LastName)
+	assert.Equal(t, user.Username, existUser.Username)
+	assert.Equal(t, user.Email, existUser.Email)
+	assert.Equal(t, user.Password, existUser.Password)
 
 	t.Cleanup(func() {
 		_ = testStorage.UserStore.DeleteUser(existUser.ID)
@@ -270,17 +224,17 @@ func TestUserStore_GetUserByUsername(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
-	AssertStringEqual(t, user.Name, existUser.Name)
-	AssertStringEqual(t, user.LastName, existUser.LastName)
-	AssertStringEqual(t, user.Username, existUser.Username)
-	AssertStringEqual(t, user.Email, existUser.Email)
-	AssertStringEqual(t, user.Password, existUser.Password)
+	assert.Equal(t, user.Name, existUser.Name)
+	assert.Equal(t, user.LastName, existUser.LastName)
+	assert.Equal(t, user.Username, existUser.Username)
+	assert.Equal(t, user.Email, existUser.Email)
+	assert.Equal(t, user.Password, existUser.Password)
 
 	t.Cleanup(func() {
 		_ = testStorage.UserStore.DeleteUser(existUser.ID)
@@ -291,17 +245,17 @@ func TestUserStore_GetUserByEmail(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByEmail("test@test.com")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
-	AssertStringEqual(t, user.Name, existUser.Name)
-	AssertStringEqual(t, user.LastName, existUser.LastName)
-	AssertStringEqual(t, user.Username, existUser.Username)
-	AssertStringEqual(t, user.Email, existUser.Email)
-	AssertStringEqual(t, user.Password, existUser.Password)
+	assert.Equal(t, user.Name, existUser.Name)
+	assert.Equal(t, user.LastName, existUser.LastName)
+	assert.Equal(t, user.Username, existUser.Username)
+	assert.Equal(t, user.Email, existUser.Email)
+	assert.Equal(t, user.Password, existUser.Password)
 
 	t.Cleanup(func() {
 		_ = testStorage.UserStore.DeleteUser(existUser.ID)
@@ -313,27 +267,27 @@ func TestFollowStore_FollowUser(t *testing.T) {
 	user2 := createTestUser(t, "test_2", "test_2", "test_2", "test_2@test.com", "test_2")
 
 	err := testStorage.UserStore.CreateUser(user1)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	err = testStorage.UserStore.CreateUser(user2)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser1, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser1)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser1)
 	existUser2, err := testStorage.UserStore.GetUserByUsername("test_2")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser2)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser2)
 
 	err = testStorage.FollowStore.FollowUser(existUser1.ID, existUser2.ID)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	follows, err := testStorage.FollowStore.GetFollowingByUserID(existUser1.ID)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(follows))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(follows))
 	first := follows[0]
-	AssertStringEqual(t, first.UserID.String(), existUser1.ID.String())
-	AssertStringEqual(t, first.FollowID.String(), existUser2.ID.String())
+	assert.Equal(t, first.UserID.String(), existUser1.ID.String())
+	assert.Equal(t, first.FollowID.String(), existUser2.ID.String())
 
 	t.Cleanup(func() {
 		_ = testStorage.FollowStore.UnFollowUser(existUser1.ID, existUser2.ID)
@@ -349,31 +303,31 @@ func TestFollowStore_UnFollowStore(t *testing.T) {
 	user2 := createTestUser(t, "test_2", "test_2", "test_2", "test_2@test.com", "test_2")
 
 	err := testStorage.UserStore.CreateUser(user1)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	err = testStorage.UserStore.CreateUser(user2)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser1, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser1)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser1)
 	existUser2, err := testStorage.UserStore.GetUserByUsername("test_2")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser2)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser2)
 
 	err = testStorage.FollowStore.FollowUser(existUser1.ID, existUser2.ID)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	follows, err := testStorage.FollowStore.GetFollowingByUserID(existUser1.ID)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(follows))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(follows))
 
 	err = testStorage.FollowStore.UnFollowUser(existUser1.ID, existUser2.ID)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	follows, err = testStorage.FollowStore.GetFollowingByUserID(existUser1.ID)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 0, len(follows))
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(follows))
 
 	t.Cleanup(func() {
 		_ = testStorage.FollowStore.UnFollowUser(existUser1.ID, existUser2.ID)
@@ -390,24 +344,24 @@ func TestPostStore_CreatePost(t *testing.T) {
 	search := createTestSearch(t, "")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	post := createTestPost(t, "test", existUser.ID)
 
 	err = testStorage.PostStore.CreatePost(post)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existPosts, err := testStorage.PostStore.GetPostsByUserID(post.UserID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
 	first := existPosts[0]
 
-	AssertStringEqual(t, existUser.ID.String(), first.User.ID.String())
-	AssertStringEqual(t, post.Content, first.Content)
+	assert.Equal(t, existUser.ID.String(), first.User.ID.String())
+	assert.Equal(t, post.Content, first.Content)
 
 	t.Cleanup(func() {
 		_ = testStorage.PostStore.DeletePost(first.ID)
@@ -422,34 +376,34 @@ func TestPostStore_UpdatePost(t *testing.T) {
 	search := createTestSearch(t, "")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	post := createTestPost(t, "test", existUser.ID)
 
 	err = testStorage.PostStore.CreatePost(post)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existPosts, err := testStorage.PostStore.GetPostsByUserID(post.UserID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
 	first := existPosts[0]
 
-	AssertStringEqual(t, existUser.ID.String(), first.User.ID.String())
-	AssertStringEqual(t, post.Content, first.Content)
+	assert.Equal(t, existUser.ID.String(), first.User.ID.String())
+	assert.Equal(t, post.Content, first.Content)
 
 	first.Content = "updated"
 
 	err = testStorage.PostStore.UpdatePost(&first)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	updatedPost, err := testStorage.PostStore.GetPostByID(first.ID)
-	AssertNoError(t, err)
-	AssertNotNil(t, updatedPost)
-	AssertStringEqual(t, first.Content, updatedPost.Content)
+	assert.NoError(t, err)
+	assert.NotNil(t, updatedPost)
+	assert.Equal(t, first.Content, updatedPost.Content)
 
 	t.Cleanup(func() {
 		_ = testStorage.PostStore.DeletePost(updatedPost.ID)
@@ -464,31 +418,31 @@ func TestPostStore_DeletePost(t *testing.T) {
 	search := createTestSearch(t, "")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	post := createTestPost(t, "test", existUser.ID)
 
 	err = testStorage.PostStore.CreatePost(post)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existPosts, err := testStorage.PostStore.GetPostsByUserID(post.UserID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
 	first := existPosts[0]
 
-	AssertStringEqual(t, existUser.ID.String(), first.User.ID.String())
-	AssertStringEqual(t, post.Content, first.Content)
+	assert.Equal(t, existUser.ID.String(), first.User.ID.String())
+	assert.Equal(t, post.Content, first.Content)
 
 	err = testStorage.PostStore.DeletePost(first.ID)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	deletedPost, err := testStorage.PostStore.GetPostByID(first.ID)
-	AssertNoError(t, err)
-	AssertNil(t, deletedPost)
+	assert.NoError(t, err)
+	assert.Nil(t, deletedPost)
 
 	t.Cleanup(func() {
 		_ = testStorage.UserStore.DeleteUser(existUser.ID)
@@ -502,11 +456,11 @@ func TestPostStore_GetPostsByUserIDByLimit(t *testing.T) {
 	search := createTestSearch(t, "")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	var posts []*model.Post
 
@@ -519,18 +473,18 @@ func TestPostStore_GetPostsByUserIDByLimit(t *testing.T) {
 	for _, post := range posts {
 
 		err = testStorage.PostStore.CreatePost(post)
-		AssertNoError(t, err)
+		assert.NoError(t, err)
 	}
 
 	fivePosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 5, len(fivePosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 5, len(fivePosts))
 
 	pagination.Limit = 10
 
 	allPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 10, len(allPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 10, len(allPosts))
 
 	t.Cleanup(func() {
 		for _, post := range posts {
@@ -547,11 +501,11 @@ func TestPostStore_GetPostsByUserIDByQuery(t *testing.T) {
 	search := createTestSearch(t, "1")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	var posts []*model.Post
 
@@ -564,17 +518,17 @@ func TestPostStore_GetPostsByUserIDByQuery(t *testing.T) {
 	for _, post := range posts {
 
 		err = testStorage.PostStore.CreatePost(post)
-		AssertNoError(t, err)
+		assert.NoError(t, err)
 	}
 
 	allPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 2, len(allPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(allPosts))
 
 	search.Query = "post"
 	allPosts, err = testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 10, len(allPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 10, len(allPosts))
 
 	t.Cleanup(func() {
 		for _, post := range posts {
@@ -588,37 +542,37 @@ func TestCommentStore_CreateComment(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	post := createTestPost(t, "test", existUser.ID)
 
 	err = testStorage.PostStore.CreatePost(post)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	pagination := createTestPagination(t)
 	search := createTestSearch(t, "")
 	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
 
 	first := existPosts[0]
 
 	comment := createTestComment(t, "test", first.ID, existUser.ID)
 	err = testStorage.CommentStore.CreateComment(comment)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	comments, err := testStorage.CommentStore.GetCommentsByPostID(first.ID)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(comments))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(comments))
 
 	firstComment := comments[0]
-	AssertStringEqual(t, comment.Content, firstComment.Content)
-	AssertStringEqual(t, comment.PostID.String(), firstComment.PostID.String())
-	AssertStringEqual(t, comment.UserID.String(), firstComment.UserID.String())
+	assert.Equal(t, comment.Content, firstComment.Content)
+	assert.Equal(t, comment.PostID.String(), firstComment.PostID.String())
+	assert.Equal(t, comment.UserID.String(), firstComment.UserID.String())
 
 	t.Cleanup(func() {
 		for _, comment := range comments {
@@ -632,48 +586,48 @@ func TestCommentStore_UpdateComment(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	post := createTestPost(t, "test", existUser.ID)
 
 	err = testStorage.PostStore.CreatePost(post)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	pagination := createTestPagination(t)
 	search := createTestSearch(t, "")
 	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
 
 	first := existPosts[0]
 
 	comment := createTestComment(t, "test", first.ID, existUser.ID)
 	err = testStorage.CommentStore.CreateComment(comment)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	comments, err := testStorage.CommentStore.GetCommentsByPostID(first.ID)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(comments))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(comments))
 
 	firstComment := comments[0]
-	AssertStringEqual(t, comment.Content, firstComment.Content)
-	AssertStringEqual(t, comment.PostID.String(), firstComment.PostID.String())
-	AssertStringEqual(t, comment.UserID.String(), firstComment.UserID.String())
+	assert.Equal(t, comment.Content, firstComment.Content)
+	assert.Equal(t, comment.PostID.String(), firstComment.PostID.String())
+	assert.Equal(t, comment.UserID.String(), firstComment.UserID.String())
 
 	firstComment.Content = "updated"
 
 	err = testStorage.CommentStore.UpdateComment(&firstComment)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	updatedComment, err := testStorage.CommentStore.GetCommentByID(firstComment.ID)
-	AssertNoError(t, err)
-	AssertNotNil(t, updatedComment)
+	assert.NoError(t, err)
+	assert.NotNil(t, updatedComment)
 
-	AssertStringEqual(t, firstComment.Content, updatedComment.Content)
+	assert.Equal(t, firstComment.Content, updatedComment.Content)
 
 	t.Cleanup(func() {
 
@@ -688,44 +642,44 @@ func TestCommentStore_DeleteComment(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	post := createTestPost(t, "test", existUser.ID)
 
 	err = testStorage.PostStore.CreatePost(post)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	pagination := createTestPagination(t)
 	search := createTestSearch(t, "")
 	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
 
 	first := existPosts[0]
 
 	comment := createTestComment(t, "test", first.ID, existUser.ID)
 	err = testStorage.CommentStore.CreateComment(comment)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	comments, err := testStorage.CommentStore.GetCommentsByPostID(first.ID)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(comments))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(comments))
 
 	firstComment := comments[0]
-	AssertStringEqual(t, comment.Content, firstComment.Content)
-	AssertStringEqual(t, comment.PostID.String(), firstComment.PostID.String())
-	AssertStringEqual(t, comment.UserID.String(), firstComment.UserID.String())
+	assert.Equal(t, comment.Content, firstComment.Content)
+	assert.Equal(t, comment.PostID.String(), firstComment.PostID.String())
+	assert.Equal(t, comment.UserID.String(), firstComment.UserID.String())
 
 	err = testStorage.CommentStore.DeleteComment(firstComment.ID)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	deletedComment, err := testStorage.CommentStore.GetCommentByID(firstComment.ID)
-	AssertNoError(t, err)
-	AssertNil(t, deletedComment)
+	assert.NoError(t, err)
+	assert.Nil(t, deletedComment)
 
 	t.Cleanup(func() {
 		_ = testStorage.UserStore.DeleteUser(existUser.ID)
@@ -736,32 +690,32 @@ func TestLikeStore_LikePost(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	post := createTestPost(t, "test", existUser.ID)
 
 	err = testStorage.PostStore.CreatePost(post)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	pagination := createTestPagination(t)
 	search := createTestSearch(t, "")
 	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
 
 	first := existPosts[0]
 
 	like := createTestLikePost(t, first.ID, existUser.ID)
 
 	err = testStorage.LikeStore.LikePost(like)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 	isLiked, err := testStorage.LikeStore.IsPostLiked(first.ID, existUser.ID)
-	AssertNoError(t, err)
-	AssertBoolEqual(t, true, isLiked)
+	assert.NoError(t, err)
+	assert.Equal(t, true, isLiked)
 
 	t.Cleanup(func() {
 
@@ -775,38 +729,38 @@ func TestLikeStore_UnlikePost(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	post := createTestPost(t, "test", existUser.ID)
 
 	err = testStorage.PostStore.CreatePost(post)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	pagination := createTestPagination(t)
 	search := createTestSearch(t, "")
 	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
 
 	first := existPosts[0]
 
 	like := createTestLikePost(t, first.ID, existUser.ID)
 
 	err = testStorage.LikeStore.LikePost(like)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 	isLiked, err := testStorage.LikeStore.IsPostLiked(first.ID, existUser.ID)
-	AssertNoError(t, err)
-	AssertBoolEqual(t, true, isLiked)
+	assert.NoError(t, err)
+	assert.Equal(t, true, isLiked)
 
 	err = testStorage.LikeStore.UnlikePost(first.ID, existUser.ID)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 	isLiked, err = testStorage.LikeStore.IsPostLiked(first.ID, existUser.ID)
-	AssertNoError(t, err)
-	AssertBoolEqual(t, false, isLiked)
+	assert.NoError(t, err)
+	assert.Equal(t, false, isLiked)
 
 	t.Cleanup(func() {
 
@@ -819,42 +773,42 @@ func TestLikeStore_LikeComment(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	post := createTestPost(t, "test", existUser.ID)
 
 	err = testStorage.PostStore.CreatePost(post)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	pagination := createTestPagination(t)
 	search := createTestSearch(t, "")
 	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
 
 	first := existPosts[0]
 
 	comment := createTestComment(t, "test", first.ID, existUser.ID)
 
 	err = testStorage.CommentStore.CreateComment(comment)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existComments, err := testStorage.CommentStore.GetCommentsByPostID(first.ID)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existComments))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existComments))
 	firstComment := existComments[0]
 
 	like := createTestLikeComment(t, firstComment.ID, existUser.ID)
 
 	err = testStorage.LikeStore.LikeComment(like)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 	isLiked, err := testStorage.LikeStore.IsCommentLiked(firstComment.ID, existUser.ID)
-	AssertNoError(t, err)
-	AssertBoolEqual(t, true, isLiked)
+	assert.NoError(t, err)
+	assert.Equal(t, true, isLiked)
 
 	t.Cleanup(func() {
 
@@ -869,48 +823,48 @@ func TestLikeStore_UnlikeComment(t *testing.T) {
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 
 	err := testStorage.UserStore.CreateUser(user)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existUser, err := testStorage.UserStore.GetUserByUsername("test")
-	AssertNoError(t, err)
-	AssertNotNil(t, existUser)
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
 
 	post := createTestPost(t, "test", existUser.ID)
 
 	err = testStorage.PostStore.CreatePost(post)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	pagination := createTestPagination(t)
 	search := createTestSearch(t, "")
 	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existPosts))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
 
 	first := existPosts[0]
 
 	comment := createTestComment(t, "test", first.ID, existUser.ID)
 
 	err = testStorage.CommentStore.CreateComment(comment)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 
 	existComments, err := testStorage.CommentStore.GetCommentsByPostID(first.ID)
-	AssertNoError(t, err)
-	AssertIntEqual(t, 1, len(existComments))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existComments))
 	firstComment := existComments[0]
 
 	like := createTestLikeComment(t, firstComment.ID, existUser.ID)
 
 	err = testStorage.LikeStore.LikeComment(like)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 	isLiked, err := testStorage.LikeStore.IsCommentLiked(firstComment.ID, existUser.ID)
-	AssertNoError(t, err)
-	AssertBoolEqual(t, true, isLiked)
+	assert.NoError(t, err)
+	assert.Equal(t, true, isLiked)
 
 	err = testStorage.LikeStore.UnlikeComment(firstComment.ID, existUser.ID)
-	AssertNoError(t, err)
+	assert.NoError(t, err)
 	isLiked, err = testStorage.LikeStore.IsCommentLiked(first.ID, existUser.ID)
-	AssertNoError(t, err)
-	AssertBoolEqual(t, false, isLiked)
+	assert.NoError(t, err)
+	assert.Equal(t, false, isLiked)
 
 	t.Cleanup(func() {
 
