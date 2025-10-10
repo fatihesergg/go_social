@@ -2,8 +2,8 @@ package controller
 
 import (
 	"github.com/fatihesergg/go_social/internal/database"
+	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/model"
-	"github.com/fatihesergg/go_social/internal/model/dto"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -393,6 +393,7 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 	pagination := database.NewPagination(c)
 	search := database.NewSearch(c)
 	for i := range followers {
+		//TODO:  Check if user owner the post.
 		followerID := followers[i].ID
 		if followerID == userID {
 			posts, err := uc.Storage.PostStore.GetPostsByUserID(user.ID, pagination, search)

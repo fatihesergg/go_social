@@ -1,11 +1,9 @@
 package controller
 
 import (
-	"database/sql"
-
 	"github.com/fatihesergg/go_social/internal/database"
+	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/model"
-	"github.com/fatihesergg/go_social/internal/model/dto"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -50,12 +48,6 @@ func (cc CommentController) CreateComment(c *gin.Context) {
 		Content: params.Content,
 	}
 
-	if params.Image != "" {
-		comment.Image = sql.NullString{String: params.Image, Valid: true}
-	} else {
-		comment.Image = sql.NullString{}
-	}
-
 	err := cc.Storage.CommentStore.CreateComment(comment)
 	if err != nil {
 
@@ -92,7 +84,8 @@ func (cc CommentController) GetCommentsByPostID(c *gin.Context) {
 		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
 		return
 	}
-	comments, err := cc.Storage.CommentStore.GetCommentsByPostID(postID)
+	userID := c.MustGet("userID").(uuid.UUID)
+	comments, err := cc.Storage.CommentStore.GetCommentsByPostID(postID, userID)
 	if err != nil {
 
 		c.JSON(500, gin.H{"error": util.InternalServerError})
@@ -102,7 +95,9 @@ func (cc CommentController) GetCommentsByPostID(c *gin.Context) {
 		c.JSON(404, gin.H{"error": util.NoCommentsFoundError})
 		return
 	}
-	c.JSON(200, gin.H{"result": comments})
+	result := dto.NewCommentDetailResponse(comments)
+
+	c.JSON(200, gin.H{"result": result})
 }
 
 // UpdateComment godoc
@@ -148,11 +143,7 @@ func (cc CommentController) UpdateComment(c *gin.Context) {
 		return
 	}
 	comment.Content = params.Content
-	if params.Image != "" {
-		comment.Image = sql.NullString{String: params.Image, Valid: true}
-	} else {
-		comment.Image = sql.NullString{}
-	}
+
 	err = cc.Storage.CommentStore.UpdateComment(comment)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error updating comment"})
@@ -187,6 +178,7 @@ func (cc CommentController) DeleteComment(c *gin.Context) {
 		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
 		return
 	}
+	// TODO: CHECK USERID
 	err = cc.Storage.CommentStore.DeleteComment(commentID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error deleting comment"})

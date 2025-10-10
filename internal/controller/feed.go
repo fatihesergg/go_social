@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/fatihesergg/go_social/internal/database"
+	"github.com/fatihesergg/go_social/internal/dto"
 	_ "github.com/fatihesergg/go_social/internal/model"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
@@ -51,5 +52,6 @@ func (fc FeedController) GetFeed(c *gin.Context) {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
 	}
-	c.JSON(200, posts)
+	response := dto.NewFeedResponse(posts)
+	c.JSON(200, response)
 }

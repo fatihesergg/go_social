@@ -69,8 +69,9 @@ func main() {
 	followStore := database.NewFollowStore(db)
 	feedStore := database.NewFeedStore(db)
 	likeStore := database.NewLikeStore(db)
+	replyStore := database.NewReplyStore(db)
 
-	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore, likeStore)
+	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore, likeStore, replyStore)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	rateLimiter := middleware.NewRateLimiter(1, 10)
@@ -86,6 +87,7 @@ func main() {
 	commentController := controller.NewCommentController(storage)
 	feedController := controller.NewFeedController(storage)
 	likeController := controller.NewLikeController(storage)
+	replyController := controller.NewReplyController(storage)
 
 	base.POST("/signup", userController.Signup)
 	base.POST("/login", userController.Login)
@@ -119,6 +121,7 @@ func main() {
 	commentRouter.GET("/:post_id", commentController.GetCommentsByPostID)
 	commentRouter.PUT("/:id", commentController.UpdateComment)
 	commentRouter.DELETE("/:id", commentController.DeleteComment)
+	commentRouter.POST("/:id/reply", replyController.ReplyComment)
 
 	likeRouter := base.Group("/likes")
 	likeRouter.Use(middleware.AuthMiddleware())

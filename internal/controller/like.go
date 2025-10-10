@@ -2,8 +2,8 @@ package controller
 
 import (
 	"github.com/fatihesergg/go_social/internal/database"
+	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/model"
-	"github.com/fatihesergg/go_social/internal/model/dto"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

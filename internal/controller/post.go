@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"fmt"
+
 	"github.com/fatihesergg/go_social/internal/database"
+	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/model"
-	"github.com/fatihesergg/go_social/internal/model/dto"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -37,7 +39,8 @@ func NewPostController(storage *database.Storage) *PostController {
 func (pc PostController) GetPosts(c *gin.Context) {
 	pagination := database.NewPagination(c)
 	search := database.NewSearch(c)
-	posts, err := pc.Storage.PostStore.GetPosts(pagination, search)
+	userID := c.MustGet("userID").(uuid.UUID)
+	posts, err := pc.Storage.PostStore.GetPosts(pagination, search, userID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
@@ -46,7 +49,9 @@ func (pc PostController) GetPosts(c *gin.Context) {
 		c.JSON(404, gin.H{"error": util.NoPostsFoundError})
 		return
 	}
-	c.JSON(200, gin.H{"result": posts})
+	result := dto.NewAllPostResponse(posts)
+
+	c.JSON(200, gin.H{"result": result})
 }
 
 // GetPostByID godoc
@@ -76,8 +81,12 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
 		return
 	}
-	post, err := pc.Storage.PostStore.GetPostByID(postID)
+
+	userID := c.MustGet("userID").(uuid.UUID)
+
+	post, err := pc.Storage.PostStore.GetPostDetailsByID(postID, userID)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(500, gin.H{"error": util.InternalServerError})
 		return
 	}
@@ -85,8 +94,9 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 		c.JSON(404, gin.H{"error": util.PostNotFoundError})
 		return
 	}
+	result := dto.NewPostDetailResponse(post)
 
-	c.JSON(200, gin.H{"result": post})
+	c.JSON(200, gin.H{"result": result})
 }
 
 // CreatePost godoc
@@ -112,9 +122,7 @@ func (pc PostController) CreatePost(c *gin.Context) {
 	post := &model.Post{
 		Content: params.Content,
 	}
-	if params.Image != "" {
-		post.Image.String = params.Image
-	}
+
 	userID := c.MustGet("userID").(uuid.UUID)
 	post.UserID = userID
 
@@ -178,12 +186,6 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 	post := &model.Post{
 		ID:      postID,
 		Content: params.Content,
-	}
-
-	if params.Image != "" {
-		post.Image.String = params.Image
-	} else {
-		post.Image.Valid = false
 	}
 
 	err = pc.Storage.PostStore.UpdatePost(post)

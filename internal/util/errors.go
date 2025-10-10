@@ -1,13 +1,5 @@
 package util
 
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-type SuccessResponse struct {
-	Result  interface{} `json:"result"`
-	Message string      `json:"message"`
-}
-
 var InternalServerError = "Internal server error"
 
 var PostNotFoundError = "Post not found"

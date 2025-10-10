@@ -5,7 +5,6 @@ import (
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 )
 
 type BaseFeedStore interface {
@@ -25,72 +24,78 @@ func NewFeedStore(db *sql.DB) BaseFeedStore {
 func (fs FeedStore) GetFeed(userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error) {
 	var posts []model.Post
 
-	followers := []int64{}
-	followersQuery := `SELECT follow_id FROM follows WHERE user_id = $1`
-	followersRows, err := fs.DB.Query(followersQuery, userID)
-	if err != nil {
-
-		return nil, err
-	}
-	defer followersRows.Close()
-	for followersRows.Next() {
-		var followerID int64
-		if err := followersRows.Scan(&followerID); err != nil {
-
-			return nil, err
-		}
-		followers = append(followers, followerID)
-	}
-
 	query := `
 	WITH limited_posts AS (
 		SELECT * FROM posts
-		WHERE user_id = ANY($1) AND content ILIKE '%' || $2 || '%'
+		WHERE content ILIKE '%' || $4 || '%' AND user_id = ANY (SELECT follow_id FROM follows WHERE user_id = $1)
 		ORDER BY created_at DESC
-		LIMIT $3 OFFSET $4
+		LIMIT $2 OFFSET $3
+	),
+
+	likes_count AS (
+		SELECT post_id ,COUNT(*) as total_likes FROM post_likes
+		GROUP BY post_id
+	),
+
+	comments_count AS (
+		SELECT post_id, COUNT(*) as total_comments FROM comments
+		GROUP BY post_id
+	),
+
+	user_likes AS (
+		SELECT post_id FROM post_likes
+		WHERE user_id = $1
 	)
 
-	SELECT posts.id, posts.content, posts.image, posts.created_at, posts.updated_at,
-	 post_user.name, post_user.last_name, post_user.username,
-	comments.id, comments.content, comments.post_id, comments.created_at, comments.updated_at,
-	comment_user.name, comment_user.last_name, comment_user.username
-	FROM limited_posts as posts
-	JOIN users as post_user ON posts.user_id = post_user.id
-	LEFT JOIN comments ON posts.id = comments.post_id
-	JOIN users as comment_user ON comments.user_id = comment_user.id
-	ORDER BY posts.created_at DESC
+
+	SELECT 
+	posts.id,
+	posts.content,
+	posts.created_at,
+	posts.updated_at,
+
+    post_user.id,
+	post_user.name,
+	post_user.last_name,
+	post_user.username,
+	
+	COALESCE(likes_count.total_likes,0) AS total_likes,
+	COALESCE(comments_count.total_comments,0) AS total_comments,
+
+	(user_likes.post_id IS NOT NULL) AS is_liked
+
+    FROM limited_posts as posts 
+    JOIN users AS post_user ON post_user.id = posts.user_id
+    LEFT JOIN likes_count ON likes_count.post_id = posts.id
+	LEFT JOIN comments_count ON comments_count.post_id = posts.id
+	LEFT JOIN user_likes ON user_likes.post_id = posts.id
 	`
 
-	rows, err := fs.DB.Query(query, pq.Array(followers), search.Query, pagination.Limit, pagination.Offset)
+	rows, err := fs.DB.Query(query, userID, pagination.Limit, pagination.Offset, search.Query)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-
 		return nil, err
 	}
 	defer rows.Close()
-	postMap := make(map[uuid.UUID]*model.Post)
+
 	for rows.Next() {
 		post := model.Post{}
-		comment := model.Comment{}
-		comment.User = model.User{}
-		err := rows.Scan(&post.ID, &post.Content, &post.Image, &post.CreatedAt, &post.UpdatedAt,
-			&post.User.Name, &post.User.LastName, &post.User.Username,
-			&comment.ID, &comment.Content, &comment.PostID, &comment.CreatedAt, &comment.UpdatedAt,
-			&comment.User.Name, &comment.User.LastName, &comment.User.Username)
+		err := rows.Scan(&post.ID, &post.Content, &post.CreatedAt, &post.UpdatedAt,
+			&post.User.ID, &post.User.Name, &post.User.LastName, &post.User.Username,
+			&post.LikeCount, &post.CommentCount,
+			&post.IsLiked,
+		)
 		if err != nil {
 			return nil, err
 		}
-		if _, ok := postMap[post.ID]; !ok {
-			postMap[post.ID] = &post
-		}
-		postMap[comment.PostID].Comments = append(postMap[comment.PostID].Comments, comment)
+
+		posts = append(posts, post)
+
+	}
+	if err := rows.Err(); err != nil {
+
+		return nil, err
 	}
 
-	for _, post := range postMap {
-		posts = append(posts, *post)
-	}
 	if len(posts) == 0 {
 		return nil, sql.ErrNoRows
 	}
