@@ -6,14 +6,15 @@ Go Social is a backend API for a social media application built with Go. It prov
 
 ### Core Functionality
 
-- **User Management**: Secure user signup and login.
+- **User Management**: Secure user sign up and login.
 - **JWT Authentication**: Endpoints are protected using JSON Web Tokens.
 - **User Profiles**: Fetch user data and profile information.
 - **Social Graph**: Users can follow and unfollow each other.
 - **Follower/Following Lists**: View lists of who a user follows and who follows them.
 - **Post Management**: Full CRUD (Create, Read, Update, Delete) operations for posts.
-- **Like Post**: Create and Delete oprations for likes on posts.
+- **Likes**: Create and Delete operations for likes on posts and comments.
 - **Comment System**: Full CRUD operations for comments on posts.
+- **Reply Comment**: Users can reply comments.
 - **Personalized Feed**: A user-specific feed that aggregates posts from the users they follow.
 
 ### Architecture & Design
@@ -22,6 +23,7 @@ Go Social is a backend API for a social media application built with Go. It prov
   - `internal/controller`: Handles incoming HTTP requests, validates input, and calls the appropriate services.
   - `internal/database`: Implements the Repository Pattern. The `...Store` structs abstract all database interactions, making the business logic independent of the database implementation.
   - `internal/model`: Defines the core data structures of the application.
+  - `internal/dto`: Defines struct for both request body parameters and responses.
 - **Dependency Injection**: Dependencies (like database stores) are created in `main.go` and injected into the controllers. This promotes loose coupling and makes components highly testable.
 - **Centralized Routing**: All API routes are clearly defined in `cmd/go_social/main.go` using the Gin Gonic framework, providing a single source of truth for the API's structure.
 - **Middleware**: Authentication is handled cleanly using Gin middleware (`internal/middleware/auth.go`), which intercepts requests to protected routes and validates the JWT.
@@ -29,7 +31,7 @@ Go Social is a backend API for a social media application built with Go. It prov
 ### Security
 
 - **JWT-Based Authentication**: Stateless authentication is implemented using JWTs, which are issued upon successful login.
-- **Password Hashing**: The database schema is designed to work with PostgreSQL's `pgcrypto` extension, ensuring that user passwords are securely hashed and never stored in plain text.
+- **Password Hashing**: Users passwords hashed before storing in database.Using `brcypt`library.
 - **Authorization Logic**: Operations like updating or deleting a post/comment include checks to ensure that the request is made by the authorized owner of the resource.
 
 ### Database
@@ -47,6 +49,7 @@ Go Social is a backend API for a social media application built with Go. It prov
 - **API Documentation**: `swag`
 - **Environment Management**: `godotenv`
 - **Deployment**: `docker` and `docker-compose`
+- **Test**:`testify` and `testing`
 
 ### Developer Experience
 
@@ -82,13 +85,21 @@ The documentation provides a clear overview of all available endpoints, their pa
 
     ```env
     POSTGRES_USER="postgres user name"
-    POSTGRES_PASSWORD="postgres user's password"
+    POSTGRES_PASSWORD="postgres user password"
     POSTGRES_DB="postgres database name"
     JWT_SECRET="your-super-secret-key"
+    TEST_DB_URL="test postgres database url"
     ```
 
 3.  **Run containers with docker-compose:**
+
     ```bash
     docker compose up
     ```
+
     The server will start on port `3000`.
+
+4.  **Run tests:**
+    ```bash
+    go test ./...
+    ```
