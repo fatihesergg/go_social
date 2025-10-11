@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
@@ -67,17 +66,7 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 	COALESCE(reply_count.replies_count,0) AS total_reply,
 
 	(user_likes.comment_id IS NOT NULL) AS is_liked,
-	(user_follows.follow_id IS NOT NULL) AS is_following,
-
-	replies.id,
-	replies.comment_id,
-	replies.message,
-
-	reply_user.id,
-	reply_user.name,
-	reply_user.last_name,
-	reply_user.username
-
+	(user_follows.follow_id IS NOT NULL) AS is_following
 
 
 	FROM comments JOIN users ON comments.user_id = users.id
@@ -85,12 +74,9 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 	LEFT JOIN reply_count ON reply_count.comment_id = comments.id
 	LEFT JOIN user_likes ON user_likes.comment_id = comments.id
 	LEFT JOIN user_follows ON user_follows.follow_id = users.id
-	LEFT JOIN replies ON replies.comment_id = comments.id
-	LEFT JOIN users AS reply_user ON reply_user.id = users.id
 	WHERE comments.post_id = $1`
 	rows, err := cs.db.Query(query, postID, userID)
 	if err != nil {
-		fmt.Println(err)
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -100,37 +86,16 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 	commentMap := make(map[uuid.UUID]*model.Comment)
 	for rows.Next() {
 		var comment model.Comment
-		var replyID, replyUserID, replyCommentID *uuid.UUID
-		var replyMessage *string
-		var replyUserName, replyUserLastName, replyUserUsername *string
 		err := rows.Scan(
 			&comment.ID, &comment.PostID, &comment.Content, &comment.CreatedAt, &comment.UpdatedAt,
 			&comment.User.ID, &comment.User.Name, &comment.User.LastName, &comment.User.Username,
 			&comment.LikeCount, &comment.ReplyCount,
-			&comment.IsLiked, &comment.IsFollowing,
-			&replyID, &replyCommentID, &replyMessage,
-			&replyUserID, &replyUserName, &replyUserLastName, &replyUserUsername,
-		)
+			&comment.IsLiked, &comment.IsFollowing)
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 		if _, ok := commentMap[comment.ID]; !ok {
 			commentMap[comment.ID] = &comment
-		}
-		if replyID != nil {
-			reply := model.Reply{
-				ID:        *replyID,
-				CommentID: *replyCommentID,
-				Message:   *replyMessage,
-				User: model.User{
-					ID:       *replyUserID,
-					Name:     *replyUserName,
-					LastName: *replyUserLastName,
-					Username: *replyUserName,
-				},
-			}
-			commentMap[*replyCommentID].Replies = append(commentMap[*replyCommentID].Replies, reply)
 		}
 
 	}

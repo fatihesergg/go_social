@@ -19,6 +19,56 @@ func NewReplyController(storage *database.Storage) *ReplyController {
 	}
 }
 
+// GetCommentReplies godoc
+//
+//	@Summary		Get replies of a comment
+//	@Description	Get replies of a comment
+//	@Tags			Reply
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Comment ID"
+//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		404	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
+//	@Router			/replies/{id} [GET]
+//	@Security		Bearer
+func (rc *ReplyController) GetCommentReplies(c *gin.Context) {
+	id := c.Param("id")
+
+	commentID, err := uuid.Parse(id)
+	if err != nil {
+		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
+		return
+	}
+
+	existComment, err := rc.Storage.CommentStore.GetCommentByID(commentID)
+	if err != nil {
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		return
+	}
+
+	if existComment == nil {
+		c.JSON(404, util.SuccessMessageResponse{Message: "Comment not found"})
+		return
+	}
+
+	replies, err := rc.Storage.ReplyStore.GetRepliesByCommentID(existComment.ID)
+	if err != nil {
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		return
+	}
+
+	if replies == nil {
+		c.JSON(404, util.SuccessMessageResponse{Message: "Replies not found"})
+		return
+	}
+
+	result := dto.NewReplyResponse(replies)
+	c.JSON(200, util.SuccessResultResponse{Message: "Replies fetched successfully", Result: result})
+
+}
+
 // ReplyCommnt godoc
 //
 //	@Summary		Reply a comment

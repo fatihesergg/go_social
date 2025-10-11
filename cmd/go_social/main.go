@@ -130,6 +130,7 @@ func main() {
 
 	replyRouter := base.Group("/replies")
 	replyRouter.Use(middleware.AuthMiddleware())
+	replyRouter.GET("/:id", replyController.GetCommentReplies)
 	replyRouter.PUT("/:id", replyController.UpdateReply)
 	replyRouter.DELETE("/:id", replyController.DeleteReply)
 

@@ -55,6 +55,7 @@ func NewPostgresTestStorage() *Storage {
 		FollowStore:  NewFollowStore(db),
 		FeedStore:    NewFeedStore(db),
 		LikeStore:    NewLikeStore(db),
+		ReplyStore:   NewReplyStore(db),
 	}
 }
 
@@ -125,6 +126,16 @@ func createTestLikeComment(t *testing.T, commentID, userID uuid.UUID) *model.Com
 		UserID:    userID,
 	}
 }
+
+func createTestCommentReply(t *testing.T, commentID, userID uuid.UUID, message string) *model.Reply {
+	t.Helper()
+	return &model.Reply{
+		CommentID: commentID,
+		UserID:    userID,
+		Message:   message,
+	}
+}
+
 func TestUserStore_CreateUser(t *testing.T) {
 
 	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
@@ -869,6 +880,205 @@ func TestLikeStore_UnlikeComment(t *testing.T) {
 	t.Cleanup(func() {
 
 		_ = testStorage.PostStore.DeletePost(first.ID)
+		_ = testStorage.UserStore.DeleteUser(existUser.ID)
+	})
+}
+
+func TestReplyStore_CreateReply(t *testing.T) {
+	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
+
+	err := testStorage.UserStore.CreateUser(user)
+	assert.NoError(t, err)
+
+	existUser, err := testStorage.UserStore.GetUserByUsername("test")
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
+
+	post := createTestPost(t, "test", existUser.ID)
+
+	err = testStorage.PostStore.CreatePost(post)
+	assert.NoError(t, err)
+
+	pagination := createTestPagination(t)
+	search := createTestSearch(t, "")
+	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
+
+	first := existPosts[0]
+
+	comment := createTestComment(t, "test", first.ID, existUser.ID)
+
+	err = testStorage.CommentStore.CreateComment(comment)
+	assert.NoError(t, err)
+
+	existComments, err := testStorage.CommentStore.GetCommentsByPostID(first.ID, existUser.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existComments))
+	firstComment := existComments[0]
+
+	reply := createTestCommentReply(t, firstComment.ID, existUser.ID, "test")
+
+	err = testStorage.ReplyStore.CreateReply(reply)
+
+	assert.NoError(t, err)
+
+	replies, err := testStorage.ReplyStore.GetRepliesByCommentID(firstComment.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(replies))
+	firstReply := replies[0]
+
+	existReply, err := testStorage.ReplyStore.GetReplyByID(firstReply.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, existReply)
+
+	assert.Equal(t, reply.CommentID.String(), existReply.CommentID.String())
+	assert.Equal(t, reply.UserID.String(), existReply.UserID.String())
+
+	t.Cleanup(func() {
+
+		_ = testStorage.PostStore.DeletePost(first.ID)
+		_ = testStorage.CommentStore.DeleteComment(firstComment.ID)
+		_ = testStorage.ReplyStore.DeleteReply(first.ID)
+		_ = testStorage.LikeStore.UnlikeComment(first.ID, existUser.ID)
+		_ = testStorage.UserStore.DeleteUser(existUser.ID)
+	})
+}
+
+func TestReplyStore_UpdateReply(t *testing.T) {
+	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
+
+	err := testStorage.UserStore.CreateUser(user)
+	assert.NoError(t, err)
+
+	existUser, err := testStorage.UserStore.GetUserByUsername("test")
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
+
+	post := createTestPost(t, "test", existUser.ID)
+
+	err = testStorage.PostStore.CreatePost(post)
+	assert.NoError(t, err)
+
+	pagination := createTestPagination(t)
+	search := createTestSearch(t, "")
+	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
+
+	first := existPosts[0]
+
+	comment := createTestComment(t, "test", first.ID, existUser.ID)
+
+	err = testStorage.CommentStore.CreateComment(comment)
+	assert.NoError(t, err)
+
+	existComments, err := testStorage.CommentStore.GetCommentsByPostID(first.ID, existUser.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existComments))
+	firstComment := existComments[0]
+
+	reply := createTestCommentReply(t, firstComment.ID, existUser.ID, "test")
+
+	err = testStorage.ReplyStore.CreateReply(reply)
+
+	assert.NoError(t, err)
+
+	replies, err := testStorage.ReplyStore.GetRepliesByCommentID(firstComment.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(replies))
+	firstReply := replies[0]
+
+	existReply, err := testStorage.ReplyStore.GetReplyByID(firstReply.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, existReply)
+
+	assert.Equal(t, reply.CommentID.String(), existReply.CommentID.String())
+	assert.Equal(t, reply.UserID.String(), existReply.UserID.String())
+
+	existReply.Message = "updated"
+
+	err = testStorage.ReplyStore.UpdateReply(existReply)
+	assert.NoError(t, err)
+
+	updatedReply, err := testStorage.ReplyStore.GetReplyByID(existReply.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, existReply.Message, updatedReply.Message)
+
+	t.Cleanup(func() {
+
+		_ = testStorage.PostStore.DeletePost(first.ID)
+		_ = testStorage.CommentStore.DeleteComment(firstComment.ID)
+		_ = testStorage.ReplyStore.DeleteReply(first.ID)
+		_ = testStorage.LikeStore.UnlikeComment(first.ID, existUser.ID)
+		_ = testStorage.UserStore.DeleteUser(existUser.ID)
+	})
+}
+
+func TestReplyStore_DeleteReply(t *testing.T) {
+	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
+
+	err := testStorage.UserStore.CreateUser(user)
+	assert.NoError(t, err)
+
+	existUser, err := testStorage.UserStore.GetUserByUsername("test")
+	assert.NoError(t, err)
+	assert.NotNil(t, existUser)
+
+	post := createTestPost(t, "test", existUser.ID)
+
+	err = testStorage.PostStore.CreatePost(post)
+	assert.NoError(t, err)
+
+	pagination := createTestPagination(t)
+	search := createTestSearch(t, "")
+	existPosts, err := testStorage.PostStore.GetPostsByUserID(existUser.ID, pagination, search)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existPosts))
+
+	first := existPosts[0]
+
+	comment := createTestComment(t, "test", first.ID, existUser.ID)
+
+	err = testStorage.CommentStore.CreateComment(comment)
+	assert.NoError(t, err)
+
+	existComments, err := testStorage.CommentStore.GetCommentsByPostID(first.ID, existUser.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(existComments))
+	firstComment := existComments[0]
+
+	reply := createTestCommentReply(t, firstComment.ID, existUser.ID, "test")
+
+	err = testStorage.ReplyStore.CreateReply(reply)
+
+	assert.NoError(t, err)
+
+	replies, err := testStorage.ReplyStore.GetRepliesByCommentID(firstComment.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(replies))
+	firstReply := replies[0]
+
+	existReply, err := testStorage.ReplyStore.GetReplyByID(firstReply.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, existReply)
+
+	assert.Equal(t, reply.CommentID.String(), existReply.CommentID.String())
+	assert.Equal(t, reply.UserID.String(), existReply.UserID.String())
+
+	err = testStorage.ReplyStore.DeleteReply(existReply.ID)
+	assert.NoError(t, err)
+
+	deletedReply, err := testStorage.ReplyStore.GetReplyByID(existReply.ID)
+	assert.NoError(t, err)
+	assert.Nil(t, deletedReply)
+
+	t.Cleanup(func() {
+
+		_ = testStorage.PostStore.DeletePost(first.ID)
+		_ = testStorage.CommentStore.DeleteComment(firstComment.ID)
+		_ = testStorage.ReplyStore.DeleteReply(first.ID)
+		_ = testStorage.LikeStore.UnlikeComment(first.ID, existUser.ID)
 		_ = testStorage.UserStore.DeleteUser(existUser.ID)
 	})
 }

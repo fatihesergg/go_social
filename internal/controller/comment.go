@@ -34,7 +34,7 @@ func NewCommentController(storage *database.Storage) *CommentController {
 //	@Failure		500		{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router			/comments [post]
-func (cc CommentController) CreateComment(c *gin.Context) {
+func (cc *CommentController) CreateComment(c *gin.Context) {
 	var params dto.CreateCommentDTO
 	if err := c.ShouldBindJSON(&params); err != nil {
 		util.HandleBindError(c, err)
@@ -73,7 +73,7 @@ func (cc CommentController) CreateComment(c *gin.Context) {
 //	@Failure		500		{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router			/comments/post/{post_id} [get]
-func (cc CommentController) GetCommentsByPostID(c *gin.Context) {
+func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
 	id := c.Param("post_id")
 	if id == "" {
 		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
@@ -86,16 +86,17 @@ func (cc CommentController) GetCommentsByPostID(c *gin.Context) {
 	}
 	userID := c.MustGet("userID").(uuid.UUID)
 	comments, err := cc.Storage.CommentStore.GetCommentsByPostID(postID, userID)
-	if err != nil {
 
+	if err != nil {
 		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
+
 	if comments == nil {
 		c.JSON(404, util.ErrorResponse{Error: util.NoCommentsFoundError})
 		return
 	}
-	result := dto.NewCommentDetailResponse(comments)
+	result := dto.NewCommentResponse(comments)
 
 	c.JSON(200, util.SuccessResultResponse{Message: "Comments fetched successfully", Result: result})
 }
@@ -116,7 +117,7 @@ func (cc CommentController) GetCommentsByPostID(c *gin.Context) {
 //	@Failure		500		{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router			/comments/{id} [put]
-func (cc CommentController) UpdateComment(c *gin.Context) {
+func (cc *CommentController) UpdateComment(c *gin.Context) {
 	var params dto.UpdateCommentDTO
 	id := c.Param("id")
 	if id == "" {
@@ -167,7 +168,7 @@ func (cc CommentController) UpdateComment(c *gin.Context) {
 //	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router	/comments/{id} [delete]
-func (cc CommentController) DeleteComment(c *gin.Context) {
+func (cc *CommentController) DeleteComment(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
