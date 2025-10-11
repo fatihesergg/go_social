@@ -110,6 +110,8 @@ func main() {
 	postRouter.GET("/", postController.GetPosts)
 	postRouter.POST("/", postController.CreatePost)
 	postRouter.PUT("/:id", postController.UpdatePost)
+	postRouter.POST("/:id/like", likeController.LikePost)
+	postRouter.DELETE("/:id/unlike", likeController.UnlikePost)
 
 	feedRouter := base.Group("/feed")
 	feedRouter.Use(middleware.AuthMiddleware())
@@ -122,11 +124,8 @@ func main() {
 	commentRouter.PUT("/:id", commentController.UpdateComment)
 	commentRouter.DELETE("/:id", commentController.DeleteComment)
 	commentRouter.POST("/:id/reply", replyController.ReplyComment)
-
-	likeRouter := base.Group("/likes")
-	likeRouter.Use(middleware.AuthMiddleware())
-	likeRouter.POST("/", likeController.LikePost)
-	likeRouter.DELETE("/:id", likeController.UnlikePost)
+	commentRouter.POST("/:id/like", likeController.LikeComment)
+	commentRouter.DELETE("/:id/unlike", likeController.UnlikeComment)
 
 	if err := app.Router.Run(":3000"); err != nil {
 		panic("Error starting the server")
