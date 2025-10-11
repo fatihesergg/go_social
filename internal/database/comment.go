@@ -133,10 +133,13 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 			commentMap[*replyCommentID].Replies = append(commentMap[*replyCommentID].Replies, reply)
 		}
 
-		comments = append(comments, comment)
 	}
 	if rows.Err() != nil {
 		return nil, err
+	}
+
+	for _, comment := range commentMap {
+		comments = append(comments, *comment)
 	}
 
 	return comments, nil
