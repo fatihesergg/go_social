@@ -15,7 +15,7 @@ type UpdatePostDTO struct {
 	Image   string `json:"image"`
 }
 
-type AllPostRepsonse struct {
+type AllPostResponse struct {
 	ID           uuid.UUID  `json:"id"`
 	Content      string     `json:"content"`
 	CreatedAt    string     `json:"created_at"`
@@ -40,10 +40,10 @@ type PostDetailResponse struct {
 	IsFollowing  bool              `json:"is_following"`
 }
 
-func NewAllPostResponse(posts []model.Post) []AllPostRepsonse {
-	result := []AllPostRepsonse{}
+func NewAllPostResponse(posts []model.Post) []AllPostResponse {
+	result := []AllPostResponse{}
 	for _, post := range posts {
-		result = append(result, AllPostRepsonse{
+		result = append(result, AllPostResponse{
 			ID:           post.ID,
 			Content:      post.Content,
 			CreatedAt:    post.CreatedAt,
