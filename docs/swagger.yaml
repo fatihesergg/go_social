@@ -214,6 +214,11 @@ definitions:
     required:
     - content
     type: object
+  github_com_fatihesergg_go_social_internal_dto.UpdateReply:
+    properties:
+      message:
+        type: string
+    type: object
   github_com_fatihesergg_go_social_internal_model.Follow:
     properties:
       follow_id:
@@ -414,6 +419,37 @@ paths:
       summary: Like a Comment
       tags:
       - CommentLikes
+  /comments/{id}/reply:
+    post:
+      consumes:
+      - application/json
+      description: Reply a comment
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Reply a comment
+      tags:
+      - Reply
   /comments/{id}/unlike:
     delete:
       consumes:
@@ -933,20 +969,34 @@ paths:
       summary: Unlike a post
       tags:
       - PostLikes
-  /reply/{id}:
-    post:
+  /replies/{id}:
+    delete:
       consumes:
       - application/json
-      description: Reply a comment
+      description: Delete a reply
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "500":
@@ -955,7 +1005,51 @@ paths:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
       security:
       - Bearer: []
-      summary: Reply a comment
+      summary: Delete a reply
+      tags:
+      - Reply
+    put:
+      consumes:
+      - application/json
+      description: Update a reply
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update reply
+        in: body
+        name: reply
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.UpdateReply'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Update a reply
       tags:
       - Reply
   /signup:
