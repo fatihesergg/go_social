@@ -290,20 +290,33 @@ func (uc UserController) FollowUser(c *gin.Context) {
 		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
-	userID, err := uuid.Parse(id)
+	followUser, err := uuid.Parse(id)
 	if err != nil {
 		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
 		return
 	}
 
-	model := model.Follow{
-		UserID:   userID,
-		FollowID: c.MustGet("userID").(uuid.UUID),
+	me := c.MustGet("userID").(uuid.UUID)
+
+	followings, err := uc.Storage.FollowStore.GetFollowingByUserID(me)
+	if err != nil {
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		return
+	}
+	isFollowing := false
+	for _, follow := range followings {
+		if follow.FollowID == followUser {
+			isFollowing = true
+		}
 	}
 
-	err = uc.Storage.FollowStore.FollowUser(model.UserID, model.FollowID)
-	if err != nil {
+	if isFollowing {
+		c.JSON(400, util.ErrorResponse{Error: "You are already following this user"})
+		return
+	}
 
+	err = uc.Storage.FollowStore.FollowUser(me, followUser)
+	if err != nil {
 		c.JSON(500, util.ErrorResponse{Error: "Error following user"})
 		return
 	}
@@ -329,21 +342,37 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
-	userID, err := uuid.Parse(id)
+	unfUser, err := uuid.Parse(id)
 	if err != nil {
 		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
 		return
 	}
-	model := model.Follow{
-		UserID:   userID,
-		FollowID: c.MustGet("userID").(uuid.UUID),
+	me := c.MustGet("userID").(uuid.UUID)
+
+	followings, err := uc.Storage.FollowStore.GetFollowingByUserID(me)
+	if err != nil {
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		return
 	}
-	err = uc.Storage.FollowStore.UnFollowUser(model.UserID, model.FollowID)
+
+	isFollowing := false
+	for _, follow := range followings {
+		if follow.FollowID == unfUser {
+			isFollowing = true
+		}
+	}
+	if !isFollowing {
+		c.JSON(400, util.ErrorResponse{Error: "You are not following this user"})
+		return
+	}
+
+	err = uc.Storage.FollowStore.UnFollowUser(me, unfUser)
 	if err != nil {
 		c.JSON(500, util.ErrorResponse{Error: "Error unfollowing user"})
 		return
+	} else {
+		c.JSON(200, util.SuccessMessageResponse{Message: "Unfollowed successfully"})
 	}
-	c.JSON(200, util.SuccessMessageResponse{Message: "Unfollowed successfully"})
 }
 
 // GetUsersPosts godoc
