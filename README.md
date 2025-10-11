@@ -14,7 +14,7 @@ Go Social is a backend API for a social media application built with Go. It prov
 - **Post Management**: Full CRUD (Create, Read, Update, Delete) operations for posts.
 - **Likes**: Create and Delete operations for likes on posts and comments.
 - **Comment System**: Full CRUD operations for comments on posts.
-- **Reply Comment**: Users can reply comments.
+- **Reply Comment**: Full CRUD operations for replies on comments.
 - **Personalized Feed**: A user-specific feed that aggregates posts from the users they follow.
 
 ### Architecture & Design
