@@ -180,7 +180,7 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 		return
 	}
 	if existPost.UserID != c.MustGet("userID").(uuid.UUID) {
-		c.JSON(403, util.ErrorResponse{Error: util.UnauthorizedError})
+		c.JSON(403, util.ErrorResponse{Error: util.InvalidPermissionError})
 		return
 	}
 	post := &model.Post{
@@ -234,7 +234,7 @@ func (pc PostController) DeletePost(c *gin.Context) {
 		return
 	}
 	if post.UserID != c.MustGet("userID").(uuid.UUID) {
-		c.JSON(403, util.ErrorResponse{Error: util.UnauthorizedError})
+		c.JSON(403, util.ErrorResponse{Error: util.InvalidPermissionError})
 		return
 	}
 
