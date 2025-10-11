@@ -26,11 +26,11 @@ func NewReplyController(storage *database.Storage) *ReplyController {
 //	@Tags			Reply
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		uuid	true	"Comment ID"
+//	@Param			id	path		string	true	"Comment ID"
 //	@Success		201	{object}	util.SuccessMessageResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
-//	@Router			/reply/{id} [POST]
+//	@Router			/comments/{id}/reply [POST]
 //	@Security		Bearer
 func (rc *ReplyController) ReplyComment(c *gin.Context) {
 	id := c.Param("id")
@@ -81,4 +81,114 @@ func (rc *ReplyController) ReplyComment(c *gin.Context) {
 
 }
 
-// TODO: update reply
+// UpdateReply godoc
+//
+//		@Summary		Update a reply
+//		@Description	Update a reply
+//		@Tags			Reply
+//		@Accept			json
+//		@Produce		json
+//		@Param			id	path		string	true	"Comment ID"
+//	 @Param 			reply body dto.UpdateReply true "Update reply"
+//		@Success		200 {object}	util.SuccessMessageResponse
+//		@Failure		400	{object}	util.ErrorResponse
+//		@Failure		404	{object}	util.ErrorResponse
+//		@Failure		403	{object}	util.ErrorResponse
+//		@Failure		500	{object}	util.ErrorResponse
+//		@Router			/replies/{id} [PUT]
+//		@Security		Bearer
+func (rc *ReplyController) UpdateReply(c *gin.Context) {
+
+	id := c.Param("id")
+
+	var params dto.UpdateReply
+
+	if err := c.ShouldBindJSON(&params); err != nil {
+		util.HandleBindError(c, err)
+		return
+	}
+
+	replyID, err := uuid.Parse(id)
+	if err != nil {
+		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
+		return
+	}
+	existReply, err := rc.Storage.ReplyStore.GetReplyByID(replyID)
+	if err != nil {
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		return
+	}
+	if existReply == nil {
+		c.JSON(404, util.SuccessMessageResponse{Message: "Reply not found"})
+		return
+	}
+
+	userID := c.MustGet("userID").(uuid.UUID)
+	if existReply.UserID != userID {
+		c.JSON(403, util.ErrorResponse{Error: util.InvalidPermissionError})
+		return
+	}
+
+	existReply.Message = params.Message
+
+	err = rc.Storage.ReplyStore.UpdateReply(existReply)
+	if err != nil {
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		return
+	}
+
+	c.JSON(200, util.SuccessMessageResponse{Message: "Reply updated successfully"})
+
+}
+
+// DeleteReply godoc
+//
+//	@Summary		Delete a reply
+//	@Description	Delete a reply
+//	@Tags			Reply
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Comment ID"
+//	@Success		200 {object}	util.SuccessMessageResponse
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		404	{object}	util.ErrorResponse
+//	@Failure		403	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
+//	@Router			/replies/{id} [DELETE]
+//	@Security		Bearer
+func (rc *ReplyController) DeleteReply(c *gin.Context) {
+
+	id := c.Param("id")
+
+	replyID, err := uuid.Parse(id)
+	if err != nil {
+		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
+		return
+	}
+
+	existReply, err := rc.Storage.ReplyStore.GetReplyByID(replyID)
+	if err != nil {
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		return
+	}
+
+	if existReply == nil {
+		c.JSON(404, util.ErrorResponse{Error: "Reply not found"})
+		return
+	}
+
+	userID := c.MustGet("userID").(uuid.UUID)
+
+	if existReply.UserID != userID {
+		c.JSON(403, util.ErrorResponse{Error: util.InvalidPermissionError})
+		return
+	}
+
+	err = rc.Storage.ReplyStore.DeleteReply(existReply.ID)
+	if err != nil {
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		return
+	}
+
+	c.JSON(200, util.SuccessMessageResponse{Message: "Reply deleted successfully"})
+}

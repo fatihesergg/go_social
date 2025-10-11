@@ -127,6 +127,11 @@ func main() {
 	commentRouter.POST("/:id/like", likeController.LikeComment)
 	commentRouter.DELETE("/:id/unlike", likeController.UnlikeComment)
 
+	replyRouter := base.Group("/replies")
+	replyRouter.Use(middleware.AuthMiddleware())
+	replyRouter.PUT("/:id", replyController.UpdateReply)
+	replyRouter.DELETE("/:id", replyController.DeleteReply)
+
 	if err := app.Router.Run(":3000"); err != nil {
 		panic("Error starting the server")
 	}
