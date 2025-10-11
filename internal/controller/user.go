@@ -496,3 +496,21 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 
 	c.JSON(200, util.SuccessMessageResponse{Message: "Password updated successfully"})
 }
+
+func (uc UserController) SearchUserByUsername(c *gin.Context) {
+	username := c.Param("username")
+
+	users, err := uc.Storage.UserStore.GetUsersByUsername(username)
+	if err != nil {
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		return
+	}
+
+	if users == nil {
+		c.JSON(200, util.SuccessMessageResponse{Message: "No users found"})
+		return
+	}
+
+	c.JSON(200, util.SuccessResultResponse{Message: "Users fetched successfully", Result: users})
+
+}

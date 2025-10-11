@@ -8,6 +8,7 @@ import (
 )
 
 type BaseUserStore interface {
+	GetUsersByUsername(userName string) ([]model.User, error)
 	GetUserByID(id uuid.UUID) (*model.User, error)
 	GetUserByUsername(username string) (*model.User, error)
 	GetUserByEmail(email string) (*model.User, error)
@@ -102,4 +103,32 @@ func (s *UserStore) DeleteUser(id uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+func (s *UserStore) GetUsersByUsername(userName string) ([]model.User, error) {
+	users := []model.User{}
+	query := "SELECT id,name,last_name,username FROM users WHERE username ILIKE '%' || $1 || '%'"
+	rows, err := s.DB.Query(query, userName)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		user := model.User{}
+		err := rows.Scan(&user.ID, &user.Name, &user.LastName, &user.Username)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+	if rows.Err() != nil {
+		return nil, err
+	}
+	if len(users) == 0 {
+		return nil, nil
+	}
+	return users, err
+
 }

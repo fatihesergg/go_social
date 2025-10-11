@@ -102,6 +102,7 @@ func main() {
 	userRouter.GET("/:id/followers", userController.GetFollowerByUserID)
 	userRouter.GET("/:id/following", userController.GetFollowingByUserID)
 	userRouter.POST("/reset_password", userController.ResetPassword)
+	userRouter.GET("/search/:username", userController.SearchUserByUsername)
 
 	postRouter := base.Group("/posts")
 	postRouter.Use(middleware.AuthMiddleware())
