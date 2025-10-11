@@ -31,7 +31,7 @@ func NewFeedController(storage *database.Storage) *FeedController {
 //	@Param			limit	query		int		false	"Limit"		default(20)
 //	@Param			offset	query		int		false	"Offset"	default(0)
 //	@Param			search	query		string	false	"Search query"
-//	@Success		200		{array}		model.Post
+//	@Success		200		{array}		util.SuccessResultResponse{result=[]dto.FeedResponse}
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		401		{object}	util.ErrorResponse
 //	@Failure		404		{object}	util.ErrorResponse
@@ -46,12 +46,12 @@ func (fc FeedController) GetFeed(c *gin.Context) {
 	posts, err := fc.Storage.FeedStore.GetFeed(userID, pagination, search)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			c.JSON(404, gin.H{"error": util.PostNotFoundError})
+			c.JSON(404, util.ErrorResponse{Error: util.PostNotFoundError})
 			return
 		}
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 	response := dto.NewFeedResponse(posts)
-	c.JSON(200, response)
+	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: response})
 }

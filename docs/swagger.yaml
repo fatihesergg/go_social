@@ -1,5 +1,5 @@
 definitions:
-  github_com_fatihesergg_go_social_internal_model.Comment:
+  github_com_fatihesergg_go_social_internal_dto.AllPostResponse:
     properties:
       content:
         type: string
@@ -7,46 +7,225 @@ definitions:
         type: string
       id:
         type: string
-      image:
-        $ref: '#/definitions/sql.NullString'
-      post_id:
+      is_following:
+        type: boolean
+      is_liked:
+        type: boolean
+      total_comment:
+        type: integer
+      total_likes:
         type: integer
       updated_at:
         type: string
       user:
         $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
     type: object
-  github_com_fatihesergg_go_social_internal_model.Follow:
+  github_com_fatihesergg_go_social_internal_dto.CommentDetailResponse:
     properties:
-      follow_id:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_followed:
+        type: boolean
+      is_liked:
+        type: boolean
+      replies:
+        items:
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.ReplyResponse'
+        type: array
+      total_likes:
         type: integer
-      user_id:
+      total_reply:
         type: integer
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
     type: object
-  github_com_fatihesergg_go_social_internal_model.Post:
+  github_com_fatihesergg_go_social_internal_dto.CommentResponse:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_followed:
+        type: boolean
+      is_liked:
+        type: boolean
+      total_likes:
+        type: integer
+      total_reply:
+        type: integer
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+    type: object
+  github_com_fatihesergg_go_social_internal_dto.CreateCommentDTO:
+    properties:
+      content:
+        maxLength: 200
+        type: string
+      image:
+        type: string
+      post_id:
+        type: string
+    required:
+    - content
+    - post_id
+    type: object
+  github_com_fatihesergg_go_social_internal_dto.CreatePostDTO:
+    properties:
+      content:
+        maxLength: 500
+        type: string
+      image:
+        type: string
+    required:
+    - content
+    type: object
+  github_com_fatihesergg_go_social_internal_dto.CreateUserDTO:
+    properties:
+      avatar:
+        type: string
+      email:
+        maxLength: 100
+        type: string
+      last_name:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 50
+        type: string
+      password:
+        maxLength: 20
+        type: string
+      username:
+        maxLength: 50
+        type: string
+    required:
+    - email
+    - last_name
+    - name
+    - password
+    - username
+    type: object
+  github_com_fatihesergg_go_social_internal_dto.FeedResponse:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_following:
+        type: boolean
+      is_liked:
+        type: boolean
+      total_comment:
+        type: integer
+      total_likes:
+        type: integer
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+    type: object
+  github_com_fatihesergg_go_social_internal_dto.LoginUserDTO:
+    properties:
+      email:
+        maxLength: 100
+        type: string
+      password:
+        maxLength: 20
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_fatihesergg_go_social_internal_dto.PostDetailResponse:
     properties:
       comments:
         items:
-          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Comment'
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.CommentResponse'
         type: array
       content:
         type: string
       created_at:
         type: string
       id:
+        type: string
+      is_following:
+        type: boolean
+      is_liked:
+        type: boolean
+      total_comment:
         type: integer
-      image:
-        $ref: '#/definitions/sql.NullString'
+      total_likes:
+        type: integer
       updated_at:
         type: string
       user:
         $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
     type: object
+  github_com_fatihesergg_go_social_internal_dto.ReplyResponse:
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+    type: object
+  github_com_fatihesergg_go_social_internal_dto.ResetUserPasswordDTO:
+    properties:
+      new_password:
+        maxLength: 20
+        type: string
+      old_password:
+        maxLength: 20
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  github_com_fatihesergg_go_social_internal_dto.UpdateCommentDTO:
+    properties:
+      content:
+        maxLength: 200
+        type: string
+      image:
+        type: string
+    required:
+    - content
+    type: object
+  github_com_fatihesergg_go_social_internal_dto.UpdatePostDTO:
+    properties:
+      content:
+        maxLength: 500
+        type: string
+      image:
+        type: string
+    required:
+    - content
+    type: object
+  github_com_fatihesergg_go_social_internal_model.Follow:
+    properties:
+      follow_id:
+        type: string
+      user_id:
+        type: string
+    type: object
   github_com_fatihesergg_go_social_internal_model.User:
     properties:
       avatar:
         type: string
-      email:
+      id:
         type: string
       last_name:
         type: string
@@ -57,22 +236,18 @@ definitions:
     type: object
   github_com_fatihesergg_go_social_internal_util.ErrorResponse:
     properties:
-      error:
+      error: {}
+    type: object
+  github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse:
+    properties:
+      message:
         type: string
     type: object
-  github_com_fatihesergg_go_social_internal_util.SuccessResponse:
+  github_com_fatihesergg_go_social_internal_util.SuccessResultResponse:
     properties:
       message:
         type: string
       result: {}
-    type: object
-  sql.NullString:
-    properties:
-      string:
-        type: string
-      valid:
-        description: Valid is true if String is not NULL
-        type: boolean
     type: object
 info:
   contact: {}
@@ -88,14 +263,14 @@ paths:
         name: comment
         required: true
         schema:
-          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Comment'
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.CreateCommentDTO'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -134,7 +309,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -171,14 +346,14 @@ paths:
         name: comment
         required: true
         schema:
-          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Comment'
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.UpdateCommentDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -200,6 +375,84 @@ paths:
       summary: Update a comment
       tags:
       - Comments
+  /comments/{id}/like:
+    post:
+      consumes:
+      - application/json
+      description: Like a Comment with Comment ID
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Like a Comment
+      tags:
+      - CommentLikes
+  /comments/{id}/unlike:
+    delete:
+      consumes:
+      - application/json
+      description: Unlike a comment with comment ID
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Unlike a comment
+      tags:
+      - CommentLikes
   /comments/post/{post_id}:
     get:
       consumes:
@@ -217,7 +470,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.CommentDetailResponse'
+                  type: array
+              type: object
         "400":
           description: Bad Request
           schema:
@@ -266,7 +526,14 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+              allOf:
+              - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+              - properties:
+                  result:
+                    items:
+                      $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.FeedResponse'
+                    type: array
+                type: object
             type: array
         "400":
           description: Bad Request
@@ -300,28 +567,21 @@ paths:
         name: credentials
         required: true
         schema:
-          properties:
-            email:
-              type: string
-            password:
-              type: string
-          type: object
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.LoginUserDTO'
       produces:
       - application/json
       responses:
         "200":
-          description: Login successful
+          description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
             - properties:
-                message:
-                  type: string
                 result:
                   type: string
               type: object
         "400":
-          description: 'Bad Request: Invalid input'
+          description: Bad Request
           schema:
             allOf:
             - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
@@ -330,7 +590,7 @@ paths:
                   type: string
               type: object
         "401":
-          description: 'Unauthorized: Invalid credentials'
+          description: Unauthorized
           schema:
             allOf:
             - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
@@ -339,7 +599,7 @@ paths:
                   type: string
               type: object
         "404":
-          description: 'Not Found: User not found'
+          description: Not Found
           schema:
             allOf:
             - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
@@ -370,7 +630,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+              type: object
         "401":
           description: 'Unauthorized: Invalid or missing token'
           schema:
@@ -415,7 +680,14 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+              allOf:
+              - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+              - properties:
+                  result:
+                    items:
+                      $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.AllPostResponse'
+                    type: array
+                type: object
             type: array
         "400":
           description: Bad Request
@@ -440,14 +712,14 @@ paths:
         name: post
         required: true
         schema:
-          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.CreatePostDTO'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -478,7 +750,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -516,7 +788,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.PostDetailResponse'
+              type: object
         "400":
           description: Bad Request
           schema:
@@ -549,14 +826,14 @@ paths:
         name: post
         required: true
         schema:
-          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.UpdatePostDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -578,6 +855,109 @@ paths:
       summary: Update an existing post
       tags:
       - Posts
+  /posts/{id}/like:
+    post:
+      consumes:
+      - application/json
+      description: Like a post with post ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Like a post
+      tags:
+      - PostLikes
+  /posts/{id}/unlike:
+    delete:
+      consumes:
+      - application/json
+      description: Unlike a post with post ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Unlike a post
+      tags:
+      - PostLikes
+  /reply/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Reply a comment
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Reply a comment
+      tags:
+      - Reply
   /signup:
     post:
       consumes:
@@ -589,7 +969,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.CreateUserDTO'
       produces:
       - application/json
       responses:
@@ -597,31 +977,19 @@ paths:
           description: User registered successfully
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
             - properties:
-                message:
-                  type: string
                 result:
                   $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
               type: object
         "400":
-          description: 'Bad Request: Invalid input or email/username already exists'
+          description: Bad Request
           schema:
-            allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-            - properties:
-                error:
-                  type: string
-              type: object
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-            - properties:
-                error:
-                  type: string
-              type: object
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
       summary: User signup
       tags:
       - Users
@@ -640,18 +1008,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: Followed successfully
+          description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
-            - properties:
-                message:
-                  type: string
-                result:
-                  $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Follow'
-              type: object
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
         "400":
-          description: 'Bad Request: ID is required'
+          description: Bad Request
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "500":
@@ -680,15 +1041,20 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
-            type: array
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Follow'
+                  type: array
+              type: object
         "400":
-          description: 'Bad Request: ID is required'
+          description: Bad Request
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "404":
-          description: 'Not Found: No followers found'
+          description: Not Found
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "500":
@@ -717,15 +1083,20 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
-            type: array
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Follow'
+                  type: array
+              type: object
         "400":
-          description: 'Bad Request: ID is required'
+          description: Bad Request
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "404":
-          description: 'Not Found: No followings found'
+          description: Not Found
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "500":
@@ -769,19 +1140,24 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Post'
-            type: array
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.AllPostResponse'
+                  type: array
+              type: object
         "400":
-          description: 'Bad Request: Invalid user ID'
+          description: Bad Request
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "403":
-          description: 'Forbidden: Not following the user'
+          description: Forbidden
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "404":
-          description: 'Not Found: User not found or no posts found'
+          description: Not Found
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "500":
@@ -808,18 +1184,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: Unfollowed successfully
+          description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
-            - properties:
-                message:
-                  type: string
-                result:
-                  $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Follow'
-              type: object
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
         "400":
-          description: 'Bad Request: ID is required'
+          description: Bad Request
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "500":
@@ -843,30 +1212,20 @@ paths:
         name: passwords
         required: true
         schema:
-          properties:
-            new_password:
-              type: string
-            old_password:
-              type: string
-          type: object
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.ResetUserPasswordDTO'
       produces:
       - application/json
       responses:
         "200":
-          description: Password updated successfully
+          description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
-            - properties:
-                message:
-                  type: string
-              type: object
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
         "400":
-          description: 'Bad Request: Invalid input or incorrect old password'
+          description: Bad Request
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "404":
-          description: 'Not Found: User not found'
+          description: Not Found
           schema:
             $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
         "500":

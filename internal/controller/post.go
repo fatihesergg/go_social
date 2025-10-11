@@ -31,7 +31,7 @@ func NewPostController(storage *database.Storage) *PostController {
 //	@Param			limit	query		int		false	"Limit"		default(20)
 //	@Param			offset	query		int		false	"Offset"	default(0)
 //	@Param			search	query		string	false	"Search query"
-//	@Success		200		{array}		model.Post
+//	@Success		200		{array}		util.SuccessResultResponse{result=[]dto.AllPostResponse}
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		500		{object}	util.ErrorResponse
 //	@Router			/posts [get]
@@ -42,16 +42,16 @@ func (pc PostController) GetPosts(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	posts, err := pc.Storage.PostStore.GetPosts(pagination, search, userID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 	if posts == nil {
-		c.JSON(404, gin.H{"error": util.NoPostsFoundError})
+		c.JSON(404, util.ErrorResponse{Error: util.NoPostsFoundError})
 		return
 	}
 	result := dto.NewAllPostResponse(posts)
 
-	c.JSON(200, gin.H{"result": result})
+	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: result})
 }
 
 // GetPostByID godoc
@@ -62,7 +62,7 @@ func (pc PostController) GetPosts(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"Post ID"
-//	@Success		200	{object}	model.Post
+//	@Success		200	{object}	util.SuccessResultResponse{result=dto.PostDetailResponse}
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
@@ -71,14 +71,14 @@ func (pc PostController) GetPosts(c *gin.Context) {
 func (pc PostController) GetPostByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, gin.H{"error": util.IDRequiredError})
+		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
 		return
 	}
 
 	postID, err := uuid.Parse(id)
 
 	if err != nil {
-		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
+		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
 		return
 	}
 
@@ -87,16 +87,16 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 	post, err := pc.Storage.PostStore.GetPostDetailsByID(postID, userID)
 	if err != nil {
 		fmt.Println(err)
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 	if post == nil {
-		c.JSON(404, gin.H{"error": util.PostNotFoundError})
+		c.JSON(404, util.ErrorResponse{Error: util.PostNotFoundError})
 		return
 	}
 	result := dto.NewPostDetailResponse(post)
 
-	c.JSON(200, gin.H{"result": result})
+	c.JSON(200, util.SuccessResultResponse{Message: "Post fetched successfully", Result: result})
 }
 
 // CreatePost godoc
@@ -106,8 +106,8 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 //	@Tags			Posts
 //	@Accept			json
 //	@Produce		json
-//	@Param			post	body		model.Post	true	"Post data"
-//	@Success		201		{object}	model.Post
+//	@Param			post	body		dto.CreatePostDTO	true	"Post data"
+//	@Success		201		{object}	util.SuccessMessageResponse
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		500		{object}	util.ErrorResponse
 //	@Router			/posts [post]
@@ -129,11 +129,11 @@ func (pc PostController) CreatePost(c *gin.Context) {
 	err := pc.Storage.PostStore.CreatePost(post)
 	if err != nil {
 
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 
-	c.JSON(201, gin.H{"message": "Post created succesfully"})
+	c.JSON(201, util.SuccessMessageResponse{Message: "Post created succesfully"})
 
 }
 
@@ -145,8 +145,8 @@ func (pc PostController) CreatePost(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		int			true	"Post ID"
-//	@Param			post	body		model.Post	true	"Updated post data"
-//	@Success		200		{object}	model.Post
+//	@Param			post	body		dto.UpdatePostDTO	true	"Updated post data"
+//	@Success		200		{object}	util.SuccessMessageResponse
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		403		{object}	util.ErrorResponse
 //	@Failure		404		{object}	util.ErrorResponse
@@ -161,26 +161,26 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 	}
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, gin.H{"error": util.IDRequiredError})
+		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
 		return
 	}
 	postID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
+		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
 		return
 	}
 
 	existPost, err := pc.Storage.PostStore.GetPostByID(postID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 	if existPost == nil {
-		c.JSON(404, gin.H{"error": util.PostNotFoundError})
+		c.JSON(404, util.ErrorResponse{Error: util.PostNotFoundError})
 		return
 	}
 	if existPost.UserID != c.MustGet("userID").(uuid.UUID) {
-		c.JSON(403, gin.H{"error": util.UnauthorizedError})
+		c.JSON(403, util.ErrorResponse{Error: util.UnauthorizedError})
 		return
 	}
 	post := &model.Post{
@@ -190,10 +190,10 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 
 	err = pc.Storage.PostStore.UpdatePost(post)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error updating post"})
+		c.JSON(500, util.ErrorResponse{Error: "Error updating post"})
 		return
 	}
-	c.JSON(200, gin.H{"message": "Post updated succesfully"})
+	c.JSON(200, util.SuccessMessageResponse{Message: "Post updated succesfully"})
 
 }
 
@@ -205,7 +205,7 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"Post ID"
-//	@Success		200	{object}	util.SuccessResponse
+//	@Success		200	{object}	util.SuccessMessageResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		403	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -216,32 +216,32 @@ func (pc PostController) DeletePost(c *gin.Context) {
 
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, gin.H{"error": util.IDRequiredError})
+		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
 		return
 	}
 	postID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
+		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
 		return
 	}
 	post, err := pc.Storage.PostStore.GetPostByID(postID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 	if post == nil {
-		c.JSON(404, gin.H{"error": util.PostNotFoundError})
+		c.JSON(404, util.ErrorResponse{Error: util.PostNotFoundError})
 		return
 	}
 	if post.UserID != c.MustGet("userID").(uuid.UUID) {
-		c.JSON(403, gin.H{"error": util.UnauthorizedError})
+		c.JSON(403, util.ErrorResponse{Error: util.UnauthorizedError})
 		return
 	}
 
 	err = pc.Storage.PostStore.DeletePost(postID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error deleting post"})
+		c.JSON(500, util.ErrorResponse{Error: "Error deleting post"})
 		return
 	}
-	c.JSON(200, gin.H{"message": "Post deleted successfully"})
+	c.JSON(200, util.SuccessMessageResponse{Message: "Post deleted successfully"})
 }

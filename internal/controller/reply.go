@@ -19,17 +19,30 @@ func NewReplyController(storage *database.Storage) *ReplyController {
 	}
 }
 
+// ReplyCommnt godoc
+//
+//	@Summary		Reply a comment
+//	@Description	Reply a comment
+//	@Tags			Reply
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		uuid	true	"Comment ID"
+//	@Success		201	{object}	util.SuccessMessageResponse
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
+//	@Router			/reply/{id} [POST]
+//	@Security		Bearer
 func (rc *ReplyController) ReplyComment(c *gin.Context) {
 	id := c.Param("id")
 
 	if id == "" {
-		c.JSON(400, gin.H{"error": util.IDRequiredError})
+		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
 		return
 	}
 
 	commentID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(400, gin.H{"error": util.InvalidIDFormatError})
+		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
 		return
 	}
 
@@ -46,7 +59,7 @@ func (rc *ReplyController) ReplyComment(c *gin.Context) {
 	}
 
 	if comment == nil {
-		c.JSON(400, gin.H{"error": util.CommentNotFoundError})
+		c.JSON(400, util.ErrorResponse{Error: util.CommentNotFoundError})
 		return
 	}
 
@@ -64,7 +77,7 @@ func (rc *ReplyController) ReplyComment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, gin.H{"message": "Reply created successfully"})
+	c.JSON(201, util.SuccessMessageResponse{Message: "Reply created successfully"})
 
 }
 

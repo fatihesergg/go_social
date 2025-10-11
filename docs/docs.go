@@ -40,7 +40,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Comment"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.CreateCommentDTO"
                         }
                     }
                 ],
@@ -48,7 +48,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                         }
                     },
                     "400": {
@@ -109,7 +109,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.CommentDetailResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -171,7 +186,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Comment"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.UpdateCommentDTO"
                         }
                     }
                 ],
@@ -179,7 +194,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                         }
                     },
                     "400": {
@@ -238,7 +253,129 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/{id}/like": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Like a Comment with Comment ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CommentLikes"
+                ],
+                "summary": "Like a Comment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Comment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/{id}/unlike": {
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Unlike a comment with comment ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CommentLikes"
+                ],
+                "summary": "Unlike a comment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Comment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                         }
                     },
                     "400": {
@@ -314,7 +451,22 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Post"
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "result": {
+                                                "type": "array",
+                                                "items": {
+                                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.FeedResponse"
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
                             }
                         }
                     },
@@ -365,32 +517,21 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "email": {
-                                    "type": "string"
-                                },
-                                "password": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.LoginUserDTO"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Login successful",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "message": {
-                                            "type": "string"
-                                        },
                                         "result": {
                                             "type": "string"
                                         }
@@ -400,7 +541,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Invalid input",
+                        "description": "Bad Request",
                         "schema": {
                             "allOf": [
                                 {
@@ -418,7 +559,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Unauthorized: Invalid credentials",
+                        "description": "Unauthorized",
                         "schema": {
                             "allOf": [
                                 {
@@ -436,7 +577,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Not Found: User not found",
+                        "description": "Not Found",
                         "schema": {
                             "allOf": [
                                 {
@@ -496,7 +637,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
@@ -566,7 +719,22 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Post"
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "result": {
+                                                "type": "array",
+                                                "items": {
+                                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.AllPostResponse"
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
                             }
                         }
                     },
@@ -608,7 +776,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Post"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.CreatePostDTO"
                         }
                     }
                 ],
@@ -616,7 +784,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Post"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                         }
                     },
                     "400": {
@@ -665,7 +833,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Post"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.PostDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -719,7 +899,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Post"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.UpdatePostDTO"
                         }
                     }
                 ],
@@ -727,7 +907,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Post"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                         }
                     },
                     "400": {
@@ -786,7 +966,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                         }
                     },
                     "400": {
@@ -803,6 +983,168 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/posts/{id}/like": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Like a post with post ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostLikes"
+                ],
+                "summary": "Like a post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Post ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/posts/{id}/unlike": {
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Unlike a post with post ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostLikes"
+                ],
+                "summary": "Unlike a post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Post ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/reply/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Reply a comment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reply"
+                ],
+                "summary": "Reply a comment",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
@@ -836,7 +1178,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.CreateUserDTO"
                         }
                     }
                 ],
@@ -846,14 +1188,11 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "message": {
-                                            "type": "string"
-                                        },
                                         "result": {
                                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
                                         }
@@ -863,39 +1202,15 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Invalid input or email/username already exists",
+                        "description": "Bad Request",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "error": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "error": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
                     }
                 }
@@ -926,45 +1241,25 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "new_password": {
-                                    "type": "string"
-                                },
-                                "old_password": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.ResetUserPasswordDTO"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Password updated successfully",
+                        "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Invalid input or incorrect old password",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Not Found: User not found",
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
@@ -1007,28 +1302,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Followed successfully",
+                        "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "result": {
-                                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Follow"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request: ID is required",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
@@ -1073,20 +1353,32 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Follow"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Bad Request: ID is required",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Not Found: No followers found",
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
@@ -1131,20 +1423,32 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Follow"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Bad Request: ID is required",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Not Found: No followings found",
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
@@ -1209,26 +1513,38 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Post"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.AllPostResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Invalid user ID",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
                     },
                     "403": {
-                        "description": "Forbidden: Not following the user",
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Not Found: User not found or no posts found",
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
@@ -1271,28 +1587,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Unfollowed successfully",
+                        "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "result": {
-                                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Follow"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request: ID is required",
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
@@ -1308,7 +1609,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_fatihesergg_go_social_internal_model.Comment": {
+        "github_com_fatihesergg_go_social_internal_dto.AllPostResponse": {
             "type": "object",
             "properties": {
                 "content": {
@@ -1320,10 +1621,16 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "image": {
-                    "$ref": "#/definitions/sql.NullString"
+                "is_following": {
+                    "type": "boolean"
                 },
-                "post_id": {
+                "is_liked": {
+                    "type": "boolean"
+                },
+                "total_comment": {
+                    "type": "integer"
+                },
+                "total_likes": {
                     "type": "integer"
                 },
                 "updated_at": {
@@ -1334,24 +1641,201 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_fatihesergg_go_social_internal_model.Follow": {
+        "github_com_fatihesergg_go_social_internal_dto.CommentDetailResponse": {
             "type": "object",
             "properties": {
-                "follow_id": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_followed": {
+                    "type": "boolean"
+                },
+                "is_liked": {
+                    "type": "boolean"
+                },
+                "replies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.ReplyResponse"
+                    }
+                },
+                "total_likes": {
                     "type": "integer"
                 },
-                "user_id": {
+                "total_reply": {
                     "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
                 }
             }
         },
-        "github_com_fatihesergg_go_social_internal_model.Post": {
+        "github_com_fatihesergg_go_social_internal_dto.CommentResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_followed": {
+                    "type": "boolean"
+                },
+                "is_liked": {
+                    "type": "boolean"
+                },
+                "total_likes": {
+                    "type": "integer"
+                },
+                "total_reply": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
+                }
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_dto.CreateCommentDTO": {
+            "type": "object",
+            "required": [
+                "content",
+                "post_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "image": {
+                    "type": "string"
+                },
+                "post_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_dto.CreatePostDTO": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "image": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_dto.CreateUserDTO": {
+            "type": "object",
+            "required": [
+                "email",
+                "last_name",
+                "name",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "last_name": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 50
+                }
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_dto.FeedResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_following": {
+                    "type": "boolean"
+                },
+                "is_liked": {
+                    "type": "boolean"
+                },
+                "total_comment": {
+                    "type": "integer"
+                },
+                "total_likes": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
+                }
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_dto.LoginUserDTO": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_dto.PostDetailResponse": {
             "type": "object",
             "properties": {
                 "comments": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.Comment"
+                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.CommentResponse"
                     }
                 },
                 "content": {
@@ -1361,10 +1845,19 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "is_following": {
+                    "type": "boolean"
+                },
+                "is_liked": {
+                    "type": "boolean"
+                },
+                "total_comment": {
                     "type": "integer"
                 },
-                "image": {
-                    "$ref": "#/definitions/sql.NullString"
+                "total_likes": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"
@@ -1374,13 +1867,85 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_fatihesergg_go_social_internal_dto.ReplyResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
+                }
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_dto.ResetUserPasswordDTO": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "old_password": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_dto.UpdateCommentDTO": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "image": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_dto.UpdatePostDTO": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "image": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_model.Follow": {
+            "type": "object",
+            "properties": {
+                "follow_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_fatihesergg_go_social_internal_model.User": {
             "type": "object",
             "properties": {
                 "avatar": {
                     "type": "string"
                 },
-                "email": {
+                "id": {
                     "type": "string"
                 },
                 "last_name": {
@@ -1397,30 +1962,24 @@ const docTemplate = `{
         "github_com_fatihesergg_go_social_internal_util.ErrorResponse": {
             "type": "object",
             "properties": {
-                "error": {
+                "error": {}
+            }
+        },
+        "github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
                     "type": "string"
                 }
             }
         },
-        "github_com_fatihesergg_go_social_internal_util.SuccessResponse": {
+        "github_com_fatihesergg_go_social_internal_util.SuccessResultResponse": {
             "type": "object",
             "properties": {
                 "message": {
                     "type": "string"
                 },
                 "result": {}
-            }
-        },
-        "sql.NullString": {
-            "type": "object",
-            "properties": {
-                "string": {
-                    "type": "string"
-                },
-                "valid": {
-                    "description": "Valid is true if String is not NULL",
-                    "type": "boolean"
-                }
             }
         }
     },

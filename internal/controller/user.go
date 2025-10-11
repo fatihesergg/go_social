@@ -23,23 +23,23 @@ func NewUserController(storage *database.Storage) *UserController {
 func (uc UserController) GetUserByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, gin.H{"error": "ID is required"})
+		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
 	userID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
 		return
 	}
 
 	user, err := uc.Storage.UserStore.GetUserByID(userID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 
 	if user == nil {
-		c.JSON(404, gin.H{"error": util.UserNotFoundError})
+		c.JSON(404, util.ErrorResponse{Error: util.UserNotFoundError})
 		return
 	}
 
@@ -53,10 +53,10 @@ func (uc UserController) GetUserByID(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			user	body		model.User												true	"User signup data"
-//	@Success		201		{object}	util.SuccessResponse{result=model.User,message=string}	"User registered successfully"
-//	@Failure		400		{object}	util.ErrorResponse{error=string}						"Bad Request: Invalid input or email/username already exists"
-//	@Failure		500		{object}	util.ErrorResponse{error=string}						"Internal Server Error"
+//	@Param			user	body		dto.CreateUserDTO												true	"User signup data"
+//	@Success		201		{object}	util.SuccessMessageResponse{result=model.User}	"User registered successfully"
+//	@Failure		400		{object}	util.ErrorResponse{}
+//	@Failure		500		{object}	util.ErrorResponse{}
 //	@Router			/signup [post]
 func (uc UserController) Signup(c *gin.Context) {
 	var params dto.CreateUserDTO
@@ -81,35 +81,35 @@ func (uc UserController) Signup(c *gin.Context) {
 		return
 	}
 	if existEmail != nil {
-		c.JSON(400, gin.H{"error": "Email already exists"})
+		c.JSON(400, util.ErrorResponse{Error: "Email already exists"})
 
 		return
 	}
 	existUsername, err := uc.Storage.UserStore.GetUserByUsername(user.Username)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 
 		return
 	}
 	if existUsername != nil {
-		c.JSON(400, gin.H{"error": "Username already exists"})
+		c.JSON(400, util.ErrorResponse{Error: "Username already exists"})
 		return
 	}
 
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Something went wrong"})
+		c.JSON(500, util.ErrorResponse{Error: "Something went wrong"})
 		return
 	}
 	user.Password = string(hashedPass)
 
 	err = uc.Storage.UserStore.CreateUser(user)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error creating user"})
+		c.JSON(500, util.ErrorResponse{Error: "Error creating user"})
 		return
 	}
 
-	c.JSON(201, gin.H{"result": user, "message": "User registered successfully"})
+	c.JSON(201, util.SuccessResultResponse{Message: "User registered successfully", Result: user})
 }
 
 // Login godoc
@@ -119,12 +119,12 @@ func (uc UserController) Signup(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			credentials	body		object{email=string,password=string}				true	"User login credentials"
-//	@Success		200			{object}	util.SuccessResponse{result=string,message=string}	"Login successful"
-//	@Failure		400			{object}	util.ErrorResponse{error=string}					"Bad Request: Invalid input"
-//	@Failure		401			{object}	util.ErrorResponse{error=string}					"Unauthorized: Invalid credentials"
-//	@Failure		404			{object}	util.ErrorResponse{error=string}					"Not Found: User not found"
-//	@Failure		500			{object}	util.ErrorResponse{error=string}					"Internal Server Error"
+//	@Param			credentials	body		dto.LoginUserDTO				true	"User login credentials"
+//	@Success		200			{object}	util.SuccessMessageResponse{result=string}
+//	@Failure		400			{object}	util.ErrorResponse{error=string}
+//	@Failure		401			{object}	util.ErrorResponse{error=string}
+//	@Failure		404			{object}	util.ErrorResponse{error=string}
+//	@Failure		500			{object}	util.ErrorResponse{error=string}
 //	@Router			/login [post]
 func (uc UserController) Login(c *gin.Context) {
 	var params dto.LoginUserDTO
@@ -136,27 +136,27 @@ func (uc UserController) Login(c *gin.Context) {
 
 	user, err := uc.Storage.UserStore.GetUserByEmail(params.Email)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 	if user == nil {
-		c.JSON(404, gin.H{"error": util.UserNotFoundError})
+		c.JSON(404, util.ErrorResponse{Error: util.UserNotFoundError})
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.Password))
 	if err != nil {
-		c.JSON(401, gin.H{"error": "Invalid credentials"})
+		c.JSON(401, util.ErrorResponse{Error: "Invalid credentials"})
 		return
 	}
 
 	token, err := util.CreateJsonWebToken(user.ID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 
-	c.JSON(200, gin.H{"result": token, "message": "Login successful"})
+	c.JSON(200, util.SuccessResultResponse{Message: "Login successful", Result: token})
 }
 
 // GetMe godoc
@@ -166,7 +166,7 @@ func (uc UserController) Login(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	model.User
+//	@Success		200	{object}	util.SuccessResultResponse{result=model.User}
 //	@Failure		401	{object}	util.ErrorResponse	"Unauthorized: Invalid or missing token"
 //	@Failure		404	{object}	util.ErrorResponse	"Not Found: User not found"
 //	@Failure		500	{object}	util.ErrorResponse	"Internal Server Error"
@@ -177,16 +177,16 @@ func (uc UserController) GetMe(c *gin.Context) {
 	user, err := uc.Storage.UserStore.GetUserByID(id)
 	if err != nil {
 
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 
 	if user == nil {
-		c.JSON(404, gin.H{"error": util.UserNotFoundError})
+		c.JSON(404, util.ErrorResponse{Error: util.UserNotFoundError})
 		return
 	}
 
-	c.JSON(200, gin.H{"result": user})
+	c.JSON(200, util.SuccessResultResponse{Message: "User fetched successfully", Result: user})
 }
 
 // GetFollowerByUserID godoc
@@ -197,36 +197,36 @@ func (uc UserController) GetMe(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"User ID"
-//	@Success		200	{array}		model.User
-//	@Failure		400	{object}	util.ErrorResponse	"Bad Request: ID is required"
-//	@Failure		404	{object}	util.ErrorResponse	"Not Found: No followers found"
-//	@Failure		500	{object}	util.ErrorResponse	"Internal Server Error"
+//	@Success		200	{object}		util.SuccessResultResponse{result=[]model.Follow}
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		404	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router			/users/{id}/followers [get]
 func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, gin.H{"error": "ID is required"})
+		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
 	userID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
 		return
 	}
 
 	followers, err := uc.Storage.FollowStore.GetFollowerByUserID(userID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 
 	if len(followers) == 0 {
-		c.JSON(404, gin.H{"error": "No followers found"})
+		c.JSON(404, util.ErrorResponse{Error: "No followers found"})
 		return
 	}
 
-	c.JSON(200, gin.H{"result": followers})
+	c.JSON(200, util.SuccessResultResponse{Message: "Followers fetched successfully", Result: followers})
 }
 
 // GetFollowingByUserID godoc
@@ -237,38 +237,38 @@ func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"User ID"
-//	@Success		200	{array}		model.User
-//	@Failure		400	{object}	util.ErrorResponse	"Bad Request: ID is required"
-//	@Failure		404	{object}	util.ErrorResponse	"Not Found: No followings found"
-//	@Failure		500	{object}	util.ErrorResponse	"Internal Server Error"
+//	@Success		200	{object}		util.SuccessResultResponse{result=[]model.Follow}
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		404	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router			/users/{id}/following [get]
 func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, gin.H{"error": "ID is required"})
+		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
 
 	userID, err := uuid.Parse(id)
 
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
 		return
 	}
 
 	followings, err := uc.Storage.FollowStore.GetFollowingByUserID(userID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 
 	if len(followings) == 0 {
-		c.JSON(404, gin.H{"error": "No followings found"})
+		c.JSON(404, util.ErrorResponse{Error: "No followings found"})
 		return
 	}
 
-	c.JSON(200, gin.H{"result": followings})
+	c.JSON(200, util.SuccessResultResponse{Message: "User following fetched successfully", Result: followings})
 }
 
 // FollowUser godoc
@@ -279,20 +279,20 @@ func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int															true	"User ID to follow"
-//	@Success		200	{object}	util.SuccessResponse{result=model.Follow,message=string}	"Followed successfully"
-//	@Failure		400	{object}	util.ErrorResponse											"Bad Request: ID is required"
-//	@Failure		500	{object}	util.ErrorResponse											"Internal Server Error"
+//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router			/users/{id}/follow [post]
 func (uc UserController) FollowUser(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, gin.H{"error": "ID is required"})
+		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
 	userID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
 		return
 	}
 
@@ -304,10 +304,10 @@ func (uc UserController) FollowUser(c *gin.Context) {
 	err = uc.Storage.FollowStore.FollowUser(model.UserID, model.FollowID)
 	if err != nil {
 
-		c.JSON(500, gin.H{"error": "Error following user"})
+		c.JSON(500, util.ErrorResponse{Error: "Error following user"})
 		return
 	}
-	c.JSON(200, gin.H{"result": model, "message": "Followed successfully"})
+	c.JSON(200, util.SuccessMessageResponse{Message: "Followed successfully"})
 }
 
 // UnfollowUser godoc
@@ -318,20 +318,20 @@ func (uc UserController) FollowUser(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int															true	"User ID to unfollow"
-//	@Success		200	{object}	util.SuccessResponse{result=model.Follow,message=string}	"Unfollowed successfully"
-//	@Failure		400	{object}	util.ErrorResponse											"Bad Request: ID is required"
-//	@Failure		500	{object}	util.ErrorResponse											"Internal Server Error"
+//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router			/users/{id}/unfollow [post]
 func (uc UserController) UnfollowUser(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, gin.H{"error": "ID is required"})
+		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
 	userID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
 		return
 	}
 	model := model.Follow{
@@ -340,10 +340,10 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 	}
 	err = uc.Storage.FollowStore.UnFollowUser(model.UserID, model.FollowID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error unfollowing user"})
+		c.JSON(500, util.ErrorResponse{Error: "Error unfollowing user"})
 		return
 	}
-	c.JSON(200, gin.H{"result": model, "message": "Unfollowed successfully"})
+	c.JSON(200, util.SuccessMessageResponse{Message: "Unfollowed successfully"})
 }
 
 // GetUsersPosts godoc
@@ -357,11 +357,11 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 //	@Param			limit	query		int		false	"Limit"		default(10)
 //	@Param			offset	query		int		false	"Offset"	default(0)
 //	@Param			search	query		string	false	"Search query"
-//	@Success		200		{array}		model.Post
-//	@Failure		400		{object}	util.ErrorResponse	"Bad Request: Invalid user ID"
-//	@Failure		403		{object}	util.ErrorResponse	"Forbidden: Not following the user"
-//	@Failure		404		{object}	util.ErrorResponse	"Not Found: User not found or no posts found"
-//	@Failure		500		{object}	util.ErrorResponse	"Internal Server Error"
+//	@Success		200		{object}		util.SuccessResultResponse{result=[]dto.AllPostResponse}
+//	@Failure		400		{object}	util.ErrorResponse
+//	@Failure		403		{object}	util.ErrorResponse
+//	@Failure		404		{object}	util.ErrorResponse
+//	@Failure		500		{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router			/users/{id}/posts [get]
 func (uc UserController) GetUsersPosts(c *gin.Context) {
@@ -370,48 +370,49 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 	userID, err := uuid.Parse(id)
 
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
 		return
 	}
 
 	user, err := uc.Storage.UserStore.GetUserByID(userID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 
 	if user == nil {
-		c.JSON(404, gin.H{"error": util.UserNotFoundError})
+		c.JSON(404, util.ErrorResponse{Error: util.UserNotFoundError})
 		return
 	}
 
 	followers, err := uc.Storage.FollowStore.GetFollowerByUserID(user.ID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 	pagination := database.NewPagination(c)
 	search := database.NewSearch(c)
 	for i := range followers {
-		//TODO:  Check if user owner the post.
+		//TODO:  Check if user owner the
 		followerID := followers[i].ID
 		if followerID == userID {
 			posts, err := uc.Storage.PostStore.GetPostsByUserID(user.ID, pagination, search)
 			if err != nil {
-				c.JSON(500, gin.H{"error": util.InternalServerError})
+				c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 				return
 			}
 			if posts == nil {
-				c.JSON(404, gin.H{"error": util.NoPostsFoundError})
+				c.JSON(404, util.ErrorResponse{Error: util.NoPostsFoundError})
 				return
 			}
+			result := dto.NewAllPostResponse(posts)
 
-			c.JSON(200, gin.H{"result": posts})
+			c.JSON(200, util.SuccessResultResponse{Message: "User posts fetched successfully", Result: result})
 			return
 		}
 	}
 
-	c.JSON(403, gin.H{"error": util.NotFollowingError})
+	c.JSON(403, util.ErrorResponse{Error: util.NotFollowingError})
 }
 
 // ResetPassword godoc
@@ -421,11 +422,11 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			passwords	body		object{old_password=string,new_password=string}	true	"Old and new passwords"
-//	@Success		200			{object}	util.SuccessResponse{message=string}			"Password updated successfully"
-//	@Failure		400			{object}	util.ErrorResponse								"Bad Request: Invalid input or incorrect old password"
-//	@Failure		404			{object}	util.ErrorResponse								"Not Found: User not found"
-//	@Failure		500			{object}	util.ErrorResponse								"Internal Server Error"
+//	@Param			passwords	body		dto.ResetUserPasswordDTO	true	"Old and new passwords"
+//	@Success		200			{object}	util.SuccessMessageResponse
+//	@Failure		400			{object}	util.ErrorResponse
+//	@Failure		404			{object}	util.ErrorResponse
+//	@Failure		500			{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router			/users/reset_password [post]
 func (uc UserController) ResetPassword(c *gin.Context) {
@@ -440,29 +441,29 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 
 	user, err := uc.Storage.UserStore.GetUserByID(userID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": util.InternalServerError})
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 	if user == nil {
-		c.JSON(404, gin.H{"error": util.UserNotFoundError})
+		c.JSON(404, util.ErrorResponse{Error: util.UserNotFoundError})
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.OldPassword)); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid password"})
+		c.JSON(400, util.ErrorResponse{Error: "Invalid Credentials"})
 		return
 	}
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(params.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Something went wrong"})
+		c.JSON(500, util.ErrorResponse{Error: "Something went wrong"})
 		return
 	}
 	user.Password = string(hashedPass)
 
 	err = uc.Storage.UserStore.UpdateUser(user)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error updating password"})
+		c.JSON(500, util.ErrorResponse{Error: "Error updating password"})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Password updated successfully"})
+	c.JSON(200, util.SuccessMessageResponse{Message: "Password updated successfully"})
 }

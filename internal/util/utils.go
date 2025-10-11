@@ -11,6 +11,19 @@ import (
 	"github.com/google/uuid"
 )
 
+type ErrorResponse struct {
+	Error any `json:"error"`
+}
+
+type SuccessMessageResponse struct {
+	Message string `json:"message"`
+}
+
+type SuccessResultResponse struct {
+	Result  any    `json:"result"`
+	Message string `json:"message"`
+}
+
 func CreateJsonWebToken(userID uuid.UUID) (string, error) {
 
 	claims := jwt.RegisteredClaims{
@@ -53,7 +66,7 @@ func HandleBindError(c *gin.Context, err error) {
 
 	validationErrors, ok := err.(validator.ValidationErrors)
 	if !ok {
-		c.JSON(400, gin.H{"error": "invalid input"})
+		c.JSON(400, ErrorResponse{Error: "invalid input"})
 	}
 
 	result := make(map[string]string)
@@ -63,7 +76,7 @@ func HandleBindError(c *gin.Context, err error) {
 		result[fe.Field()] = errMsg
 
 	}
-	c.JSON(400, gin.H{"error": result})
+	c.JSON(400, ErrorResponse{Error: result})
 }
 
 func GetErrorMessage(fe validator.FieldError) string {
