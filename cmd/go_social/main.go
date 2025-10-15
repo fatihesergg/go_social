@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
 	docs "github.com/fatihesergg/go_social/docs"
@@ -41,7 +42,7 @@ func main() {
 
 	dotenv := godotenv.Load()
 	if dotenv != nil {
-		panic("Error loading .env file")
+		log.Fatal("Error loading .env file")
 	}
 
 	pgUser := os.Getenv("POSTGRES_USER")
@@ -49,18 +50,22 @@ func main() {
 	pgDB := os.Getenv("POSTGRES_DB")
 
 	if pgUser == "" || pgPassword == "" || pgDB == "" {
-		panic("Database environment variables are not set")
+		log.Fatal("Database environment variables are not set")
 	}
 
 	DSN := fmt.Sprintf("postgres://%s:%s@db:5432/%s?sslmode=disable", pgUser, pgPassword, pgDB)
 
 	if os.Getenv("JWT_SECRET") == "" {
-		panic("JWT_SECRET is not set")
+		log.Fatal("JWT_SECRET is not set")
 	}
 
 	db, err := sql.Open("postgres", DSN)
 	if err != nil {
-		panic("Error connecting to the database")
+		log.Fatal("Invalid postgres arguments")
+	}
+
+	if err := db.Ping(); err != nil {
+		log.Fatalf("Error connecting database")
 	}
 
 	userStore := database.NewUserStore(db)
@@ -135,7 +140,7 @@ func main() {
 	replyRouter.DELETE("/:id", replyController.DeleteReply)
 
 	if err := app.Router.Run(":3000"); err != nil {
-		panic("Error starting the server")
+		log.Fatal("Error starting the server")
 	}
 
 }

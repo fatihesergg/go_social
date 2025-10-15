@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"fmt"
+
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/model"
@@ -77,7 +79,7 @@ func (uc UserController) Signup(c *gin.Context) {
 
 	existEmail, err := uc.Storage.UserStore.GetUserByEmail(user.Email)
 	if err != nil {
-
+		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
 		return
 	}
 	if existEmail != nil {
@@ -85,6 +87,7 @@ func (uc UserController) Signup(c *gin.Context) {
 
 		return
 	}
+	fmt.Println(existEmail)
 	existUsername, err := uc.Storage.UserStore.GetUserByUsername(user.Username)
 	if err != nil {
 		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
@@ -108,6 +111,7 @@ func (uc UserController) Signup(c *gin.Context) {
 		c.JSON(500, util.ErrorResponse{Error: "Error creating user"})
 		return
 	}
+	fmt.Println(err)
 
 	c.JSON(201, util.SuccessResultResponse{Message: "User registered successfully", Result: user})
 }
