@@ -4,13 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
 	docs "github.com/fatihesergg/go_social/docs"
 	"github.com/fatihesergg/go_social/internal/controller"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/middleware"
 	"github.com/fatihesergg/go_social/internal/services"
+	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -41,24 +41,15 @@ func main() {
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Host = "localhost:3000"
 
-	dotenv := godotenv.Load()
-	if dotenv != nil {
+	err := godotenv.Load()
+	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	pgUser := os.Getenv("POSTGRES_USER")
-	pgPassword := os.Getenv("POSTGRES_PASSWORD")
-	pgDB := os.Getenv("POSTGRES_DB")
+	util.ApiConfig = util.LoadConfig()
+	util.ApiConfig.Validate()
 
-	if pgUser == "" || pgPassword == "" || pgDB == "" {
-		log.Fatal("Database environment variables are not set")
-	}
-
-	DSN := fmt.Sprintf("postgres://%s:%s@db:5432/%s?sslmode=disable", pgUser, pgPassword, pgDB)
-
-	if os.Getenv("JWT_SECRET") == "" {
-		log.Fatal("JWT_SECRET is not set")
-	}
+	DSN := fmt.Sprintf("postgres://%s:%s@db:%s/%s?sslmode=disable", util.ApiConfig.PGUser, util.ApiConfig.PGPass, util.ApiConfig.PGPort, util.ApiConfig.PGDB)
 
 	db, err := sql.Open("postgres", DSN)
 	if err != nil {

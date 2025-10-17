@@ -3,7 +3,6 @@ package util
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/fatihesergg/go_social/internal/errors"
@@ -38,7 +37,7 @@ func CreateJsonWebToken(userID uuid.UUID) (string, error) {
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	secret := os.Getenv("JWT_SECRET")
+	secret := ApiConfig.JWTSecret
 	tokenString, err := token.SignedString([]byte(secret))
 
 	if err != nil {
@@ -50,7 +49,7 @@ func CreateJsonWebToken(userID uuid.UUID) (string, error) {
 
 func ParseJWT(token string) (*jwt.RegisteredClaims, error) {
 	claims := &jwt.RegisteredClaims{}
-	secret := os.Getenv("JWT_SECRET")
+	secret := ApiConfig.JWTSecret
 
 	jwtToken, err := jwt.ParseWithClaims(token, claims, func(jwtToken *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
