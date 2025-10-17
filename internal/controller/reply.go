@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/fatihesergg/go_social/internal/dto"
-	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
@@ -38,8 +37,7 @@ func (rc *ReplyController) GetCommentReplies(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	replies, err := rc.ReplyService.GetCommentReplies(userID, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessResultResponse{Message: "Replies fetched successfully", Result: replies})
@@ -69,8 +67,7 @@ func (rc *ReplyController) ReplyComment(c *gin.Context) {
 	}
 	err := rc.ReplyService.ReplyComment(userID, id, params)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -107,8 +104,7 @@ func (rc *ReplyController) UpdateReply(c *gin.Context) {
 	err := rc.ReplyService.UpdateReply(userID, id, params)
 
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Reply updated successfully"})
@@ -137,8 +133,7 @@ func (rc *ReplyController) DeleteReply(c *gin.Context) {
 
 	err := rc.ReplyService.DeleteReply(userID, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Reply deleted successfully"})

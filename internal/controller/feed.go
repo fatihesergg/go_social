@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"github.com/fatihesergg/go_social/internal/errors"
 	_ "github.com/fatihesergg/go_social/internal/model"
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
@@ -44,8 +43,7 @@ func (fc FeedController) GetFeed(c *gin.Context) {
 	searchQuery := c.Query("search")
 	posts, err := fc.FeedService.GetFeed(userID, limit, offset, searchQuery)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: posts})

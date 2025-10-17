@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/fatihesergg/go_social/internal/dto"
-	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
@@ -42,8 +41,7 @@ func (pc PostController) GetPosts(c *gin.Context) {
 
 	posts, err := pc.PostService.GetAllPosts(userID, limit, offset, searchQuery)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: posts})
@@ -69,8 +67,7 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 
 	post, err := pc.PostService.GetPostByID(meID, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -100,8 +97,7 @@ func (pc PostController) CreatePost(c *gin.Context) {
 
 	err := pc.PostService.CreatePost(userID, params)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(201, util.SuccessMessageResponse{Message: "Post created succesfully"})
@@ -135,8 +131,7 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 
 	err := pc.PostService.UpdatePost(userID, id, params)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Post updated succesfully"})
@@ -165,8 +160,7 @@ func (pc PostController) DeletePost(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	err := pc.PostService.DeletePost(userID, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Post deleted successfully"})

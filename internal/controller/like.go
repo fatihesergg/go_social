@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
@@ -39,8 +38,7 @@ func (lc LikeController) LikePost(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	err := lc.LikeService.LikePost(userID, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(201, util.SuccessMessageResponse{Message: "Post liked successfully"})
@@ -67,8 +65,7 @@ func (lc LikeController) UnlikePost(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	err := lc.LikeService.UnlikePost(userID, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Post unliked successfully"})
@@ -95,8 +92,7 @@ func (lc *LikeController) LikeComment(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	err := lc.LikeService.LikeComment(userID, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(201, util.SuccessMessageResponse{Message: "Comment liked succesfully"})
@@ -124,8 +120,7 @@ func (lc *LikeController) UnlikeComment(c *gin.Context) {
 
 	err := lc.LikeService.UnlikeComment(userID, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Comment unliked succesfully"})

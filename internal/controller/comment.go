@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/fatihesergg/go_social/internal/dto"
-	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
@@ -43,8 +42,7 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	err := cc.CommentService.AddCommentPost(userID, params)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -73,8 +71,7 @@ func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
 
 	comments, err := cc.CommentService.GetCommentsByPostID(userID, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessResultResponse{Message: "Comments fetched successfully", Result: comments})
@@ -108,8 +105,7 @@ func (cc *CommentController) UpdateComment(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	err := cc.CommentService.UpdateComment(userID, id, params)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Comment updated successfully"})
@@ -136,8 +132,7 @@ func (cc *CommentController) DeleteComment(c *gin.Context) {
 
 	err := cc.CommentService.DeleteComment(userID, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Comment deleted successfully"})

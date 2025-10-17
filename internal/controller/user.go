@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/fatihesergg/go_social/internal/dto"
-	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
@@ -29,8 +28,7 @@ func (uc UserController) GetUserByID(c *gin.Context) {
 
 	user, err := uc.UserService.GetUserByID(id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -60,8 +58,7 @@ func (uc UserController) Signup(c *gin.Context) {
 	err := uc.UserService.Register(params)
 
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -93,8 +90,7 @@ func (uc UserController) Login(c *gin.Context) {
 	token, err := uc.UserService.Login(params)
 
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -118,8 +114,7 @@ func (uc UserController) GetMe(c *gin.Context) {
 	id := c.MustGet("userID").(uuid.UUID)
 	user, err := uc.UserService.GetUserByID(id.String())
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -148,8 +143,7 @@ func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 	}
 	followers, err := uc.UserService.GetFollowerByUserID(id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -180,8 +174,7 @@ func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 	followings, err := uc.UserService.GetFollowingByUserID(id)
 
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -211,8 +204,7 @@ func (uc UserController) FollowUser(c *gin.Context) {
 
 	err := uc.UserService.FollowUser(me, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -241,8 +233,7 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 	me := c.MustGet("userID").(uuid.UUID)
 	err := uc.UserService.UnFollowUser(me, id)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Unfollowed successfully"})
@@ -276,8 +267,7 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 
 	posts, err := uc.UserService.GetUsersPosts(id, meID, limit, offset, searchQuery)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched succesfully", Result: posts})
@@ -307,8 +297,7 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 	}
 	err := uc.UserService.ResetPassword(meID, params)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 
@@ -322,8 +311,7 @@ func (uc UserController) SearchUserByUsername(c *gin.Context) {
 
 	users, err := uc.UserService.GetUsersByUsername(username)
 	if err != nil {
-		appErr, _ := err.(errors.AppError)
-		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		util.WriteAppError(c, err)
 		return
 	}
 

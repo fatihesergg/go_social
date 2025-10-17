@@ -2,9 +2,11 @@ package util
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
+	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
@@ -93,4 +95,13 @@ func GetErrorMessage(fe validator.FieldError) string {
 		return fmt.Sprintf("should less than or equal to %s", fe.Param())
 	}
 	return "not valid"
+}
+
+func WriteAppError(c *gin.Context, err error) {
+	appErr, ok := err.(errors.AppError)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: errors.InternalServerError.Message})
+		return
+	}
+	c.JSON(appErr.Code, ErrorResponse{Error: appErr.Error()})
 }
