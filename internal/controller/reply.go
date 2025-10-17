@@ -1,21 +1,21 @@
 package controller
 
 import (
-	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
-	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/fatihesergg/go_social/internal/errors"
+	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type ReplyController struct {
-	Storage database.Storage
+	ReplyService services.BaseReplyService
 }
 
-func NewReplyController(storage *database.Storage) *ReplyController {
+func NewReplyController(replyService services.BaseReplyService) *ReplyController {
 	return &ReplyController{
-		Storage: *storage,
+		ReplyService: replyService,
 	}
 }
 
@@ -35,37 +35,14 @@ func NewReplyController(storage *database.Storage) *ReplyController {
 //	@Security		Bearer
 func (rc *ReplyController) GetCommentReplies(c *gin.Context) {
 	id := c.Param("id")
-
-	commentID, err := uuid.Parse(id)
+	userID := c.MustGet("userID").(uuid.UUID)
+	replies, err := rc.ReplyService.GetCommentReplies(userID, id)
 	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
-
-	existComment, err := rc.Storage.CommentStore.GetCommentByID(commentID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
-	if existComment == nil {
-		c.JSON(404, util.SuccessMessageResponse{Message: "Comment not found"})
-		return
-	}
-
-	replies, err := rc.Storage.ReplyStore.GetRepliesByCommentID(existComment.ID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
-	if replies == nil {
-		c.JSON(404, util.SuccessMessageResponse{Message: "Replies not found"})
-		return
-	}
-
-	result := dto.NewReplyResponse(replies)
-	c.JSON(200, util.SuccessResultResponse{Message: "Replies fetched successfully", Result: result})
+	c.JSON(200, util.SuccessResultResponse{Message: "Replies fetched successfully", Result: replies})
 
 }
 
@@ -84,46 +61,16 @@ func (rc *ReplyController) GetCommentReplies(c *gin.Context) {
 //	@Security		Bearer
 func (rc *ReplyController) ReplyComment(c *gin.Context) {
 	id := c.Param("id")
-
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
-		return
-	}
-
-	commentID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
-
+	userID := c.MustGet("userID").(uuid.UUID)
 	var params dto.CreateReply
 	if err := c.ShouldBindJSON(&params); err != nil {
 		util.HandleBindError(c, err)
 		return
 	}
-
-	comment, err := rc.Storage.CommentStore.GetCommentByID(commentID)
+	err := rc.ReplyService.ReplyComment(userID, id, params)
 	if err != nil {
-		c.JSON(500, util.InternalServerError)
-		return
-	}
-
-	if comment == nil {
-		c.JSON(400, util.ErrorResponse{Error: util.CommentNotFoundError})
-		return
-	}
-
-	userID := c.MustGet("userID").(uuid.UUID)
-
-	reply := &model.Reply{
-		CommentID: comment.ID,
-		UserID:    userID,
-		Message:   params.Message,
-	}
-
-	err = rc.Storage.ReplyStore.CreateReply(reply)
-	if err != nil {
-		c.JSON(500, util.InternalServerError)
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 
@@ -150,43 +97,20 @@ func (rc *ReplyController) ReplyComment(c *gin.Context) {
 func (rc *ReplyController) UpdateReply(c *gin.Context) {
 
 	id := c.Param("id")
-
+	userID := c.MustGet("userID").(uuid.UUID)
 	var params dto.UpdateReply
 
 	if err := c.ShouldBindJSON(&params); err != nil {
 		util.HandleBindError(c, err)
 		return
 	}
+	err := rc.ReplyService.UpdateReply(userID, id, params)
 
-	replyID, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
-	existReply, err := rc.Storage.ReplyStore.GetReplyByID(replyID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	if existReply == nil {
-		c.JSON(404, util.SuccessMessageResponse{Message: "Reply not found"})
-		return
-	}
-
-	userID := c.MustGet("userID").(uuid.UUID)
-	if existReply.UserID != userID {
-		c.JSON(403, util.ErrorResponse{Error: util.InvalidPermissionError})
-		return
-	}
-
-	existReply.Message = params.Message
-
-	err = rc.Storage.ReplyStore.UpdateReply(existReply)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
 	c.JSON(200, util.SuccessMessageResponse{Message: "Reply updated successfully"})
 
 }
@@ -209,36 +133,13 @@ func (rc *ReplyController) UpdateReply(c *gin.Context) {
 func (rc *ReplyController) DeleteReply(c *gin.Context) {
 
 	id := c.Param("id")
-
-	replyID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
-
-	existReply, err := rc.Storage.ReplyStore.GetReplyByID(replyID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
-	if existReply == nil {
-		c.JSON(404, util.ErrorResponse{Error: "Reply not found"})
-		return
-	}
-
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	if existReply.UserID != userID {
-		c.JSON(403, util.ErrorResponse{Error: util.InvalidPermissionError})
-		return
-	}
-
-	err = rc.Storage.ReplyStore.DeleteReply(existReply.ID)
+	err := rc.ReplyService.DeleteReply(userID, id)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
-
 	c.JSON(200, util.SuccessMessageResponse{Message: "Reply deleted successfully"})
 }

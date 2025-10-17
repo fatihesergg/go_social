@@ -1,23 +1,21 @@
 package controller
 
 import (
-	"fmt"
-
-	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
-	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/fatihesergg/go_social/internal/errors"
+	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type PostController struct {
-	Storage *database.Storage
+	PostService services.BasePostService
 }
 
-func NewPostController(storage *database.Storage) *PostController {
+func NewPostController(postService services.BasePostService) *PostController {
 	return &PostController{
-		Storage: storage,
+		PostService: postService,
 	}
 }
 
@@ -37,21 +35,18 @@ func NewPostController(storage *database.Storage) *PostController {
 //	@Router			/posts [get]
 //	@Security		Bearer
 func (pc PostController) GetPosts(c *gin.Context) {
-	pagination := database.NewPagination(c)
-	search := database.NewSearch(c)
+	limit := c.Query("limit")
+	offset := c.Query("offset")
+	searchQuery := c.Query("search")
 	userID := c.MustGet("userID").(uuid.UUID)
-	posts, err := pc.Storage.PostStore.GetPosts(pagination, search, userID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	if posts == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.NoPostsFoundError})
-		return
-	}
-	result := dto.NewAllPostResponse(posts)
 
-	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: result})
+	posts, err := pc.PostService.GetAllPosts(userID, limit, offset, searchQuery)
+	if err != nil {
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
+		return
+	}
+	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: posts})
 }
 
 // GetPostByID godoc
@@ -70,33 +65,16 @@ func (pc PostController) GetPosts(c *gin.Context) {
 //	@Security		Bearer
 func (pc PostController) GetPostByID(c *gin.Context) {
 	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
-		return
-	}
+	meID := c.MustGet("userID").(uuid.UUID)
 
-	postID, err := uuid.Parse(id)
-
+	post, err := pc.PostService.GetPostByID(meID, id)
 	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 
-	userID := c.MustGet("userID").(uuid.UUID)
-
-	post, err := pc.Storage.PostStore.GetPostDetailsByID(postID, userID)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	if post == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.PostNotFoundError})
-		return
-	}
-	result := dto.NewPostDetailResponse(post)
-
-	c.JSON(200, util.SuccessResultResponse{Message: "Post fetched successfully", Result: result})
+	c.JSON(200, util.SuccessResultResponse{Message: "Post fetched successfully", Result: post})
 }
 
 // CreatePost godoc
@@ -118,21 +96,14 @@ func (pc PostController) CreatePost(c *gin.Context) {
 		util.HandleBindError(c, err)
 		return
 	}
-
-	post := &model.Post{
-		Content: params.Content,
-	}
-
 	userID := c.MustGet("userID").(uuid.UUID)
-	post.UserID = userID
 
-	err := pc.Storage.PostStore.CreatePost(post)
+	err := pc.PostService.CreatePost(userID, params)
 	if err != nil {
-
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
-
 	c.JSON(201, util.SuccessMessageResponse{Message: "Post created succesfully"})
 
 }
@@ -160,37 +131,12 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 		return
 	}
 	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
-		return
-	}
-	postID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
+	userID := c.MustGet("userID").(uuid.UUID)
 
-	existPost, err := pc.Storage.PostStore.GetPostByID(postID)
+	err := pc.PostService.UpdatePost(userID, id, params)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	if existPost == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.PostNotFoundError})
-		return
-	}
-	if existPost.UserID != c.MustGet("userID").(uuid.UUID) {
-		c.JSON(403, util.ErrorResponse{Error: util.InvalidPermissionError})
-		return
-	}
-	post := &model.Post{
-		ID:      postID,
-		Content: params.Content,
-	}
-
-	err = pc.Storage.PostStore.UpdatePost(post)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Error updating post"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Post updated succesfully"})
@@ -215,32 +161,12 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 func (pc PostController) DeletePost(c *gin.Context) {
 
 	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
-		return
-	}
-	postID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
-	post, err := pc.Storage.PostStore.GetPostByID(postID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	if post == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.PostNotFoundError})
-		return
-	}
-	if post.UserID != c.MustGet("userID").(uuid.UUID) {
-		c.JSON(403, util.ErrorResponse{Error: util.InvalidPermissionError})
-		return
-	}
 
-	err = pc.Storage.PostStore.DeletePost(postID)
+	userID := c.MustGet("userID").(uuid.UUID)
+	err := pc.PostService.DeletePost(userID, id)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Error deleting post"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Post deleted successfully"})

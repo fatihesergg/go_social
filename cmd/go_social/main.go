@@ -10,6 +10,7 @@ import (
 	"github.com/fatihesergg/go_social/internal/controller"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/middleware"
+	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -77,6 +78,12 @@ func main() {
 	replyStore := database.NewReplyStore(db)
 
 	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore, likeStore, replyStore)
+	userService := services.NewUserService(storage)
+	postService := services.NewPostService(storage)
+	commentService := services.NewCommentService(storage)
+	feedService := services.NewFeedService(storage)
+	likeService := services.NewLikeService(storage)
+	replyService := services.NewReplyService(storage)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	rateLimiter := middleware.NewRateLimiter(1, 10)
@@ -87,12 +94,12 @@ func main() {
 	}
 	base := app.Router.Group("/api/v1")
 
-	userController := controller.NewUserController(storage)
-	postController := controller.NewPostController(storage)
-	commentController := controller.NewCommentController(storage)
-	feedController := controller.NewFeedController(storage)
-	likeController := controller.NewLikeController(storage)
-	replyController := controller.NewReplyController(storage)
+	userController := controller.NewUserController(userService)
+	postController := controller.NewPostController(postService)
+	commentController := controller.NewCommentController(commentService)
+	feedController := controller.NewFeedController(feedService)
+	likeController := controller.NewLikeController(likeService)
+	replyController := controller.NewReplyController(replyService)
 
 	base.POST("/signup", userController.Signup)
 	base.POST("/login", userController.Login)

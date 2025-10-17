@@ -1,20 +1,20 @@
 package controller
 
 import (
-	"github.com/fatihesergg/go_social/internal/database"
-	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/fatihesergg/go_social/internal/errors"
+	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type LikeController struct {
-	Storage *database.Storage
+	LikeService services.BaseLikeService
 }
 
-func NewLikeController(storage *database.Storage) *LikeController {
+func NewLikeController(likeService services.BaseLikeService) *LikeController {
 	return &LikeController{
-		Storage: storage,
+		LikeService: likeService,
 	}
 }
 
@@ -36,31 +36,11 @@ func NewLikeController(storage *database.Storage) *LikeController {
 func (lc LikeController) LikePost(c *gin.Context) {
 
 	id := c.Param("id")
-
-	postID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
-
 	userID := c.MustGet("userID").(uuid.UUID)
-
-	liked, err := lc.Storage.LikeStore.IsPostLiked(postID, userID)
+	err := lc.LikeService.LikePost(userID, id)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	if liked {
-		c.JSON(400, util.ErrorResponse{Error: "Post already liked"})
-		return
-	}
-
-	err = lc.Storage.LikeStore.LikePost(&model.PostLike{
-		PostID: postID,
-		UserID: userID,
-	})
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 	c.JSON(201, util.SuccessMessageResponse{Message: "Post liked successfully"})
@@ -84,28 +64,11 @@ func (lc LikeController) LikePost(c *gin.Context) {
 //	@Router	/posts/{id}/unlike [delete]
 func (lc LikeController) UnlikePost(c *gin.Context) {
 	id := c.Param("id")
-
-	postID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
-
 	userID := c.MustGet("userID").(uuid.UUID)
-
-	liked, err := lc.Storage.LikeStore.IsPostLiked(postID, userID)
+	err := lc.LikeService.UnlikePost(userID, id)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	if !liked {
-		c.JSON(400, util.ErrorResponse{Error: "Post not liked yet"})
-		return
-	}
-
-	err = lc.Storage.LikeStore.UnlikePost(postID, userID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Post unliked successfully"})
@@ -129,34 +92,13 @@ func (lc LikeController) UnlikePost(c *gin.Context) {
 // @Router	/comments/{id}/like [post]
 func (lc *LikeController) LikeComment(c *gin.Context) {
 	id := c.Param("id")
-
-	commentID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
-
 	userID := c.MustGet("userID").(uuid.UUID)
-
-	existLike, err := lc.Storage.LikeStore.IsCommentLiked(commentID, userID)
+	err := lc.LikeService.LikeComment(userID, id)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
-	if existLike {
-		c.JSON(400, util.ErrorResponse{Error: "Comment already liked"})
-		return
-
-	}
-	err = lc.Storage.LikeStore.LikeComment(&model.CommentLike{
-		CommentID: commentID,
-		UserID:    userID,
-	})
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
 	c.JSON(201, util.SuccessMessageResponse{Message: "Comment liked succesfully"})
 
 }
@@ -178,31 +120,14 @@ func (lc *LikeController) LikeComment(c *gin.Context) {
 //	@Router	/comments/{id}/unlike [delete]
 func (lc *LikeController) UnlikeComment(c *gin.Context) {
 	id := c.Param("id")
-
-	commentID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
-
 	userID := c.MustGet("userID").(uuid.UUID)
-	existLike, err := lc.Storage.LikeStore.IsCommentLiked(commentID, userID)
+
+	err := lc.LikeService.UnlikeComment(userID, id)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
-
-	if !existLike {
-		c.JSON(400, util.ErrorResponse{Error: "Comment not liked yet"})
-		return
-	}
-
-	err = lc.Storage.LikeStore.UnlikeComment(commentID, userID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
 	c.JSON(200, util.SuccessMessageResponse{Message: "Comment unliked succesfully"})
 
 }

@@ -1,21 +1,21 @@
 package controller
 
 import (
-	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
-	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/fatihesergg/go_social/internal/errors"
+	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type CommentController struct {
-	Storage *database.Storage
+	CommentService services.BaseCommentService
 }
 
-func NewCommentController(storage *database.Storage) *CommentController {
+func NewCommentController(commentService services.BaseCommentService) *CommentController {
 	return &CommentController{
-		Storage: storage,
+		CommentService: commentService,
 	}
 }
 
@@ -41,19 +41,13 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 		return
 	}
 	userID := c.MustGet("userID").(uuid.UUID)
-	comment := &model.Comment{
-		ID:      uuid.New(),
-		PostID:  params.PostID,
-		UserID:  userID,
-		Content: params.Content,
-	}
-
-	err := cc.Storage.CommentStore.CreateComment(comment)
+	err := cc.CommentService.AddCommentPost(userID, params)
 	if err != nil {
-
-		c.JSON(500, util.ErrorResponse{Error: "Error creating comment"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
+
 	c.JSON(201, util.SuccessMessageResponse{Message: "Comment created successfully"})
 
 }
@@ -75,30 +69,15 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 //	@Router			/comments/post/{post_id} [get]
 func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
 	id := c.Param("post_id")
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
-		return
-	}
-	postID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
 	userID := c.MustGet("userID").(uuid.UUID)
-	comments, err := cc.Storage.CommentStore.GetCommentsByPostID(postID, userID)
 
+	comments, err := cc.CommentService.GetCommentsByPostID(userID, id)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
-
-	if comments == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.NoCommentsFoundError})
-		return
-	}
-	result := dto.NewCommentResponse(comments)
-
-	c.JSON(200, util.SuccessResultResponse{Message: "Comments fetched successfully", Result: result})
+	c.JSON(200, util.SuccessResultResponse{Message: "Comments fetched successfully", Result: comments})
 }
 
 // UpdateComment godoc
@@ -120,34 +99,17 @@ func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
 func (cc *CommentController) UpdateComment(c *gin.Context) {
 	var params dto.UpdateCommentDTO
 	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
-		return
-	}
-	commentID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
 
 	if err := c.ShouldBindJSON(&params); err != nil {
 		util.HandleBindError(c, err)
 		return
 	}
-	comment, err := cc.Storage.CommentStore.GetCommentByID(commentID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Error fetching comment"})
-		return
-	}
-	if comment == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.NoCommentsFoundError})
-		return
-	}
-	comment.Content = params.Content
 
-	err = cc.Storage.CommentStore.UpdateComment(comment)
+	userID := c.MustGet("userID").(uuid.UUID)
+	err := cc.CommentService.UpdateComment(userID, id, params)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Error updating comment"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Comment updated successfully"})
@@ -170,19 +132,12 @@ func (cc *CommentController) UpdateComment(c *gin.Context) {
 //	@Router	/comments/{id} [delete]
 func (cc *CommentController) DeleteComment(c *gin.Context) {
 	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: util.IDRequiredError})
-		return
-	}
-	commentID, err := uuid.Parse(id)
+	userID := c.MustGet("userID").(uuid.UUID)
+
+	err := cc.CommentService.DeleteComment(userID, id)
 	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: util.InvalidIDFormatError})
-		return
-	}
-	// TODO: CHECK USERID
-	err = cc.Storage.CommentStore.DeleteComment(commentID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Error deleting comment"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Comment deleted successfully"})

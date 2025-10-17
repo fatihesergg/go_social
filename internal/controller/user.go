@@ -1,47 +1,36 @@
 package controller
 
 import (
-	"fmt"
-
-	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
-	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/fatihesergg/go_social/internal/errors"
+	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserController struct {
-	Storage *database.Storage
+	UserService services.BaseUserService
 }
 
-func NewUserController(storage *database.Storage) *UserController {
+func NewUserController(userService services.BaseUserService) *UserController {
 	return &UserController{
-		Storage: storage,
+		UserService: userService,
 	}
 }
 
+// TODO: Add  docs
 func (uc UserController) GetUserByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
-	userID, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
-		return
-	}
 
-	user, err := uc.Storage.UserStore.GetUserByID(userID)
+	user, err := uc.UserService.GetUserByID(id)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
-	if user == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.UserNotFoundError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 
@@ -68,52 +57,15 @@ func (uc UserController) Signup(c *gin.Context) {
 		return
 	}
 
-	user := &model.User{
-		Name:     params.Name,
-		LastName: params.LastName,
-		Email:    params.Email,
-		Avatar:   params.Avatar,
-		Username: params.Username,
-		Password: params.Password,
-	}
+	err := uc.UserService.Register(params)
 
-	existEmail, err := uc.Storage.UserStore.GetUserByEmail(user.Email)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	if existEmail != nil {
-		c.JSON(400, util.ErrorResponse{Error: "Email already exists"})
-
-		return
-	}
-	fmt.Println(existEmail)
-	existUsername, err := uc.Storage.UserStore.GetUserByUsername(user.Username)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-
-		return
-	}
-	if existUsername != nil {
-		c.JSON(400, util.ErrorResponse{Error: "Username already exists"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 
-	hashedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Something went wrong"})
-		return
-	}
-	user.Password = string(hashedPass)
-
-	err = uc.Storage.UserStore.CreateUser(user)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Error creating user"})
-		return
-	}
-	fmt.Println(err)
-
-	c.JSON(201, util.SuccessResultResponse{Message: "User registered successfully", Result: user})
+	c.JSON(201, util.SuccessMessageResponse{Message: "User registered successfully"})
 }
 
 // Login godoc
@@ -138,25 +90,11 @@ func (uc UserController) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := uc.Storage.UserStore.GetUserByEmail(params.Email)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	if user == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.UserNotFoundError})
-		return
-	}
+	token, err := uc.UserService.Login(params)
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.Password))
 	if err != nil {
-		c.JSON(401, util.ErrorResponse{Error: "Invalid credentials"})
-		return
-	}
-
-	token, err := util.CreateJsonWebToken(user.ID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 
@@ -178,15 +116,10 @@ func (uc UserController) Login(c *gin.Context) {
 //	@Router			/me [get]
 func (uc UserController) GetMe(c *gin.Context) {
 	id := c.MustGet("userID").(uuid.UUID)
-	user, err := uc.Storage.UserStore.GetUserByID(id)
+	user, err := uc.UserService.GetUserByID(id.String())
 	if err != nil {
-
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
-	if user == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.UserNotFoundError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 
@@ -213,20 +146,10 @@ func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
-	userID, err := uuid.Parse(id)
+	followers, err := uc.UserService.GetFollowerByUserID(id)
 	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
-		return
-	}
-
-	followers, err := uc.Storage.FollowStore.GetFollowerByUserID(userID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
-	if len(followers) == 0 {
-		c.JSON(404, util.ErrorResponse{Error: "No followers found"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 
@@ -254,21 +177,11 @@ func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 		return
 	}
 
-	userID, err := uuid.Parse(id)
+	followings, err := uc.UserService.GetFollowingByUserID(id)
 
 	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
-		return
-	}
-
-	followings, err := uc.Storage.FollowStore.GetFollowingByUserID(userID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
-	if len(followings) == 0 {
-		c.JSON(404, util.ErrorResponse{Error: "No followings found"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 
@@ -294,36 +207,15 @@ func (uc UserController) FollowUser(c *gin.Context) {
 		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
-	followUser, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
-		return
-	}
-
 	me := c.MustGet("userID").(uuid.UUID)
 
-	followings, err := uc.Storage.FollowStore.GetFollowingByUserID(me)
+	err := uc.UserService.FollowUser(me, id)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	isFollowing := false
-	for _, follow := range followings {
-		if follow.FollowID == followUser {
-			isFollowing = true
-		}
-	}
-
-	if isFollowing {
-		c.JSON(400, util.ErrorResponse{Error: "You are already following this user"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 
-	err = uc.Storage.FollowStore.FollowUser(me, followUser)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Error following user"})
-		return
-	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Followed successfully"})
 }
 
@@ -346,37 +238,14 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
-	unfUser, err := uuid.Parse(id)
-	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
-		return
-	}
 	me := c.MustGet("userID").(uuid.UUID)
-
-	followings, err := uc.Storage.FollowStore.GetFollowingByUserID(me)
+	err := uc.UserService.UnFollowUser(me, id)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
-
-	isFollowing := false
-	for _, follow := range followings {
-		if follow.FollowID == unfUser {
-			isFollowing = true
-		}
-	}
-	if !isFollowing {
-		c.JSON(400, util.ErrorResponse{Error: "You are not following this user"})
-		return
-	}
-
-	err = uc.Storage.FollowStore.UnFollowUser(me, unfUser)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Error unfollowing user"})
-		return
-	} else {
-		c.JSON(200, util.SuccessMessageResponse{Message: "Unfollowed successfully"})
-	}
+	c.JSON(200, util.SuccessMessageResponse{Message: "Unfollowed successfully"})
 }
 
 // GetUsersPosts godoc
@@ -399,53 +268,19 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 //	@Router			/users/{id}/posts [get]
 func (uc UserController) GetUsersPosts(c *gin.Context) {
 	id := c.Param("id")
+	meID := c.MustGet("userID").(uuid.UUID)
 
-	userID, err := uuid.Parse(id)
+	limit := c.Query("limit")
+	offset := c.Query("offset")
+	searchQuery := c.Query("search")
 
+	posts, err := uc.UserService.GetUsersPosts(id, meID, limit, offset, searchQuery)
 	if err != nil {
-		c.JSON(400, util.ErrorResponse{Error: "Invalid user ID"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
-
-	user, err := uc.Storage.UserStore.GetUserByID(userID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
-	if user == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.UserNotFoundError})
-		return
-	}
-
-	followers, err := uc.Storage.FollowStore.GetFollowerByUserID(user.ID)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	pagination := database.NewPagination(c)
-	search := database.NewSearch(c)
-	for i := range followers {
-		//TODO:  Check if user owner the
-		followerID := followers[i].ID
-		if followerID == userID {
-			posts, err := uc.Storage.PostStore.GetPostsByUserID(user.ID, pagination, search)
-			if err != nil {
-				c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-				return
-			}
-			if posts == nil {
-				c.JSON(404, util.ErrorResponse{Error: util.NoPostsFoundError})
-				return
-			}
-			result := dto.NewAllPostResponse(posts)
-
-			c.JSON(200, util.SuccessResultResponse{Message: "User posts fetched successfully", Result: result})
-			return
-		}
-	}
-
-	c.JSON(403, util.ErrorResponse{Error: util.NotFollowingError})
+	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched succesfully", Result: posts})
 }
 
 // ResetPassword godoc
@@ -464,54 +299,31 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 //	@Router			/users/reset_password [post]
 func (uc UserController) ResetPassword(c *gin.Context) {
 
+	meID := c.MustGet("userID").(uuid.UUID)
 	var params dto.ResetUserPasswordDTO
 	if err := c.ShouldBindJSON(&params); err != nil {
 		util.HandleBindError(c, err)
 		return
 	}
-
-	userID := c.MustGet("userID").(uuid.UUID)
-
-	user, err := uc.Storage.UserStore.GetUserByID(userID)
+	err := uc.UserService.ResetPassword(meID, params)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-	if user == nil {
-		c.JSON(404, util.ErrorResponse{Error: util.UserNotFoundError})
-		return
-	}
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.OldPassword)); err != nil {
-		c.JSON(400, util.ErrorResponse{Error: "Invalid Credentials"})
-		return
-	}
-	hashedPass, err := bcrypt.GenerateFromPassword([]byte(params.NewPassword), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Something went wrong"})
-		return
-	}
-	user.Password = string(hashedPass)
-
-	err = uc.Storage.UserStore.UpdateUser(user)
-	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: "Error updating password"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 
 	c.JSON(200, util.SuccessMessageResponse{Message: "Password updated successfully"})
 }
 
+//TODO:  Add docs
+
 func (uc UserController) SearchUserByUsername(c *gin.Context) {
 	username := c.Param("username")
 
-	users, err := uc.Storage.UserStore.GetUsersByUsername(username)
+	users, err := uc.UserService.GetUsersByUsername(username)
 	if err != nil {
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
-		return
-	}
-
-	if users == nil {
-		c.JSON(200, util.SuccessMessageResponse{Message: "No users found"})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
 

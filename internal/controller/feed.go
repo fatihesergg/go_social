@@ -1,23 +1,21 @@
 package controller
 
 import (
-	"database/sql"
-
-	"github.com/fatihesergg/go_social/internal/database"
-	"github.com/fatihesergg/go_social/internal/dto"
+	"github.com/fatihesergg/go_social/internal/errors"
 	_ "github.com/fatihesergg/go_social/internal/model"
+	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type FeedController struct {
-	Storage *database.Storage
+	FeedService services.BaseFeedService
 }
 
-func NewFeedController(storage *database.Storage) *FeedController {
+func NewFeedController(feedService services.BaseFeedService) *FeedController {
 	return &FeedController{
-		Storage: storage,
+		FeedService: feedService,
 	}
 }
 
@@ -41,17 +39,14 @@ func NewFeedController(storage *database.Storage) *FeedController {
 func (fc FeedController) GetFeed(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	search := database.NewSearch(c)
-	pagination := database.NewPagination(c)
-	posts, err := fc.Storage.FeedStore.GetFeed(userID, pagination, search)
+	limit := c.Query("limit")
+	offset := c.Query("offset")
+	searchQuery := c.Query("search")
+	posts, err := fc.FeedService.GetFeed(userID, limit, offset, searchQuery)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			c.JSON(404, util.ErrorResponse{Error: util.PostNotFoundError})
-			return
-		}
-		c.JSON(500, util.ErrorResponse{Error: util.InternalServerError})
+		appErr, _ := err.(errors.AppError)
+		c.JSON(appErr.Code, util.ErrorResponse{Error: appErr.Error()})
 		return
 	}
-	response := dto.NewFeedResponse(posts)
-	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: response})
+	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: posts})
 }
