@@ -58,8 +58,8 @@ func NewAllPostResponse(posts []model.Post) []AllPostResponse {
 	return result
 }
 
-func NewPostDetailResponse(post *model.Post) PostDetailResponse {
-	result := PostDetailResponse{
+func NewPostDetailResponse(post *model.Post) *PostDetailResponse {
+	result := &PostDetailResponse{
 		ID:           post.ID,
 		Content:      post.Content,
 		CreatedAt:    post.CreatedAt,
