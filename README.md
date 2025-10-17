@@ -9,7 +9,7 @@ Go Social is a backend API for a social media application built with Go. It prov
 - **User Management**: Secure user sign up and login.
 - **JWT Authentication**: Endpoints are protected using JSON Web Tokens.
 - **User Profiles**: Fetch user data and profile information.
-- **Social Graph**: Users can follow and unfollow each other.
+- **Social Graph**: Users can follow and unfollow each other.Users can search other users by their usernames.
 - **Follower/Following Lists**: View lists of who a user follows and who follows them.
 - **Post Management**: Full CRUD (Create, Read, Update, Delete) operations for posts.
 - **Likes**: Create and Delete operations for likes on posts and comments.
@@ -22,11 +22,19 @@ Go Social is a backend API for a social media application built with Go. It prov
 - **Layered Architecture**: The project is structured into distinct layers (Controller, Database/Store, Model) to enforce separation of concerns.
   - `internal/controller`: Handles incoming HTTP requests, validates input, and calls the appropriate services.
   - `internal/database`: Implements the Repository Pattern. The `...Store` structs abstract all database interactions, making the business logic independent of the database implementation.
+  - `internal/services`: Responsible for business logic validation, permission checks.Uses `Storage` struct as dependency
   - `internal/model`: Defines the core data structures of the application.
   - `internal/dto`: Defines struct for both request body parameters and responses.
 - **Dependency Injection**: Dependencies (like database stores) are created in `main.go` and injected into the controllers. This promotes loose coupling and makes components highly testable.
 - **Centralized Routing**: All API routes are clearly defined in `cmd/go_social/main.go` using the Gin Gonic framework, providing a single source of truth for the API's structure.
 - **Middleware**: Authentication is handled cleanly using Gin middleware (`internal/middleware/auth.go`), which intercepts requests to protected routes and validates the JWT.
+- **Types**:
+
+  - **Errors**: `AppErr` use by services.It can wrap Actual error for debugging purposes using ` Wrap(actual error)` method.Later we can access the wrapped error using `Actual` method.
+
+  - **Dtos**:`...DTO` use by controller and services.Structs can be found in `internal/dto`
+
+  - **Response Types**: This api has **3** response types named `SuccessMessageResponse`, `SuccessResultResponse` and `ErrorResponse`.It can be found in `internal/utils.go`.
 
 ### Security
 
