@@ -2,8 +2,6 @@ package database
 
 import (
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 type Pagination struct {
@@ -15,9 +13,7 @@ type Search struct {
 	Query string
 }
 
-func NewPagination(c *gin.Context) Pagination {
-	limit := c.Query("limit")
-	offset := c.Query("offset")
+func NewPagination(limit, offset string) Pagination {
 	if limit == "" {
 		limit = "20"
 	}
@@ -38,8 +34,7 @@ func NewPagination(c *gin.Context) Pagination {
 	}
 }
 
-func NewSearch(c *gin.Context) Search {
-	query := c.Query("search")
+func NewSearch(query string) Search {
 	if query == "" {
 		query = ""
 	}
