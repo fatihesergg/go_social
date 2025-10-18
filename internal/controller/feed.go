@@ -1,6 +1,7 @@
 package controller
 
 import (
+	_ "github.com/fatihesergg/go_social/internal/dto"
 	_ "github.com/fatihesergg/go_social/internal/model"
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
@@ -28,7 +29,7 @@ func NewFeedController(feedService services.BaseFeedService) *FeedController {
 //	@Param			limit	query		int		false	"Limit"		default(20)
 //	@Param			offset	query		int		false	"Offset"	default(0)
 //	@Param			search	query		string	false	"Search query"
-//	@Success		200		{array}		util.SuccessResultResponse{result=[]dto.FeedResponse}
+//	@Success		200		{object}	util.SuccessResultResponse{result=[]dto.FeedResponse}
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		401		{object}	util.ErrorResponse
 //	@Failure		404		{object}	util.ErrorResponse

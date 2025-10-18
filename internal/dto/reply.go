@@ -14,18 +14,20 @@ type UpdateReply struct {
 }
 
 type ReplyResponse struct {
-	ID      uuid.UUID  `json:"id"`
-	Message string     `json:"message"`
-	User    model.User `json:"user"`
+	ID           uuid.UUID  `json:"id"`
+	Message      string     `json:"message"`
+	User         model.User `json:"user"`
+	TotalReplies int        `json:"total_replies"`
 }
 
 func NewReplyResponse(replies []model.Reply) []ReplyResponse {
 	result := []ReplyResponse{}
 	for _, reply := range replies {
 		replyResponse := ReplyResponse{
-			ID:      reply.ID,
-			Message: reply.Message,
-			User:    reply.User,
+			ID:           reply.ID,
+			Message:      reply.Message,
+			User:         reply.User,
+			TotalReplies: reply.TotalReplies,
 		}
 		result = append(result, replyResponse)
 	}

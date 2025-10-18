@@ -89,6 +89,11 @@ definitions:
     required:
     - content
     type: object
+  github_com_fatihesergg_go_social_internal_dto.CreateReply:
+    properties:
+      message:
+        type: string
+    type: object
   github_com_fatihesergg_go_social_internal_dto.CreateUserDTO:
     properties:
       avatar:
@@ -179,6 +184,8 @@ definitions:
         type: string
       message:
         type: string
+      total_replies:
+        type: integer
       user:
         $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
     type: object
@@ -418,7 +425,49 @@ paths:
       - Bearer: []
       summary: Like a Comment
       tags:
-      - CommentLikes
+      - Comments
+  /comments/{id}/replies:
+    get:
+      consumes:
+      - application/json
+      description: Get replies of a comment
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.ReplyResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get replies of a comment
+      tags:
+      - Comments
   /comments/{id}/reply:
     post:
       consumes:
@@ -430,6 +479,12 @@ paths:
         name: id
         required: true
         type: string
+      - description: User login credentials
+        in: body
+        name: CreateReply
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.CreateReply'
       produces:
       - application/json
       responses:
@@ -449,7 +504,7 @@ paths:
       - Bearer: []
       summary: Reply a comment
       tags:
-      - Reply
+      - Comments
   /comments/{id}/unlike:
     delete:
       consumes:
@@ -488,52 +543,6 @@ paths:
       - Bearer: []
       summary: Unlike a comment
       tags:
-      - CommentLikes
-  /comments/post/{post_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve all comments associated with a specific post by its ID
-      parameters:
-      - description: Post ID
-        in: path
-        name: post_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
-            - properties:
-                result:
-                  items:
-                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.CommentDetailResponse'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Get comments for a specific post
-      tags:
       - Comments
   /feed:
     get:
@@ -561,16 +570,14 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              allOf:
-              - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
-              - properties:
-                  result:
-                    items:
-                      $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.FeedResponse'
-                    type: array
-                type: object
-            type: array
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.FeedResponse'
+                  type: array
+              type: object
         "400":
           description: Bad Request
           schema:
@@ -891,6 +898,52 @@ paths:
       summary: Update an existing post
       tags:
       - Posts
+  /posts/{id}/comments:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all comments associated with a specific post by its ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.CommentDetailResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get comments for a specific post
+      tags:
+      - Posts
   /posts/{id}/like:
     post:
       consumes:
@@ -929,7 +982,7 @@ paths:
       - Bearer: []
       summary: Like a post
       tags:
-      - PostLikes
+      - Posts
   /posts/{id}/unlike:
     delete:
       consumes:
@@ -968,7 +1021,7 @@ paths:
       - Bearer: []
       summary: Unlike a post
       tags:
-      - PostLikes
+      - Posts
   /replies/{id}:
     delete:
       consumes:
@@ -1006,40 +1059,6 @@ paths:
       security:
       - Bearer: []
       summary: Delete a reply
-      tags:
-      - Reply
-    get:
-      consumes:
-      - application/json
-      description: Get replies of a comment
-      parameters:
-      - description: Comment ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Get replies of a comment
       tags:
       - Reply
     put:
@@ -1086,6 +1105,85 @@ paths:
       summary: Update a reply
       tags:
       - Reply
+  /replies/{id}/replies:
+    get:
+      consumes:
+      - application/json
+      description: Get replies of a reply
+      parameters:
+      - description: Reply ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.ReplyResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get replies of a reply
+      tags:
+      - Reply
+  /replies/{id}/reply:
+    post:
+      consumes:
+      - application/json
+      description: Reply a reply
+      parameters:
+      - description: Reply ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User login credentials
+        in: body
+        name: CreateReply
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.CreateReply'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Reply a reply
+      tags:
+      - Reply
   /signup:
     post:
       consumes:
@@ -1127,11 +1225,11 @@ paths:
       - application/json
       description: Follow a user by their ID
       parameters:
-      - description: User ID to follow
+      - description: User ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1162,7 +1260,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1204,7 +1302,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1303,11 +1401,11 @@ paths:
       - application/json
       description: Unfollow a user by their ID
       parameters:
-      - description: User ID to unfollow
+      - description: User ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:

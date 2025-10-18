@@ -21,7 +21,7 @@ func NewLikeController(likeService services.BaseLikeService) *LikeController {
 //
 //	@Summary		Like a post
 //	@Description	Like a post with post ID
-//	@Tags			PostLikes
+//	@Tags			Posts
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Post ID"
@@ -49,7 +49,7 @@ func (lc LikeController) LikePost(c *gin.Context) {
 //
 //	@Summary		Unlike a post
 //	@Description	Unlike a post with post ID
-//	@Tags			PostLikes
+//	@Tags			Posts
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Post ID"
@@ -75,7 +75,7 @@ func (lc LikeController) UnlikePost(c *gin.Context) {
 //
 //	@Summary		Like a Comment
 //	@Description	Like a Comment with Comment ID
-//	@Tags			CommentLikes
+//	@Tags			Comments
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Comment ID"
@@ -103,7 +103,7 @@ func (lc *LikeController) LikeComment(c *gin.Context) {
 //
 //	@Summary		Unlike a comment
 //	@Description	Unlike a comment with comment ID
-//	@Tags			CommentLikes
+//	@Tags			Comments
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Comment ID"

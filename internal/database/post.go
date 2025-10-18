@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
@@ -89,7 +88,6 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 
 	rows, err := s.DB.Query(query, search.Query, pagination.Limit, pagination.Offset, userID, userID)
 	if err != nil {
-		fmt.Println(err)
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -108,7 +106,6 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 			&isLiked, &isFollowing,
 		)
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 		post.LikeCount = *postLikeCount
@@ -251,7 +248,6 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 			&post.IsFollowing, &isCommentFollowing,
 		)
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 		if commentID != nil {
@@ -277,7 +273,6 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 	}
 
 	if err := rows.Err(); err != nil {
-		fmt.Println(err)
 
 		return nil, err
 	}

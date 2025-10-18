@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/fatihesergg/go_social/internal/dto"
+	_ "github.com/fatihesergg/go_social/internal/model"
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
@@ -128,7 +129,7 @@ func (uc UserController) GetMe(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int	true	"User ID"
+//	@Param			id	path		string	true	"User ID"
 //	@Success		200	{object}		util.SuccessResultResponse{result=[]model.Follow}
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -157,7 +158,7 @@ func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int	true	"User ID"
+//	@Param			id	path		string	true	"User ID"
 //	@Success		200	{object}		util.SuccessResultResponse{result=[]model.Follow}
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -188,7 +189,7 @@ func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int															true	"User ID to follow"
+//	@Param			id	path		string		true	"User ID"														true	"User ID to follow"
 //	@Success		200	{object}	util.SuccessMessageResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
@@ -218,7 +219,7 @@ func (uc UserController) FollowUser(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int															true	"User ID to unfollow"
+//	@Param			id	path		string		true	"User ID"													true	"User ID to unfollow"
 //	@Success		200	{object}	util.SuccessMessageResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse

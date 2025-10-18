@@ -8,9 +8,11 @@ import (
 )
 
 type BaseReplyStore interface {
-	CreateReply(reply *model.Reply) error
+	CreateCommentReply(reply *model.Reply) error
+	CreateNestedReply(reply *model.Reply) error
 	UpdateReply(reply *model.Reply) error
 	GetRepliesByCommentID(commentID uuid.UUID) ([]model.Reply, error)
+	GetRepliesByParentID(parentID uuid.UUID) ([]model.Reply, error)
 	GetReplyByID(replyID uuid.UUID) (*model.Reply, error)
 	DeleteReply(replyID uuid.UUID) error
 }
@@ -25,9 +27,15 @@ func NewReplyStore(db *sql.DB) *ReplyStore {
 	}
 }
 
-func (rs *ReplyStore) CreateReply(reply *model.Reply) error {
+func (rs *ReplyStore) CreateCommentReply(reply *model.Reply) error {
 	query := "INSERT INTO replies ( comment_id,user_id,message ) VALUES ( $1,$2,$3 )"
 	_, err := rs.DB.Exec(query, reply.CommentID, reply.UserID, reply.Message)
+	return err
+}
+
+func (rs *ReplyStore) CreateNestedReply(reply *model.Reply) error {
+	query := "INSERT INTO replies ( parent_id,user_id,message ) VALUES ( $1,$2,$3 )"
+	_, err := rs.DB.Exec(query, reply.ParentID, reply.UserID, reply.Message)
 	return err
 }
 
@@ -62,6 +70,11 @@ func (rc *ReplyStore) GetRepliesByCommentID(commentID uuid.UUID) ([]model.Reply,
 	replies := []model.Reply{}
 	query := `
 
+	WITH reply_count AS (
+		SELECT parent_id,COUNT(*) AS replies_count FROM replies
+		GROUP BY parent_id
+	)
+
 	SELECT
 
 	replies.id,
@@ -70,14 +83,18 @@ func (rc *ReplyStore) GetRepliesByCommentID(commentID uuid.UUID) ([]model.Reply,
 	reply_user.id,
 	reply_user.name,
 	reply_user.last_name,
-	reply_user.username
+	reply_user.username,
+
+	COALESCE(reply_count.replies_count ,0) AS total_replies
 
 	FROM replies
-	LEFT JOIN users as reply_user ON reply_user.id = replies.user_id
+	JOIN users as reply_user ON reply_user.id = replies.user_id
+	LEFT JOIN reply_count ON reply_count.parent_id = replies.id
 	WHERE replies.comment_id = $1
 	`
 	rows, err := rc.DB.Query(query, commentID)
 	if err != nil {
+
 		return nil, err
 	}
 
@@ -88,8 +105,68 @@ func (rc *ReplyStore) GetRepliesByCommentID(commentID uuid.UUID) ([]model.Reply,
 		err := rows.Scan(
 			&reply.ID, &reply.Message,
 			&reply.User.ID, &reply.User.Name, &reply.User.LastName, &reply.User.Username,
+			&reply.TotalReplies,
 		)
 		if err != nil {
+			return nil, err
+		}
+
+		replies = append(replies, reply)
+
+	}
+	if rows.Err() != nil {
+		return nil, err
+	}
+	if len(replies) == 0 {
+		return nil, nil
+	}
+	return replies, nil
+
+}
+
+func (rc *ReplyStore) GetRepliesByParentID(parentID uuid.UUID) ([]model.Reply, error) {
+	replies := []model.Reply{}
+	query := `
+
+	WITH reply_count AS (
+		SELECT parent_id,COUNT(*) AS replies_count FROM replies
+		GROUP BY parent_id
+	)
+
+	SELECT
+
+	replies.id,
+	replies.parent_id,
+	replies.message,
+
+	reply_user.id,
+	reply_user.name,
+	reply_user.last_name,
+	reply_user.username,
+
+	COALESCE(reply_count.replies_count ,0) AS total_replies
+
+	FROM replies
+	JOIN users as reply_user ON reply_user.id = replies.user_id
+	LEFT JOIN reply_count ON reply_count.parent_id = replies.id
+	WHERE replies.parent_id = $1
+	`
+	rows, err := rc.DB.Query(query, parentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		reply := model.Reply{}
+
+		err := rows.Scan(
+			&reply.ID, &reply.ParentID, &reply.Message,
+			&reply.User.ID, &reply.User.Name, &reply.User.LastName, &reply.User.Username,
+			&reply.TotalReplies,
+		)
+		if err != nil {
+
 			return nil, err
 		}
 

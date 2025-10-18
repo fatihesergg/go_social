@@ -78,82 +78,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/comments/post/{post_id}": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Retrieve all comments associated with a specific post by its ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Comments"
-                ],
-                "summary": "Get comments for a specific post",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Post ID",
-                        "name": "post_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "result": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.CommentDetailResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/comments/{id}": {
             "put": {
                 "security": [
@@ -298,7 +222,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "CommentLikes"
+                    "Comments"
                 ],
                 "summary": "Like a Comment",
                 "parameters": [
@@ -344,6 +268,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/comments/{id}/replies": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get replies of a comment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Get replies of a comment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Comment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.ReplyResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/comments/{id}/reply": {
             "post": {
                 "security": [
@@ -359,7 +353,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Reply"
+                    "Comments"
                 ],
                 "summary": "Reply a comment",
                 "parameters": [
@@ -369,6 +363,15 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "User login credentials",
+                        "name": "CreateReply",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.CreateReply"
+                        }
                     }
                 ],
                 "responses": {
@@ -408,7 +411,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "CommentLikes"
+                    "Comments"
                 ],
                 "summary": "Unlike a comment",
                 "parameters": [
@@ -498,25 +501,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "allOf": [
-                                    {
-                                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
-                                    },
-                                    {
-                                        "type": "object",
-                                        "properties": {
-                                            "result": {
-                                                "type": "array",
-                                                "items": {
-                                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.FeedResponse"
-                                                }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.FeedResponse"
                                             }
                                         }
                                     }
-                                ]
-                            }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1045,6 +1045,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/posts/{id}/comments": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieve all comments associated with a specific post by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Get comments for a specific post",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Post ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.CommentDetailResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/posts/{id}/like": {
             "post": {
                 "security": [
@@ -1060,7 +1136,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "PostLikes"
+                    "Posts"
                 ],
                 "summary": "Like a post",
                 "parameters": [
@@ -1121,7 +1197,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "PostLikes"
+                    "Posts"
                 ],
                 "summary": "Unlike a post",
                 "parameters": [
@@ -1168,59 +1244,6 @@ const docTemplate = `{
             }
         },
         "/replies/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Get replies of a comment",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Reply"
-                ],
-                "summary": "Get replies of a comment",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Comment ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                        }
-                    }
-                }
-            },
             "put": {
                 "security": [
                     {
@@ -1336,6 +1359,134 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/replies/{id}/replies": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get replies of a reply",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reply"
+                ],
+                "summary": "Get replies of a reply",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Reply ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.ReplyResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/replies/{id}/reply": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Reply a reply",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reply"
+                ],
+                "summary": "Reply a reply",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Reply ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "User login credentials",
+                        "name": "CreateReply",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_dto.CreateReply"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
@@ -1484,8 +1635,8 @@ const docTemplate = `{
                 "summary": "Follow a user",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "User ID to follow",
+                        "type": "string",
+                        "description": "User ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1533,7 +1684,7 @@ const docTemplate = `{
                 "summary": "Get followers of a user by user ID",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "User ID",
                         "name": "id",
                         "in": "path",
@@ -1603,7 +1754,7 @@ const docTemplate = `{
                 "summary": "Get followings of a user by user ID",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "User ID",
                         "name": "id",
                         "in": "path",
@@ -1769,8 +1920,8 @@ const docTemplate = `{
                 "summary": "Unfollow a user",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "User ID to unfollow",
+                        "type": "string",
+                        "description": "User ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1936,6 +2087,14 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_fatihesergg_go_social_internal_dto.CreateReply": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_fatihesergg_go_social_internal_dto.CreateUserDTO": {
             "type": "object",
             "required": [
@@ -2066,6 +2225,9 @@ const docTemplate = `{
                 },
                 "message": {
                     "type": "string"
+                },
+                "total_replies": {
+                    "type": "integer"
                 },
                 "user": {
                     "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"

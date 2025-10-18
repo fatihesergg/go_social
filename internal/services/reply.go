@@ -10,7 +10,9 @@ import (
 
 type BaseReplyService interface {
 	GetCommentReplies(userID uuid.UUID, commentIDRaw string) ([]dto.ReplyResponse, error)
+	GetRepliesByParentID(parentIDRaw string) ([]dto.ReplyResponse, error)
 	ReplyComment(userID uuid.UUID, commentIDRaw string, dto dto.CreateReply) error
+	ReplyAReply(userID uuid.UUID, replyIDRaw string, dto dto.CreateReply) error
 	UpdateReply(userID uuid.UUID, replyIDRaw string, dto dto.UpdateReply) error
 	DeleteReply(userUD uuid.UUID, replyIDRaw string) error
 }
@@ -72,7 +74,7 @@ func (rp *ReplyService) ReplyComment(userID uuid.UUID, commentIDRaw string, dto 
 		Message:   dto.Message,
 	}
 
-	err = rp.storage.ReplyStore.CreateReply(reply)
+	err = rp.storage.ReplyStore.CreateCommentReply(reply)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
@@ -128,6 +130,51 @@ func (rp *ReplyService) DeleteReply(userID uuid.UUID, replyIDRaw string) error {
 	}
 
 	err = rp.storage.ReplyStore.DeleteReply(existReply.ID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+	return nil
+}
+func (rp *ReplyService) GetRepliesByParentID(parentIDRaw string) ([]dto.ReplyResponse, error) {
+
+	parentID, err := uuid.Parse(parentIDRaw)
+	if err != nil {
+		return nil, errors.InvalidIDFormatError
+	}
+
+	replies, err := rp.storage.ReplyStore.GetRepliesByParentID(parentID)
+	if err != nil {
+		return nil, errors.InternalServerError.Wrap(err)
+	}
+	if replies == nil {
+		return nil, errors.NoRepliesFoundError
+	}
+	result := dto.NewReplyResponse(replies)
+	return result, nil
+}
+
+func (rp *ReplyService) ReplyAReply(userID uuid.UUID, replyIDRaw string, dto dto.CreateReply) error {
+	parentID, err := uuid.Parse(replyIDRaw)
+	if err != nil {
+		return errors.InvalidIDFormatError
+	}
+
+	reply, err := rp.storage.ReplyStore.GetReplyByID(parentID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if reply == nil {
+		return errors.ReplyNotFoundError
+	}
+
+	nestedReply := &model.Reply{
+		ParentID: parentID,
+		UserID:   userID,
+		Message:  dto.Message,
+	}
+
+	err = rp.storage.ReplyStore.CreateNestedReply(nestedReply)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}

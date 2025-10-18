@@ -146,6 +146,28 @@ func GenerateFollows(amount int, users []model.User) []model.Follow {
 	return follows
 }
 
+func GenerateRepliesToReply(amount int, users []model.User, parentReplies []model.Reply) []model.Reply {
+	replies := make([]model.Reply, 0, amount)
+	used := make(map[string]bool)
+	for len(replies) < amount {
+		user := users[gofakeit.Number(0, len(users)-1)]
+		reply := parentReplies[gofakeit.Number(0, len(users)-1)]
+		key := fmt.Sprintf("%s:%s", user.ID, reply.ID)
+
+		if used[key] {
+			continue
+		}
+		used[key] = true
+		replies = append(replies, model.Reply{
+			ID:       uuid.New(),
+			UserID:   user.ID,
+			ParentID: reply.ID,
+			Message:  gofakeit.Sentence(6),
+		})
+	}
+	return replies
+}
+
 func main() {
 	gofakeit.Seed(0)
 
@@ -157,7 +179,8 @@ func main() {
 	postLikes := GeneratePostLike(amount, users, posts)
 	comments := GenerateComments(amount, users, posts)
 	commentLikes := GenerateCommentLike(amount, users, comments)
-	replies := GenerateReplies(amount, users, comments)
+	parentReplies := GenerateReplies(amount, users, comments)
+	replies := GenerateRepliesToReply(amount, users, parentReplies)
 
 	var sb strings.Builder
 	sb.WriteString("-- Seed data using gofakeit/v7\n")
@@ -220,7 +243,7 @@ func main() {
 	}
 	sb.WriteString("\n")
 
-	for _, reply := range replies {
+	for _, reply := range parentReplies {
 		sb.WriteString(
 			fmt.Sprintf("INSERT INTO replies (id,user_id,comment_id,message) VALUES ('%s','%s','%s','%s');\n",
 				reply.ID,
@@ -230,6 +253,16 @@ func main() {
 	}
 	sb.WriteString("\n")
 
+	for _, reply := range replies {
+		sb.WriteString(
+			fmt.Sprintf("INSERT INTO replies (id,user_id,parent_id,message) VALUES ('%s','%s','%s','%s');\n",
+				reply.ID,
+				reply.UserID,
+				reply.ParentID,
+				reply.Message))
+	}
+
+	sb.WriteString("\n")
 	sb.WriteString("COMMIT;\n")
 
 	if err := os.WriteFile("seed.sql", []byte(sb.String()), 0644); err != nil {

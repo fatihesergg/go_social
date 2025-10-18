@@ -19,8 +19,7 @@ import (
 )
 
 type App struct {
-	Router  *gin.Engine
-	Storage *database.Storage
+	Router *gin.Engine
 }
 
 // @securityDefinitions.apikey	Bearer
@@ -80,8 +79,7 @@ func main() {
 	rateLimiter := middleware.NewRateLimiter(1, 10)
 	engine.Use(rateLimiter.TokenBucketMiddleware())
 	app := App{
-		Router:  engine,
-		Storage: storage,
+		Router: engine,
 	}
 	base := app.Router.Group("/api/v1")
 
@@ -126,6 +124,7 @@ func main() {
 	commentRouter.Use(middleware.AuthMiddleware())
 	commentRouter.POST("/", commentController.CreateComment)
 	commentRouter.PUT("/:id", commentController.UpdateComment)
+	commentRouter.GET("/:id/replies", replyController.GetCommentReplies)
 	commentRouter.DELETE("/:id", commentController.DeleteComment)
 	commentRouter.POST("/:id/reply", replyController.ReplyComment)
 	commentRouter.POST("/:id/like", likeController.LikeComment)
@@ -133,9 +132,10 @@ func main() {
 
 	replyRouter := base.Group("/replies")
 	replyRouter.Use(middleware.AuthMiddleware())
-	replyRouter.GET("/:id", replyController.GetCommentReplies)
+	replyRouter.GET("/:id/replies", replyController.GetRepliesByParent)
 	replyRouter.PUT("/:id", replyController.UpdateReply)
 	replyRouter.DELETE("/:id", replyController.DeleteReply)
+	replyRouter.POST("/:id/reply", replyController.ReplyAReply)
 
 	if err := app.Router.Run(":3000"); err != nil {
 		log.Fatal("Error starting the server")
