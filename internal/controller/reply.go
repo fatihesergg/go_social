@@ -34,7 +34,8 @@ func NewReplyController(replyService services.BaseReplyService) *ReplyController
 //	@Security		Bearer
 func (rc *ReplyController) GetRepliesByParent(c *gin.Context) {
 	id := c.Param("id")
-	replies, err := rc.ReplyService.GetRepliesByParentID(id)
+	userID := c.MustGet("userID").(uuid.UUID)
+	replies, err := rc.ReplyService.GetRepliesByParentID(userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return

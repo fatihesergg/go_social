@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
@@ -11,8 +12,8 @@ type BaseReplyStore interface {
 	CreateCommentReply(reply *model.Reply) error
 	CreateNestedReply(reply *model.Reply) error
 	UpdateReply(reply *model.Reply) error
-	GetRepliesByCommentID(commentID uuid.UUID) ([]model.Reply, error)
-	GetRepliesByParentID(parentID uuid.UUID) ([]model.Reply, error)
+	GetRepliesByCommentID(commentID, userID uuid.UUID) ([]model.Reply, error)
+	GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.Reply, error)
 	GetReplyByID(replyID uuid.UUID) (*model.Reply, error)
 	DeleteReply(replyID uuid.UUID) error
 }
@@ -66,13 +67,28 @@ func (rc *ReplyStore) DeleteReply(replyID uuid.UUID) error {
 	_, err := rc.DB.Exec(query, replyID)
 	return err
 }
-func (rc *ReplyStore) GetRepliesByCommentID(commentID uuid.UUID) ([]model.Reply, error) {
+func (rc *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]model.Reply, error) {
 	replies := []model.Reply{}
 	query := `
 
 	WITH reply_count AS (
 		SELECT parent_id,COUNT(*) AS replies_count FROM replies
 		GROUP BY parent_id
+	),
+
+	reply_likes_count AS (
+	SELECT reply_id,COUNT(*) AS likes_count FROM reply_likes
+	GROUP BY reply_id
+	),
+
+	user_likes AS (
+	SELECT reply_id FROM reply_likes
+	WHERE user_id = $2 
+	),
+
+	user_follows AS (
+	SELECT follow_id FROM follows
+	WHERE user_id = $2
 	)
 
 	SELECT
@@ -85,15 +101,24 @@ func (rc *ReplyStore) GetRepliesByCommentID(commentID uuid.UUID) ([]model.Reply,
 	reply_user.last_name,
 	reply_user.username,
 
-	COALESCE(reply_count.replies_count ,0) AS total_replies
+	COALESCE(reply_likes_count.likes_count ,0) AS total_likes,
+	COALESCE(reply_count.replies_count ,0) AS total_replies,
+
+	(user_likes.reply_id IS NOT NULL) AS is_liked,
+	(user_follows.follow_id IS NOT NULL) AS is_following
+
 
 	FROM replies
 	JOIN users as reply_user ON reply_user.id = replies.user_id
 	LEFT JOIN reply_count ON reply_count.parent_id = replies.id
+	LEFT JOIN reply_likes_count ON reply_likes_count.reply_id = replies.id
+	LEFT JOIN user_likes ON user_likes.reply_id = replies.id
+	LEFT JOIN user_follows ON user_follows.follow_id = reply_user.id
 	WHERE replies.comment_id = $1
 	`
-	rows, err := rc.DB.Query(query, commentID)
+	rows, err := rc.DB.Query(query, commentID, userID)
 	if err != nil {
+		fmt.Println(err)
 
 		return nil, err
 	}
@@ -105,7 +130,7 @@ func (rc *ReplyStore) GetRepliesByCommentID(commentID uuid.UUID) ([]model.Reply,
 		err := rows.Scan(
 			&reply.ID, &reply.Message,
 			&reply.User.ID, &reply.User.Name, &reply.User.LastName, &reply.User.Username,
-			&reply.TotalReplies,
+			&reply.LikeCount, &reply.ReplyCount, &reply.IsLiked, &reply.IsFollowing,
 		)
 		if err != nil {
 			return nil, err
@@ -124,13 +149,28 @@ func (rc *ReplyStore) GetRepliesByCommentID(commentID uuid.UUID) ([]model.Reply,
 
 }
 
-func (rc *ReplyStore) GetRepliesByParentID(parentID uuid.UUID) ([]model.Reply, error) {
+func (rc *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.Reply, error) {
 	replies := []model.Reply{}
 	query := `
 
 	WITH reply_count AS (
 		SELECT parent_id,COUNT(*) AS replies_count FROM replies
 		GROUP BY parent_id
+	),
+
+	reply_likes_count AS (
+	SELECT reply_id,COUNT(*) AS likes_count FROM reply_likes
+	GROUP BY reply_id
+	),
+
+	user_likes AS (
+	SELECT reply_id FROM reply_likes
+	WHERE user_id = $2 
+	),
+
+	user_follows AS (
+	SELECT follow_id FROM follows
+	WHERE user_id = $2
 	)
 
 	SELECT
@@ -144,14 +184,21 @@ func (rc *ReplyStore) GetRepliesByParentID(parentID uuid.UUID) ([]model.Reply, e
 	reply_user.last_name,
 	reply_user.username,
 
-	COALESCE(reply_count.replies_count ,0) AS total_replies
+	COALESCE(reply_likes_count.likes_count ,0) AS total_likes,
+	COALESCE(reply_count.replies_count ,0) AS total_replies,
+
+	(user_likes.reply_id IS NOT NULL) AS is_liked,
+	(user_follows.follow_id IS NOT NULL) AS is_following
 
 	FROM replies
 	JOIN users as reply_user ON reply_user.id = replies.user_id
 	LEFT JOIN reply_count ON reply_count.parent_id = replies.id
+	LEFT JOIN reply_likes_count ON reply_likes_count.reply_id = replies.id
+	LEFT JOIN user_likes ON user_likes.reply_id = replies.id
+	LEFT JOIN user_follows ON user_follows.follow_id = reply_user.id
 	WHERE replies.parent_id = $1
 	`
-	rows, err := rc.DB.Query(query, parentID)
+	rows, err := rc.DB.Query(query, parentID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +210,7 @@ func (rc *ReplyStore) GetRepliesByParentID(parentID uuid.UUID) ([]model.Reply, e
 		err := rows.Scan(
 			&reply.ID, &reply.ParentID, &reply.Message,
 			&reply.User.ID, &reply.User.Name, &reply.User.LastName, &reply.User.Username,
-			&reply.TotalReplies,
+			&reply.LikeCount, &reply.ReplyCount, &reply.IsLiked, &reply.IsFollowing,
 		)
 		if err != nil {
 

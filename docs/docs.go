@@ -1372,6 +1372,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/replies/{id}/like": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Like a reply with reply ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Replies"
+                ],
+                "summary": "Like a reply",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Reply ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/replies/{id}/replies": {
             "get": {
                 "security": [
@@ -1487,6 +1548,67 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/replies/{id}/unlike": {
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Unlike a reply with reply ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Replies"
+                ],
+                "summary": "Unlike a reply",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Reply ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
                         }
@@ -2223,10 +2345,19 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "is_followed": {
+                    "type": "boolean"
+                },
+                "is_liked": {
+                    "type": "boolean"
+                },
                 "message": {
                     "type": "string"
                 },
-                "total_replies": {
+                "total_like": {
+                    "type": "integer"
+                },
+                "total_reply": {
                     "type": "integer"
                 },
                 "user": {

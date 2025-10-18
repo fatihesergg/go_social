@@ -10,7 +10,7 @@ import (
 
 type BaseReplyService interface {
 	GetCommentReplies(userID uuid.UUID, commentIDRaw string) ([]dto.ReplyResponse, error)
-	GetRepliesByParentID(parentIDRaw string) ([]dto.ReplyResponse, error)
+	GetRepliesByParentID(userID uuid.UUID, parentIDRaw string) ([]dto.ReplyResponse, error)
 	ReplyComment(userID uuid.UUID, commentIDRaw string, dto dto.CreateReply) error
 	ReplyAReply(userID uuid.UUID, replyIDRaw string, dto dto.CreateReply) error
 	UpdateReply(userID uuid.UUID, replyIDRaw string, dto dto.UpdateReply) error
@@ -39,7 +39,7 @@ func (rp *ReplyService) GetCommentReplies(userID uuid.UUID, commentIDRaw string)
 		return nil, errors.CommentNotFoundError
 	}
 
-	replies, err := rp.storage.ReplyStore.GetRepliesByCommentID(existComment.ID)
+	replies, err := rp.storage.ReplyStore.GetRepliesByCommentID(existComment.ID, userID)
 	if err != nil {
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -135,14 +135,14 @@ func (rp *ReplyService) DeleteReply(userID uuid.UUID, replyIDRaw string) error {
 	}
 	return nil
 }
-func (rp *ReplyService) GetRepliesByParentID(parentIDRaw string) ([]dto.ReplyResponse, error) {
+func (rp *ReplyService) GetRepliesByParentID(userID uuid.UUID, parentIDRaw string) ([]dto.ReplyResponse, error) {
 
 	parentID, err := uuid.Parse(parentIDRaw)
 	if err != nil {
 		return nil, errors.InvalidIDFormatError
 	}
 
-	replies, err := rp.storage.ReplyStore.GetRepliesByParentID(parentID)
+	replies, err := rp.storage.ReplyStore.GetRepliesByParentID(parentID, userID)
 	if err != nil {
 		return nil, errors.InternalServerError.Wrap(err)
 	}

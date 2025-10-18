@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS reply_likes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reply_id UUID NOT NULL REFERENCES replies(id) ON DELETE CASCADE
+)

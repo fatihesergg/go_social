@@ -136,6 +136,8 @@ func main() {
 	replyRouter.PUT("/:id", replyController.UpdateReply)
 	replyRouter.DELETE("/:id", replyController.DeleteReply)
 	replyRouter.POST("/:id/reply", replyController.ReplyAReply)
+	replyRouter.POST("/:id/like", likeController.LikeReply)
+	replyRouter.DELETE("/:id/unlike", likeController.UnlikeReply)
 
 	if err := app.Router.Run(":3000"); err != nil {
 		log.Fatal("Error starting the server")

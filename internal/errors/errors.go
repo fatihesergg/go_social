@@ -28,3 +28,5 @@ var AlreadyCommentLikeError = AppError{Message: "Comment already liked", Code: h
 var PostNotLikedError = AppError{Message: "Post not liked yet", Code: http.StatusBadRequest}
 var CommentNotLikedError = AppError{Message: "Comment not liked yet", Code: http.StatusBadRequest}
 var NoRepliesFoundError = AppError{Message: "Replies not found", Code: http.StatusBadRequest}
+var AlreadyReplyLikeError = AppError{Message: "Reply already liked", Code: http.StatusBadRequest}
+var ReplyNotLikedError = AppError{Message: "Reply not liked yet", Code: http.StatusBadRequest}

@@ -10,8 +10,10 @@ import (
 type BaseLikeService interface {
 	LikePost(userID uuid.UUID, postIDRaw string) error
 	LikeComment(userID uuid.UUID, commentRawID string) error
+	LikeReply(userID uuid.UUID, replyRawID string) error
 	UnlikePost(userID uuid.UUID, postIDRaw string) error
 	UnlikeComment(userID uuid.UUID, commentRawID string) error
+	UnlikeReply(userID uuid.UUID, replyRawID string) error
 }
 
 type LikeService struct {
@@ -109,6 +111,53 @@ func (ls *LikeService) UnlikeComment(userID uuid.UUID, commentRawID string) erro
 	}
 
 	err = ls.storage.LikeStore.UnlikeComment(commentID, userID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+
+	}
+	return nil
+}
+
+func (ls *LikeService) LikeReply(userID uuid.UUID, replyRawID string) error {
+	replyID, err := uuid.Parse(replyRawID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	liked, err := ls.storage.LikeStore.IsReplyLiked(replyID, userID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+	if liked {
+		return errors.AlreadyReplyLikeError
+	}
+
+	err = ls.storage.LikeStore.LikeReply(&model.ReplyLike{
+		ReplyID: replyID,
+		UserID:  userID,
+	})
+
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+	return nil
+}
+func (ls *LikeService) UnlikeReply(userID uuid.UUID, replyRawID string) error {
+	replyID, err := uuid.Parse(replyRawID)
+	if err != nil {
+		return errors.InvalidIDFormatError
+	}
+
+	existLike, err := ls.storage.LikeStore.IsReplyLiked(replyID, userID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !existLike {
+		return errors.ReplyNotLikedError
+	}
+
+	err = ls.storage.LikeStore.UnlikeReply(replyID, userID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 

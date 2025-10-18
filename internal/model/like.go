@@ -12,3 +12,8 @@ type CommentLike struct {
 	CommentID uuid.UUID `json:"comment_id"`
 	UserID    uuid.UUID `json:"user_id"`
 }
+type ReplyLike struct {
+	ID      uuid.UUID `json:"id"`
+	ReplyID uuid.UUID `json:"reply_id"`
+	UserID  uuid.UUID `json:"user_id"`
+}

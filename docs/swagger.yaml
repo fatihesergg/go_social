@@ -182,9 +182,15 @@ definitions:
     properties:
       id:
         type: string
+      is_followed:
+        type: boolean
+      is_liked:
+        type: boolean
       message:
         type: string
-      total_replies:
+      total_like:
+        type: integer
+      total_reply:
         type: integer
       user:
         $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
@@ -1105,6 +1111,45 @@ paths:
       summary: Update a reply
       tags:
       - Reply
+  /replies/{id}/like:
+    post:
+      consumes:
+      - application/json
+      description: Like a reply with reply ID
+      parameters:
+      - description: Reply ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Like a reply
+      tags:
+      - Replies
   /replies/{id}/replies:
     get:
       consumes:
@@ -1184,6 +1229,45 @@ paths:
       summary: Reply a reply
       tags:
       - Reply
+  /replies/{id}/unlike:
+    delete:
+      consumes:
+      - application/json
+      description: Unlike a reply with reply ID
+      parameters:
+      - description: Reply ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Unlike a reply
+      tags:
+      - Replies
   /signup:
     post:
       consumes:

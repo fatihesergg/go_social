@@ -45,6 +45,34 @@ func (lc LikeController) LikePost(c *gin.Context) {
 
 }
 
+// LikeReply godoc
+//
+//	@Summary		Like a reply
+//	@Description	Like a reply with reply ID
+//	@Tags			Replies
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Reply ID"
+//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		401	{object}	util.ErrorResponse
+//	@Failure		404	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
+//	@Security		Bearer
+//	@Router	/replies/{id}/like [post]
+func (lc LikeController) LikeReply(c *gin.Context) {
+
+	id := c.Param("id")
+	userID := c.MustGet("userID").(uuid.UUID)
+	err := lc.LikeService.LikeReply(userID, id)
+	if err != nil {
+		util.WriteAppError(c, err)
+		return
+	}
+	c.JSON(201, util.SuccessMessageResponse{Message: "Reply liked successfully"})
+
+}
+
 // UnlikePost godoc
 //
 //	@Summary		Unlike a post
@@ -69,6 +97,32 @@ func (lc LikeController) UnlikePost(c *gin.Context) {
 		return
 	}
 	c.JSON(200, util.SuccessMessageResponse{Message: "Post unliked successfully"})
+}
+
+// UnlikeReply godoc
+//
+//	@Summary		Unlike a reply
+//	@Description	Unlike a reply with reply ID
+//	@Tags			Replies
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Reply ID"
+//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		401	{object}	util.ErrorResponse
+//	@Failure		404	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
+//	@Security		Bearer
+//	@Router	/replies/{id}/unlike [delete]
+func (lc LikeController) UnlikeReply(c *gin.Context) {
+	id := c.Param("id")
+	userID := c.MustGet("userID").(uuid.UUID)
+	err := lc.LikeService.UnlikeReply(userID, id)
+	if err != nil {
+		util.WriteAppError(c, err)
+		return
+	}
+	c.JSON(200, util.SuccessMessageResponse{Message: "Reply unliked successfully"})
 }
 
 // LikePost godoc
