@@ -49,8 +49,8 @@ func main() {
 	util.ApiConfig = util.LoadConfig()
 	util.ApiConfig.Validate()
 
-	DSN := fmt.Sprintf("postgres://%s:%s@db:%s/%s?sslmode=disable", util.ApiConfig.PGUser, util.ApiConfig.PGPass, util.ApiConfig.PGPort, util.ApiConfig.PGDB)
-
+	DSN := fmt.Sprintf("postgres://%s:%s@db:5432/%s?sslmode=disable", util.ApiConfig.PGUser, util.ApiConfig.PGPass, util.ApiConfig.PGDB)
+	fmt.Println(DSN)
 	db, err := sql.Open("postgres", DSN)
 	if err != nil {
 		log.Fatal("Invalid postgres arguments")
@@ -116,7 +116,7 @@ func main() {
 	postRouter.PUT("/:id", postController.UpdatePost)
 	postRouter.POST("/:id/like", likeController.LikePost)
 	postRouter.DELETE("/:id/unlike", likeController.UnlikePost)
-	postRouter.GET("/:post_id", commentController.GetCommentsByPostID)
+	postRouter.GET("/:id/comments", commentController.GetCommentsByPostID)
 
 	feedRouter := base.Group("/feed")
 	feedRouter.Use(middleware.AuthMiddleware())

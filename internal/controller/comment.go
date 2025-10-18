@@ -57,7 +57,7 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 //	@Tags			Comments
 //	@Accept			json
 //	@Produce		json
-//	@Param			post_id	path		int	true	"Post ID"
+//	@Param			id	path		int	true	"Post ID"
 //	@Success		200		{object}	util.SuccessResultResponse{result=[]dto.CommentDetailResponse}
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		401		{object}	util.ErrorResponse
@@ -66,7 +66,7 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 //	@Security		Bearer
 //	@Router			/posts/{post_id}/comments [get]
 func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
-	id := c.Param("post_id")
+	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
 
 	comments, err := cc.CommentService.GetCommentsByPostID(userID, id)
