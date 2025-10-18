@@ -64,7 +64,7 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 //	@Failure		404		{object}	util.ErrorResponse
 //	@Failure		500		{object}	util.ErrorResponse
 //	@Security		Bearer
-//	@Router			/comments/post/{post_id} [get]
+//	@Router			/posts/{post_id}/comments [get]
 func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
 	id := c.Param("post_id")
 	userID := c.MustGet("userID").(uuid.UUID)

@@ -116,6 +116,7 @@ func main() {
 	postRouter.PUT("/:id", postController.UpdatePost)
 	postRouter.POST("/:id/like", likeController.LikePost)
 	postRouter.DELETE("/:id/unlike", likeController.UnlikePost)
+	postRouter.GET("/:post_id", commentController.GetCommentsByPostID)
 
 	feedRouter := base.Group("/feed")
 	feedRouter.Use(middleware.AuthMiddleware())
@@ -124,7 +125,6 @@ func main() {
 	commentRouter := base.Group("/comments")
 	commentRouter.Use(middleware.AuthMiddleware())
 	commentRouter.POST("/", commentController.CreateComment)
-	commentRouter.GET("/:post_id", commentController.GetCommentsByPostID)
 	commentRouter.PUT("/:id", commentController.UpdateComment)
 	commentRouter.DELETE("/:id", commentController.DeleteComment)
 	commentRouter.POST("/:id/reply", replyController.ReplyComment)
