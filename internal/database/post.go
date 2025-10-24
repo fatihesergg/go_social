@@ -125,15 +125,21 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 }
 
 func (s *PostStore) GetPostByID(postID uuid.UUID) (*model.Post, error) {
-	var result *model.Post
-	query := `SELECT * FROM posts WHERE id = $1`
-	err := s.DB.QueryRow(query, postID).Scan(&result)
+	result := &model.Post{}
+	var id, userID *uuid.UUID
+	var content *string
+	query := `SELECT id,user_id,content FROM posts WHERE id = $1`
+	err := s.DB.QueryRow(query, postID).Scan(&id, &userID, &content)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
 	}
+	result.ID = *id
+	result.Content = *content
+	result.UserID = *userID
+
 	return result, nil
 }
 
@@ -358,9 +364,9 @@ func (s *PostStore) GetPostsByUserID(userID uuid.UUID, pagination Pagination, se
 
 func (s *PostStore) CreatePost(post *model.Post) error {
 
-	query := "INSERT INTO posts (content, user_id) VALUES ($1, $2)"
+	query := "INSERT INTO posts (id, content, user_id) VALUES ($1, $2, $3)"
 
-	_, err := s.DB.Exec(query, post.Content, post.UserID.String())
+	_, err := s.DB.Exec(query, post.ID, post.Content, post.UserID)
 	if err != nil {
 		return err
 	}

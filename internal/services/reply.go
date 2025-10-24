@@ -69,6 +69,7 @@ func (rp *ReplyService) ReplyComment(userID uuid.UUID, commentIDRaw string, dto 
 	}
 
 	reply := &model.Reply{
+		ID:        uuid.New(),
 		CommentID: comment.ID,
 		UserID:    userID,
 		Message:   dto.Message,
@@ -169,6 +170,7 @@ func (rp *ReplyService) ReplyAReply(userID uuid.UUID, replyIDRaw string, dto dto
 	}
 
 	nestedReply := &model.Reply{
+		ID:       uuid.New(),
 		ParentID: parentID,
 		UserID:   userID,
 		Message:  dto.Message,

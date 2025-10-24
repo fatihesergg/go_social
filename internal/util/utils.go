@@ -68,6 +68,7 @@ func HandleBindError(c *gin.Context, err error) {
 	validationErrors, ok := err.(validator.ValidationErrors)
 	if !ok {
 		c.JSON(400, ErrorResponse{Error: "invalid input"})
+		return
 	}
 
 	result := make(map[string]string)

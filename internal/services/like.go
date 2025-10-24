@@ -38,6 +38,7 @@ func (ls *LikeService) LikePost(userID uuid.UUID, postIDRaw string) error {
 	}
 
 	err = ls.storage.LikeStore.LikePost(&model.PostLike{
+		ID:     uuid.New(),
 		PostID: postID,
 		UserID: userID,
 	})
@@ -86,6 +87,7 @@ func (ls *LikeService) LikeComment(userID uuid.UUID, commentRawID string) error 
 		return errors.AlreadyCommentLikeError
 	}
 	err = ls.storage.LikeStore.LikeComment(&model.CommentLike{
+		ID:        uuid.New(),
 		CommentID: commentID,
 		UserID:    userID,
 	})
@@ -133,6 +135,7 @@ func (ls *LikeService) LikeReply(userID uuid.UUID, replyRawID string) error {
 	}
 
 	err = ls.storage.LikeStore.LikeReply(&model.ReplyLike{
+		ID:      uuid.New(),
 		ReplyID: replyID,
 		UserID:  userID,
 	})

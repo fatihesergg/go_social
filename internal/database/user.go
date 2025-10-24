@@ -78,8 +78,8 @@ func (s *UserStore) GetUserByEmail(email string) (*model.User, error) {
 
 func (s *UserStore) CreateUser(user *model.User) error {
 	var id uuid.UUID
-	query := "INSERT INTO users (name, last_name, username, email, password, avatar) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
-	err := s.DB.QueryRow(query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.Avatar).Scan(&id)
+	query := "INSERT INTO users (id, name, last_name, username, email, password, avatar) VALUES ($1, $2, $3, $4, $5, $6,$7) RETURNING id"
+	err := s.DB.QueryRow(query, user.ID, user.Name, user.LastName, user.Username, user.Email, user.Password, user.Avatar).Scan(&id)
 	if err != nil {
 
 		return err

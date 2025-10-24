@@ -132,8 +132,8 @@ func (cs CommentStore) GetCommentByID(id uuid.UUID) (*model.Comment, error) {
 
 func (cs CommentStore) CreateComment(comment *model.Comment) error {
 
-	query := "INSERT INTO comments (post_id, user_id, content) VALUES ($1, $2, $3)"
-	_, err := cs.db.Exec(query, comment.PostID, comment.UserID, comment.Content)
+	query := "INSERT INTO comments (id,post_id, user_id, content) VALUES ($1, $2, $3,$4)"
+	_, err := cs.db.Exec(query, comment.ID, comment.PostID, comment.UserID, comment.Content)
 	if err != nil {
 		return err
 	}

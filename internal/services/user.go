@@ -33,6 +33,7 @@ func NewUserService(storage *database.Storage) BaseUserService {
 }
 func (us *UserService) Register(dto dto.CreateUserDTO) error {
 	user := &model.User{
+		ID:       uuid.New(),
 		Name:     dto.Name,
 		LastName: dto.LastName,
 		Email:    dto.Email,
@@ -166,8 +167,13 @@ func (us *UserService) FollowUser(userID uuid.UUID, followID string) error {
 	if isFollowing {
 		return errors.AlreadyFollowingError
 	}
+	follow := model.Follow{
+		ID:       uuid.New(),
+		UserID:   userID,
+		FollowID: followUserID,
+	}
 
-	err = us.storage.FollowStore.FollowUser(userID, followUserID)
+	err = us.storage.FollowStore.FollowUser(follow)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
@@ -194,8 +200,12 @@ func (us *UserService) UnFollowUser(userID uuid.UUID, followID string) error {
 	if !isFollowing {
 		return errors.NotFollowingError
 	}
+	follow := model.Follow{
+		UserID:   userID,
+		FollowID: unfUser,
+	}
 
-	err = us.storage.FollowStore.UnFollowUser(userID, unfUser)
+	err = us.storage.FollowStore.UnFollowUser(follow)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}

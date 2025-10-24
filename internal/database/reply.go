@@ -29,14 +29,14 @@ func NewReplyStore(db *sql.DB) *ReplyStore {
 }
 
 func (rs *ReplyStore) CreateCommentReply(reply *model.Reply) error {
-	query := "INSERT INTO replies ( comment_id,user_id,message ) VALUES ( $1,$2,$3 )"
-	_, err := rs.DB.Exec(query, reply.CommentID, reply.UserID, reply.Message)
+	query := "INSERT INTO replies ( id,comment_id,user_id,message ) VALUES ( $1,$2,$3,$4 )"
+	_, err := rs.DB.Exec(query, reply.ID, reply.CommentID, reply.UserID, reply.Message)
 	return err
 }
 
 func (rs *ReplyStore) CreateNestedReply(reply *model.Reply) error {
-	query := "INSERT INTO replies ( parent_id,user_id,message ) VALUES ( $1,$2,$3 )"
-	_, err := rs.DB.Exec(query, reply.ParentID, reply.UserID, reply.Message)
+	query := "INSERT INTO replies ( id,parent_id,user_id,message ) VALUES ( $1,$2,$3,$4 )"
+	_, err := rs.DB.Exec(query, reply.ID, reply.ParentID, reply.UserID, reply.Message)
 	return err
 }
 

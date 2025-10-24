@@ -10,8 +10,8 @@ import (
 type BaseFollowStore interface {
 	GetFollowerByUserID(userID uuid.UUID) ([]model.Follow, error)
 	GetFollowingByUserID(userID uuid.UUID) ([]model.Follow, error)
-	FollowUser(userID, followID uuid.UUID) error
-	UnFollowUser(userID, followID uuid.UUID) error
+	FollowUser(model model.Follow) error
+	UnFollowUser(model model.Follow) error
 }
 
 type FollowStore struct {
@@ -71,13 +71,13 @@ func (s FollowStore) GetFollowingByUserID(userID uuid.UUID) ([]model.Follow, err
 	return follows, nil
 }
 
-func (s FollowStore) FollowUser(userID, followID uuid.UUID) error {
-	query := "INSERT INTO follows (user_id, follow_id) VALUES ($1, $2)"
-	_, err := s.db.Exec(query, userID, followID)
+func (s FollowStore) FollowUser(model model.Follow) error {
+	query := "INSERT INTO follows (id,user_id, follow_id) VALUES ($1, $2,$3)"
+	_, err := s.db.Exec(query, model.ID, model.UserID, model.FollowID)
 	return err
 }
-func (s FollowStore) UnFollowUser(userID, followID uuid.UUID) error {
+func (s FollowStore) UnFollowUser(model model.Follow) error {
 	query := "DELETE FROM follows WHERE user_id = $1 AND follow_id = $2"
-	_, err := s.db.Exec(query, userID, followID)
+	_, err := s.db.Exec(query, model.UserID, model.FollowID)
 	return err
 }

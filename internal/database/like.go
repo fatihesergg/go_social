@@ -28,14 +28,14 @@ func NewLikeStore(db *sql.DB) BaseLikeStore {
 }
 
 func (s *LikeStore) LikePost(like *model.PostLike) error {
-	query := `INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2)`
-	_, err := s.DB.Exec(query, like.PostID, like.UserID)
+	query := `INSERT INTO post_likes (id,post_id, user_id) VALUES ($1, $2,$3)`
+	_, err := s.DB.Exec(query, like.ID, like.PostID, like.UserID)
 	return err
 }
 
 func (s *LikeStore) LikeComment(like *model.CommentLike) error {
-	query := `INSERT INTO comment_likes (comment_id, user_id) VALUES ($1, $2)`
-	_, err := s.DB.Exec(query, like.CommentID, like.UserID)
+	query := `INSERT INTO comment_likes (id,comment_id, user_id) VALUES ($1, $2,$3)`
+	_, err := s.DB.Exec(query, like.ID, like.CommentID, like.UserID)
 	return err
 }
 func (s *LikeStore) UnlikePost(postID uuid.UUID, userID uuid.UUID) error {
@@ -45,8 +45,8 @@ func (s *LikeStore) UnlikePost(postID uuid.UUID, userID uuid.UUID) error {
 }
 
 func (s *LikeStore) LikeReply(like *model.ReplyLike) error {
-	query := `INSERT INTO reply_likes  (reply_id,user_id) VALUES ($1,$2)`
-	_, err := s.DB.Exec(query, like.ReplyID, like.UserID)
+	query := `INSERT INTO reply_likes  (id,reply_id,user_id) VALUES ($1,$2,$3)`
+	_, err := s.DB.Exec(query, like.ID, like.ReplyID, like.UserID)
 	return err
 }
 

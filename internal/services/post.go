@@ -58,6 +58,7 @@ func (ps *PostService) GetPostByID(userID uuid.UUID, postIDRaw string) (*dto.Pos
 func (ps *PostService) CreatePost(userID uuid.UUID, dto dto.CreatePostDTO) error {
 
 	post := &model.Post{
+		ID:      uuid.New(),
 		Content: dto.Content,
 	}
 
