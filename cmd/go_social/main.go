@@ -78,10 +78,8 @@ func main() {
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	rateLimiter := middleware.NewRateLimiter(1, 10)
 	engine.Use(rateLimiter.TokenBucketMiddleware())
-	app := App{
-		Router: engine,
-	}
-	base := app.Router.Group("/api/v1")
+
+	base := engine.Group("/api/v1")
 
 	userController := controller.NewUserController(userService)
 	postController := controller.NewPostController(postService)
@@ -139,7 +137,7 @@ func main() {
 	replyRouter.POST("/:id/like", likeController.LikeReply)
 	replyRouter.DELETE("/:id/unlike", likeController.UnlikeReply)
 
-	if err := app.Router.Run(":3000"); err != nil {
+	if err := engine.Run(":3000"); err != nil {
 		log.Fatal("Error starting the server")
 	}
 
