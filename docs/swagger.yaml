@@ -1066,7 +1066,7 @@ paths:
       - Bearer: []
       summary: Delete a reply
       tags:
-      - Reply
+      - Replies
     put:
       consumes:
       - application/json
@@ -1110,7 +1110,7 @@ paths:
       - Bearer: []
       summary: Update a reply
       tags:
-      - Reply
+      - Replies
   /replies/{id}/like:
     post:
       consumes:
@@ -1191,7 +1191,7 @@ paths:
       - Bearer: []
       summary: Get replies of a reply
       tags:
-      - Reply
+      - Replies
   /replies/{id}/reply:
     post:
       consumes:
@@ -1228,7 +1228,7 @@ paths:
       - Bearer: []
       summary: Reply a reply
       tags:
-      - Reply
+      - Replies
   /replies/{id}/unlike:
     delete:
       consumes:

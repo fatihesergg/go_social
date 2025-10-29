@@ -22,7 +22,7 @@ func NewReplyController(replyService services.BaseReplyService) *ReplyController
 //
 //	@Summary		Get replies of a reply
 //	@Description	Get replies of a reply
-//	@Tags			Reply
+//	@Tags Replies
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Reply ID"
@@ -105,7 +105,7 @@ func (rc *ReplyController) ReplyComment(c *gin.Context) {
 //
 //	@Summary		Reply a reply
 //	@Description	Reply a reply
-//	@Tags			Reply
+//	@Tags Replies
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Reply ID"
@@ -137,7 +137,7 @@ func (rc *ReplyController) ReplyAReply(c *gin.Context) {
 //
 //		@Summary		Update a reply
 //		@Description	Update a reply
-//		@Tags			Reply
+//		@Tags Replies
 //		@Accept			json
 //		@Produce		json
 //		@Param			id	path		string	true	"Comment ID"
@@ -173,7 +173,7 @@ func (rc *ReplyController) UpdateReply(c *gin.Context) {
 //
 //	@Summary		Delete a reply
 //	@Description	Delete a reply
-//	@Tags			Reply
+//	@Tags Replies
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Comment ID"

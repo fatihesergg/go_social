@@ -1258,7 +1258,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Reply"
+                    "Replies"
                 ],
                 "summary": "Update a reply",
                 "parameters": [
@@ -1326,7 +1326,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Reply"
+                    "Replies"
                 ],
                 "summary": "Delete a reply",
                 "parameters": [
@@ -1448,7 +1448,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Reply"
+                    "Replies"
                 ],
                 "summary": "Get replies of a reply",
                 "parameters": [
@@ -1518,7 +1518,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Reply"
+                    "Replies"
                 ],
                 "summary": "Reply a reply",
                 "parameters": [

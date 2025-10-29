@@ -1247,7 +1247,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Reply"
+                    "Replies"
                 ],
                 "summary": "Update a reply",
                 "parameters": [
@@ -1315,7 +1315,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Reply"
+                    "Replies"
                 ],
                 "summary": "Delete a reply",
                 "parameters": [
@@ -1437,7 +1437,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Reply"
+                    "Replies"
                 ],
                 "summary": "Get replies of a reply",
                 "parameters": [
@@ -1507,7 +1507,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Reply"
+                    "Replies"
                 ],
                 "summary": "Reply a reply",
                 "parameters": [
