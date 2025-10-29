@@ -1,0 +1,13 @@
+DROP INDEX IF EXISTS follows_userid_idx;
+DROP INDEX IF EXISTS follows_followid_idx;
+DROP INDEX IF EXISTS posts_userid_idx;
+DROP INDEX IF EXISTS comments_postid_idx;
+DROP INDEX IF EXISTS comments_userid_idx;
+DROP INDEX IF EXISTS replies_userid_idx;
+DROP INDEX IF EXISTS replies_parentid_idx;
+DROP INDEX IF EXISTS replies_commentid_idx;
+DROP INDEX IF EXISTS comment_likes_userid_idx;
+DROP INDEX IF EXISTS post_likes_userid_idx;
+DROP INDEX IF EXISTS post_likes_postid_idx;
+DROP INDEX IF EXISTS reply_likes_replyid_idx;
+DROP INDEX IF EXISTS reply_likes_userid_idx;

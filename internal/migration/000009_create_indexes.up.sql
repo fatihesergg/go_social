@@ -1,0 +1,13 @@
+CREATE INDEX IF NOT EXISTS follows_userid_idx ON follows (user_id);
+CREATE INDEX IF NOT EXISTS follows_followid_idx ON follows (follow_id);
+CREATE INDEX IF NOT EXISTS posts_userid_idx ON posts (user_id);
+CREATE INDEX IF NOT EXISTS comments_postid_idx ON comments (post_id);
+CREATE INDEX IF NOT EXISTS comments_userid_idx ON comments (user_id);
+CREATE INDEX IF NOT EXISTS replies_userid_idx ON replies (user_id);
+CREATE INDEX IF NOT EXISTS replies_parentid_idx ON replies (parent_id);
+CREATE INDEX IF NOT EXISTS replies_commentid_idx ON replies (comment_id);
+CREATE INDEX IF NOT EXISTS comment_likes_userid_idx ON comment_likes (user_id);
+CREATE INDEX IF NOT EXISTS post_likes_userid_idx ON post_likes (user_id);
+CREATE INDEX IF NOT EXISTS post_likes_postid_idx ON post_likes (post_id);
+CREATE INDEX IF NOT EXISTS reply_likes_replyid_idx ON reply_likes (reply_id);
+CREATE INDEX IF NOT EXISTS reply_likes_userid_idx ON reply_likes (user_id);
