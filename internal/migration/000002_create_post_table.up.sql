@@ -1,3 +1,5 @@
+CREATE TYPE post_visibility AS ENUM ('private','public');
+
 CREATE TABLE IF NOT EXISTS posts(
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     content TEXT NOT NULL,
@@ -5,5 +7,6 @@ CREATE TABLE IF NOT EXISTS posts(
     user_id UUID NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    visibility post_visibility NOT NULL DEFAULT 'public'
 );

@@ -24,6 +24,15 @@ func NewCommentService(storage *database.Storage) BaseCommentService {
 
 func (cs *CommentService) AddCommentPost(userID uuid.UUID, dto dto.CreateCommentDTO) error {
 
+	hasAccess, err := cs.storage.PostStore.HasAccessToPost(userID, dto.PostID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
+	}
+
 	comment := &model.Comment{
 		ID:      uuid.New(),
 		PostID:  dto.PostID,
@@ -31,7 +40,7 @@ func (cs *CommentService) AddCommentPost(userID uuid.UUID, dto dto.CreateComment
 		Content: dto.Content,
 	}
 
-	err := cs.storage.CommentStore.CreateComment(comment)
+	err = cs.storage.CommentStore.CreateComment(comment)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
@@ -43,6 +52,16 @@ func (cs *CommentService) GetCommentsByPostID(userID uuid.UUID, postIDRaw string
 	if err != nil {
 		return nil, errors.InvalidIDFormatError
 	}
+
+	hasAccess, err := cs.storage.PostStore.HasAccessToPost(userID, postID)
+	if err != nil {
+		return nil, errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return nil, errors.InvalidPermissionError
+	}
+
 	comments, err := cs.storage.CommentStore.GetCommentsByPostID(postID, userID)
 
 	if err != nil {
@@ -60,6 +79,16 @@ func (cs *CommentService) UpdateComment(userID uuid.UUID, commentIDRaw string, d
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
 		return errors.InvalidIDFormatError
+
+	}
+
+	hasAccess, err := cs.storage.CommentStore.HasAccessToComment(userID, commentID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
 	}
 
 	comment, err := cs.storage.CommentStore.GetCommentByID(commentID)
@@ -83,6 +112,15 @@ func (cs *CommentService) DeleteComment(userID uuid.UUID, commentIDRaw string) e
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
 		return errors.InvalidIDFormatError
+	}
+
+	hasAccess, err := cs.storage.CommentStore.HasAccessToComment(userID, commentID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
 	}
 
 	comment, err := cs.storage.CommentStore.GetCommentByID(commentID)

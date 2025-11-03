@@ -8,6 +8,7 @@ import (
 )
 
 type BasePostStore interface {
+	HasAccessToPost(userID, postID uuid.UUID) (bool, error)
 	GetPostByID(postID uuid.UUID) (*model.Post, error)
 	GetPosts(pagination Pagination, search Search, userID uuid.UUID) ([]model.Post, error)
 	GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, error)
@@ -25,6 +26,26 @@ func NewPostStore(db *sql.DB) BasePostStore {
 	return &PostStore{DB: db}
 }
 
+func (s *PostStore) HasAccessToPost(userID, postID uuid.UUID) (bool, error) {
+	var result bool
+	query := `
+	SELECT EXISTS(SELECT 1 FROM posts
+	LEFT JOIN follows ON follows.follow_id = posts.user_id
+	WHERE posts.id = $2  
+	AND ( 
+	posts.visibility = 'public' 
+	OR posts.user_id = $1
+	OR ( follows.user_id IS NOT NULL AND follows.user_id = $1))
+	)`
+
+	err := s.DB.QueryRow(query, userID, postID).Scan(&result)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
+
+}
+
 func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.UUID) ([]model.Post, error) {
 	var posts []model.Post
 
@@ -38,14 +59,7 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 	// IsLiked      bool       `json:"is_liked"`
 	// IsFollowing  bool       `json:"is_following"`
 	query := `
-	WITH limited_posts AS (
-		SELECT * FROM posts
-		WHERE content ILIKE '%' || $1 || '%'
-		ORDER BY created_at DESC
-		LIMIT $2 OFFSET $3
-	),
-
-	likes_count AS (
+	WITH likes_count AS (
 		SELECT post_id ,COUNT(*) as total_likes FROM post_likes
 		GROUP BY post_id
 	),
@@ -64,6 +78,13 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 		SELECT follow_id
 		FROM follows
 		WHERE user_id = $5
+	),
+
+	limited_posts AS (
+		SELECT * FROM posts
+		WHERE content ILIKE '%' || $1 || '%' AND (posts.visibility = 'public' OR posts.user_id IN (SELECT follow_id FROM user_follows))
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
 	)
 
 
@@ -84,6 +105,7 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 	LEFT JOIN comments_count ON comments_count.post_id = posts.id
 	LEFT JOIN user_likes ON user_likes.post_id = posts.id
 	LEFT JOIN user_follows ON user_follows.follow_id = post_user.id
+;
 	`
 
 	rows, err := s.DB.Query(query, search.Query, pagination.Limit, pagination.Offset, userID, userID)
@@ -188,6 +210,7 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 		posts.content,
 		posts.created_at,
 		posts.updated_at,
+		posts.visibility,
 
         post_user.id,
 		post_user.name,
@@ -225,7 +248,6 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 		LEFT JOIN reply_count ON  reply_count.comment_id = comments.id
 		LEFT JOIN comment_like_count ON  comment_like_count.comment_id = comments.id
 		LEFT JOIN post_like_count ON  post_like_count.post_id = posts.id
-
         WHERE posts.id = $2`
 
 	rows, err := s.DB.Query(postQuery, userID, postID)
@@ -245,7 +267,7 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 		var replyCount, commentLikeCount *int
 		var isCommentFollowing, isCommentLiked *bool
 
-		err := rows.Scan(&post.ID, &post.Content, &post.CreatedAt, &post.UpdatedAt,
+		err := rows.Scan(&post.ID, &post.Content, &post.CreatedAt, &post.UpdatedAt, &post.Visibility,
 			&post.User.ID, &post.User.Name, &post.User.LastName, &post.User.Username,
 			&commentID, &commentContent,
 			&commentUserID, &commentUserName, &commentUserLastName, &commentUserUsername,
@@ -364,9 +386,9 @@ func (s *PostStore) GetPostsByUserID(userID uuid.UUID, pagination Pagination, se
 
 func (s *PostStore) CreatePost(post *model.Post) error {
 
-	query := "INSERT INTO posts (id, content, user_id) VALUES ($1, $2, $3)"
+	query := "INSERT INTO posts (id, content, user_id, visibility) VALUES ($1, $2, $3,$4)"
 
-	_, err := s.DB.Exec(query, post.ID, post.Content, post.UserID)
+	_, err := s.DB.Exec(query, post.ID, post.Content, post.UserID, post.Visibility)
 	if err != nil {
 		return err
 	}

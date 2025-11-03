@@ -8,6 +8,7 @@ import (
 )
 
 type BaseCommentStore interface {
+	HasAccessToComment(userID, commentID uuid.UUID) (bool, error)
 	GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Comment, error)
 	GetCommentByID(id uuid.UUID) (*model.Comment, error)
 	CreateComment(comment *model.Comment) error
@@ -23,6 +24,27 @@ func NewCommentStore(db *sql.DB) BaseCommentStore {
 	return &CommentStore{
 		db: db,
 	}
+}
+
+func (cs *CommentStore) HasAccessToComment(userID, commentID uuid.UUID) (bool, error) {
+	var result bool
+	query := `
+	SELECT EXISTS(SELECT 1 FROM comments
+	JOIN posts AS comments_post ON comments_post.id = comments.post_id
+	LEFT JOIN follows ON follows.follow_id = comments_post.user_id
+	WHERE comments.id = $2 
+	AND (
+	comments_post.visibility = 'public' 
+	OR comments.user_id = $1
+	OR (follows.user_id IS NOT NULL AND follows.user_id = $1)
+	))`
+
+	err := cs.db.QueryRow(query, userID, commentID).Scan(&result)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
+
 }
 
 func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Comment, error) {

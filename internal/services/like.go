@@ -29,6 +29,15 @@ func (ls *LikeService) LikePost(userID uuid.UUID, postIDRaw string) error {
 		return errors.InternalServerError.Wrap(err)
 	}
 
+	hasAccess, err := ls.storage.PostStore.HasAccessToPost(userID, postID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
+	}
+
 	liked, err := ls.storage.LikeStore.IsPostLiked(postID, userID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
@@ -56,6 +65,15 @@ func (ls *LikeService) UnlikePost(userID uuid.UUID, postIDRaw string) error {
 		return errors.InvalidIDFormatError
 	}
 
+	hasAccess, err := ls.storage.PostStore.HasAccessToPost(userID, postID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
+	}
+
 	liked, err := ls.storage.LikeStore.IsPostLiked(postID, userID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
@@ -76,6 +94,15 @@ func (ls *LikeService) LikeComment(userID uuid.UUID, commentRawID string) error 
 	commentID, err := uuid.Parse(commentRawID)
 	if err != nil {
 		return errors.InvalidIDFormatError
+	}
+	hasAccess, err := ls.storage.CommentStore.HasAccessToComment(userID, commentID)
+
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
 	}
 
 	existLike, err := ls.storage.LikeStore.IsCommentLiked(commentID, userID)
@@ -101,6 +128,15 @@ func (ls *LikeService) UnlikeComment(userID uuid.UUID, commentRawID string) erro
 	commentID, err := uuid.Parse(commentRawID)
 	if err != nil {
 		return errors.InvalidIDFormatError
+	}
+	hasAccess, err := ls.storage.CommentStore.HasAccessToComment(userID, commentID)
+
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
 	}
 
 	existLike, err := ls.storage.LikeStore.IsCommentLiked(commentID, userID)

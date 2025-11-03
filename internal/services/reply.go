@@ -30,6 +30,15 @@ func (rp *ReplyService) GetCommentReplies(userID uuid.UUID, commentIDRaw string)
 		return nil, errors.InvalidIDFormatError
 	}
 
+	hasAccess, err := rp.storage.CommentStore.HasAccessToComment(userID, commentID)
+	if err != nil {
+		return nil, errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return nil, errors.InvalidPermissionError
+	}
+
 	existComment, err := rp.storage.CommentStore.GetCommentByID(commentID)
 	if err != nil {
 		return nil, errors.InternalServerError.Wrap(err)
@@ -57,6 +66,15 @@ func (rp *ReplyService) ReplyComment(userID uuid.UUID, commentIDRaw string, dto 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
 		return errors.InvalidIDFormatError
+	}
+
+	hasAccess, err := rp.storage.CommentStore.HasAccessToComment(userID, commentID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
 	}
 
 	comment, err := rp.storage.CommentStore.GetCommentByID(commentID)
@@ -87,6 +105,16 @@ func (rp *ReplyService) UpdateReply(userID uuid.UUID, replyIDRaw string, dto dto
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
+
+	hasAccess, err := rp.storage.ReplyStore.HasAccessToReply(userID, replyID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
+	}
+
 	existReply, err := rp.storage.ReplyStore.GetReplyByID(replyID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
@@ -117,6 +145,15 @@ func (rp *ReplyService) DeleteReply(userID uuid.UUID, replyIDRaw string) error {
 		return errors.InvalidIDFormatError
 	}
 
+	hasAccess, err := rp.storage.ReplyStore.HasAccessToReply(userID, replyID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
+	}
+
 	existReply, err := rp.storage.ReplyStore.GetReplyByID(replyID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
@@ -143,6 +180,15 @@ func (rp *ReplyService) GetRepliesByParentID(userID uuid.UUID, parentIDRaw strin
 		return nil, errors.InvalidIDFormatError
 	}
 
+	hasAccess, err := rp.storage.ReplyStore.HasAccessToReply(userID, parentID)
+	if err != nil {
+		return nil, errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return nil, errors.InvalidPermissionError
+	}
+
 	replies, err := rp.storage.ReplyStore.GetRepliesByParentID(parentID, userID)
 	if err != nil {
 		return nil, errors.InternalServerError.Wrap(err)
@@ -158,6 +204,15 @@ func (rp *ReplyService) ReplyAReply(userID uuid.UUID, replyIDRaw string, dto dto
 	parentID, err := uuid.Parse(replyIDRaw)
 	if err != nil {
 		return errors.InvalidIDFormatError
+	}
+
+	hasAccess, err := rp.storage.ReplyStore.HasAccessToReply(userID, parentID)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return errors.InvalidPermissionError
 	}
 
 	reply, err := rp.storage.ReplyStore.GetReplyByID(parentID)

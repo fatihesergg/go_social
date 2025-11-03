@@ -45,21 +45,38 @@ func (ps *PostService) GetPostByID(userID uuid.UUID, postIDRaw string) (*dto.Pos
 		return nil, errors.InvalidIDFormatError
 	}
 
+	hasAccess, err := ps.storage.PostStore.HasAccessToPost(userID, postID)
+	if err != nil {
+		return nil, errors.InternalServerError.Wrap(err)
+	}
+
+	if !hasAccess {
+		return nil, errors.InvalidPermissionError
+	}
+
 	post, err := ps.storage.PostStore.GetPostDetailsByID(postID, userID)
 	if err != nil {
 		return nil, errors.InternalServerError.Wrap(err)
 	}
+
 	if post == nil {
 		return nil, errors.PostNotFoundError
 	}
+
 	result := dto.NewPostDetailResponse(post)
 	return result, nil
 }
 func (ps *PostService) CreatePost(userID uuid.UUID, dto dto.CreatePostDTO) error {
 
+	if dto.Visibility == "private" {
+		dto.Visibility = "private"
+	} else {
+		dto.Visibility = "public"
+	}
 	post := &model.Post{
-		ID:      uuid.New(),
-		Content: dto.Content,
+		ID:         uuid.New(),
+		Content:    dto.Content,
+		Visibility: model.PostVisibility(dto.Visibility),
 	}
 
 	post.UserID = userID

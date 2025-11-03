@@ -9,6 +9,7 @@ import (
 )
 
 type BaseReplyStore interface {
+	HasAccessToReply(userID, replyID uuid.UUID) (bool, error)
 	CreateCommentReply(reply *model.Reply) error
 	CreateNestedReply(reply *model.Reply) error
 	UpdateReply(reply *model.Reply) error
@@ -26,6 +27,29 @@ func NewReplyStore(db *sql.DB) *ReplyStore {
 	return &ReplyStore{
 		DB: db,
 	}
+}
+
+func (rs *ReplyStore) HasAccessToReply(userID, replyID uuid.UUID) (bool, error) {
+	var result bool
+	query := `SELECT EXISTS(
+	SELECT 1 FROM replies
+	JOIN comments ON  replies.comment_id = comments.id
+	JOIN posts ON posts.id = comments.post_id
+	LEFT JOIN follows ON follows.following_id
+	WHERE 
+	replies.id = $2 
+	AND (
+	posts.visibility  = 'public' 
+	OR posts.user_id = $1
+	OR (follows.user_id IS NOT NULL AND follows.user_id = $1)
+	)
+	)`
+	err := rs.DB.QueryRow(query, userID, replyID).Scan(&result)
+	if err != nil {
+		return false, err
+	}
+	return result, err
+
 }
 
 func (rs *ReplyStore) CreateCommentReply(reply *model.Reply) error {
