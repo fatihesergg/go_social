@@ -6,12 +6,13 @@ import (
 )
 
 type CreatePostDTO struct {
-	Content string `json:"content" binding:"required,lte=500"`
-	Image   string `json:"image"`
+	Content    string `json:"content" binding:"required,lte=500"`
+	Image      string `json:"image"`
+	Visibility string `json:"visibility"`
 }
 
 type UpdatePostDTO struct {
-	Content string `json:"content" binding:"required,alphanum,lte=500"`
+	Content string `json:"content" binding:"required,lte=500"`
 	Image   string `json:"image"`
 }
 

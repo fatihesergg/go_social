@@ -1,11 +1,11 @@
 package dto
 
 type CreateUserDTO struct {
-	Name     string  `json:"name" binding:"required,alphanum,lte=50"`
-	LastName string  `json:"last_name" binding:"required,alphanum,lte=50"`
+	Name     string  `json:"name" binding:"required,lte=50"`
+	LastName string  `json:"last_name" binding:"required,lte=50"`
 	Email    string  `json:"email" binding:"required,email,lte=100"`
 	Avatar   *string `json:"avatar"`
-	Username string  `json:"username" binding:"required,alphanum,lte=50"`
+	Username string  `json:"username" binding:"required,lte=50"`
 	Password string  `json:"password" binding:"required,lte=20"`
 }
 

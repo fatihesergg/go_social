@@ -12,7 +12,7 @@ type CreateCommentDTO struct {
 }
 
 type UpdateCommentDTO struct {
-	Content string `json:"content" binding:"required,alphanum,lte=200"`
+	Content string `json:"content" binding:"required,lte=200"`
 	Image   string `json:"image"`
 }
 
