@@ -6,11 +6,11 @@ import (
 )
 
 type CreateReply struct {
-	Message string `json:"message",binding:"required,lte=100"`
+	Message string `json:"message"  binding:"required,lte=100"`
 }
 
 type UpdateReply struct {
-	Message string `json:"message",binding:"required,lte=100"`
+	Message string `json:"message" binding:"required,lte=100"`
 }
 
 type ReplyResponse struct {

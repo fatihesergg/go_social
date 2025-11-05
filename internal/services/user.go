@@ -1,6 +1,8 @@
 package services
 
 import (
+	"database/sql"
+
 	"github.com/bytedance/gopkg/util/logger"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
@@ -47,6 +49,10 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 
 	existEmail, err := us.storage.UserStore.GetUserByEmail(user.Email)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			us.logger.Error("User not found")
+			return errors.UserNotFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
 	}
 	if existEmail != nil {
@@ -87,12 +93,13 @@ func (us *UserService) GetUserByID(rawID string) (*model.User, error) {
 
 	user, err := us.storage.UserStore.GetUserByID(userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			us.logger.Error("User not found")
+			return nil, errors.UserNotFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
 
-	if user == nil {
-		return nil, errors.UserNotFoundError
-	}
 	return user, nil
 
 }
@@ -100,10 +107,11 @@ func (us *UserService) GetUserByID(rawID string) (*model.User, error) {
 func (us *UserService) Login(dto dto.LoginUserDTO) (string, error) {
 	user, err := us.storage.UserStore.GetUserByEmail(dto.Email)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			us.logger.Error("User not found")
+			return "", errors.UserNotFoundError
+		}
 		return "", errors.InternalServerError
-	}
-	if user == nil {
-		return "", errors.UserNotFoundError
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.Password))
@@ -129,12 +137,13 @@ func (us *UserService) GetFollowerByUserID(rawID string) ([]model.Follow, error)
 
 	followers, err := us.storage.FollowStore.GetFollowerByUserID(userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			us.logger.Error("No followers found")
+			return nil, errors.NoFollowersFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
 
-	if len(followers) == 0 {
-		return nil, errors.NoFollowersFoundError
-	}
 	return followers, nil
 }
 func (us *UserService) GetFollowingByUserID(rawID string) ([]model.Follow, error) {
@@ -147,12 +156,13 @@ func (us *UserService) GetFollowingByUserID(rawID string) ([]model.Follow, error
 
 	followings, err := us.storage.FollowStore.GetFollowingByUserID(userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			us.logger.Error("No followings found")
+			return nil, errors.NoFollowingsFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
 
-	if len(followings) == 0 {
-		return nil, errors.NoFollowingsFoundError
-	}
 	return followings, nil
 }
 func (us *UserService) FollowUser(userID uuid.UUID, followID string) error {
@@ -202,6 +212,10 @@ func (us *UserService) UnFollowUser(userID uuid.UUID, followID string) error {
 
 	followings, err := us.storage.FollowStore.GetFollowingByUserID(userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			us.logger.Error("No followings found")
+			return errors.NoFollowingsFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
 	}
 
@@ -236,11 +250,11 @@ func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset
 
 	user, err := us.storage.UserStore.GetUserByID(userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			us.logger.Error("User not found")
+			return nil, errors.UserNotFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
-	}
-
-	if user == nil {
-		return nil, errors.UserNotFoundError
 	}
 
 	followers, err := us.storage.FollowStore.GetFollowerByUserID(user.ID)
@@ -255,11 +269,13 @@ func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset
 		if followerID == userID {
 			posts, err := us.storage.PostStore.GetPostsByUserID(user.ID, pagination, search)
 			if err != nil {
+				if err == sql.ErrNoRows {
+					us.logger.Error("No posts found")
+					return nil, errors.NoPostsFoundError
+				}
 				return nil, errors.InternalServerError.Wrap(err)
 			}
-			if posts == nil {
-				return nil, errors.NoPostsFoundError
-			}
+
 			result := dto.NewAllPostResponse(posts)
 			return result, nil
 		}
@@ -271,11 +287,13 @@ func (us *UserService) ResetPassword(meID uuid.UUID, dto dto.ResetUserPasswordDT
 
 	user, err := us.storage.UserStore.GetUserByID(meID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			us.logger.Error("User not found")
+			return errors.UserNotFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
 	}
-	if user == nil {
-		return errors.UserNotFoundError
-	}
+
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.OldPassword)); err != nil {
 		us.logger.Error("Invalid credentials")
 		return errors.InvalidCredentialsError
@@ -297,11 +315,12 @@ func (us *UserService) GetUsersByUsername(username string) ([]model.User, error)
 
 	users, err := us.storage.UserStore.GetUsersByUsername(username)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			us.logger.Error("No users found")
+			return nil, errors.NoUsersFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
 
-	if users == nil {
-		return nil, errors.UserNotFoundError
-	}
 	return users, nil
 }

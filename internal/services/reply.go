@@ -1,6 +1,8 @@
 package services
 
 import (
+	"database/sql"
+
 	"github.com/bytedance/gopkg/util/logger"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
@@ -46,20 +48,20 @@ func (rp *ReplyService) GetCommentReplies(userID uuid.UUID, commentIDRaw string)
 
 	existComment, err := rp.storage.CommentStore.GetCommentByID(commentID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			rp.logger.Error("Comment not found")
+			return nil, errors.CommentNotFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
-	}
-
-	if existComment == nil {
-		return nil, errors.CommentNotFoundError
 	}
 
 	replies, err := rp.storage.ReplyStore.GetRepliesByCommentID(existComment.ID, userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			rp.logger.Error("No replies found")
+			return nil, errors.NoRepliesFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
-	}
-
-	if replies == nil {
-		return nil, errors.NoRepliesFoundError
 	}
 
 	result := dto.NewReplyResponse(replies)
@@ -86,11 +88,11 @@ func (rp *ReplyService) ReplyComment(userID uuid.UUID, commentIDRaw string, dto 
 
 	comment, err := rp.storage.CommentStore.GetCommentByID(commentID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			rp.logger.Error("Comment not found")
+			return errors.CommentNotFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
-	}
-
-	if comment == nil {
-		return errors.CommentNotFoundError
 	}
 
 	reply := &model.Reply{
@@ -126,10 +128,11 @@ func (rp *ReplyService) UpdateReply(userID uuid.UUID, replyIDRaw string, dto dto
 
 	existReply, err := rp.storage.ReplyStore.GetReplyByID(replyID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			rp.logger.Error("Reply not found")
+			return errors.ReplyNotFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
-	}
-	if existReply == nil {
-		return errors.ReplyNotFoundError
 	}
 
 	if existReply.UserID != userID {
@@ -168,11 +171,11 @@ func (rp *ReplyService) DeleteReply(userID uuid.UUID, replyIDRaw string) error {
 
 	existReply, err := rp.storage.ReplyStore.GetReplyByID(replyID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			rp.logger.Error("Reply not found")
+			return errors.ReplyNotFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
-	}
-
-	if existReply == nil {
-		return errors.ReplyNotFoundError
 	}
 
 	if existReply.UserID != userID {
@@ -206,11 +209,13 @@ func (rp *ReplyService) GetRepliesByParentID(userID uuid.UUID, parentIDRaw strin
 
 	replies, err := rp.storage.ReplyStore.GetRepliesByParentID(parentID, userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			rp.logger.Error("Reply not found")
+			return nil, errors.ReplyNotFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
-	if replies == nil {
-		return nil, errors.NoRepliesFoundError
-	}
+
 	result := dto.NewReplyResponse(replies)
 	return result, nil
 }
@@ -234,6 +239,10 @@ func (rp *ReplyService) ReplyAReply(userID uuid.UUID, replyIDRaw string, dto dto
 
 	reply, err := rp.storage.ReplyStore.GetReplyByID(parentID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			rp.logger.Error("Reply not found")
+			return errors.ReplyNotFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
 	}
 

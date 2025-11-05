@@ -29,9 +29,6 @@ func (s FollowStore) GetFollowerByUserID(userID uuid.UUID) ([]model.Follow, erro
 	query := "SELECT id, user_id, follow_id FROM follows WHERE follow_id = $1"
 	rows, err := s.db.Query(query, userID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return follows, nil
-		}
 		s.logger.Error("Error while getting follower by userid", zap.Error(err))
 		return nil, err
 	}
@@ -48,6 +45,11 @@ func (s FollowStore) GetFollowerByUserID(userID uuid.UUID) ([]model.Follow, erro
 		s.logger.Error("Error in result row", zap.Error(err))
 		return nil, err
 	}
+
+	if len(follows) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
 	return follows, nil
 }
 
@@ -71,10 +73,17 @@ func (s FollowStore) GetFollowingByUserID(userID uuid.UUID) ([]model.Follow, err
 		}
 		follows = append(follows, follow)
 	}
+
 	if err := rows.Err(); err != nil {
 		s.logger.Error("Error in result row", zap.Error(err))
 		return nil, err
+
 	}
+
+	if len(follows) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
 	return follows, nil
 }
 

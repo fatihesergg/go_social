@@ -28,6 +28,7 @@ func (fs *FeedService) GetFeed(userID uuid.UUID, limit, offset, query string) ([
 	posts, err := fs.storage.FeedStore.GetFeed(userID, pagination, search)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			fs.logger.Error("No posts found")
 			return nil, errors.NoPostsFoundError
 		}
 		return nil, errors.InternalServerError.Wrap(err)

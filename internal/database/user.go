@@ -36,9 +36,6 @@ func (s *UserStore) GetUserByID(id uuid.UUID) (*model.User, error) {
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.Avatar, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		s.logger.Error("Error while getting user by id", zap.Error(err))
 		return nil, err
 	}
@@ -54,9 +51,6 @@ func (s *UserStore) GetUserByUsername(username string) (*model.User, error) {
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.Avatar, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		s.logger.Error("Error while getting user by username", zap.Error(err))
 		return nil, err
 	}
@@ -72,9 +66,6 @@ func (s *UserStore) GetUserByEmail(email string) (*model.User, error) {
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt, &user.Avatar)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		s.logger.Error("Error while getting user by email", zap.Error(err))
 		return nil, err
 	}
@@ -137,7 +128,7 @@ func (s *UserStore) GetUsersByUsername(userName string) ([]model.User, error) {
 		return nil, err
 	}
 	if len(users) == 0 {
-		return nil, nil
+		return nil, sql.ErrNoRows
 	}
 	return users, err
 

@@ -113,9 +113,6 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 
 	rows, err := s.DB.Query(query, search.Query, pagination.Limit, pagination.Offset, userID, userID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		s.logger.Error("Error while getting all posts", zap.Error(err))
 		return nil, err
 	}
@@ -148,6 +145,10 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 		return nil, err
 	}
 
+	if len(posts) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
 	return posts, nil
 }
 
@@ -158,9 +159,6 @@ func (s *PostStore) GetPostByID(postID uuid.UUID) (*model.Post, error) {
 	query := `SELECT id,user_id,content FROM posts WHERE id = $1`
 	err := s.DB.QueryRow(query, postID).Scan(&id, &userID, &content)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		s.logger.Error("Error while getting post by id", zap.Error(err))
 		return nil, err
 	}
@@ -313,7 +311,7 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 		return nil, err
 	}
 	if post.ID == uuid.Nil {
-		return nil, nil
+		return nil, sql.ErrNoRows
 	}
 
 	return post, nil

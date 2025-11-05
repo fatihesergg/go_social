@@ -103,9 +103,6 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 	WHERE comments.post_id = $1`
 	rows, err := cs.db.Query(query, postID, userID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		cs.logger.Error("Error while getting comments by postid", zap.Error(err))
 		return nil, err
 	}
@@ -136,6 +133,10 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 		comments = append(comments, *comment)
 	}
 
+	if len(comments) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
 	return comments, nil
 
 }
@@ -147,16 +148,12 @@ func (cs CommentStore) GetCommentByID(id uuid.UUID) (*model.Comment, error) {
 	JOIN users ON comments.user_id = users.id
 	WHERE comments.id = $1`
 	err := cs.db.QueryRow(query, id).Scan(&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.CreatedAt, &comment.UpdatedAt, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email)
+
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		cs.logger.Error("Error wile getting comment by id", zap.Error(err))
 		return nil, err
 	}
-	if comment.ID == uuid.Nil {
-		return nil, nil
-	}
+
 	return &comment, nil
 }
 

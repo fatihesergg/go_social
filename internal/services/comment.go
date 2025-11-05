@@ -1,6 +1,8 @@
 package services
 
 import (
+	"database/sql"
+
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/errors"
@@ -70,12 +72,13 @@ func (cs *CommentService) GetCommentsByPostID(userID uuid.UUID, postIDRaw string
 	comments, err := cs.storage.CommentStore.GetCommentsByPostID(postID, userID)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			cs.logger.Error("Comment not found")
+			return nil, errors.CommentNotFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
 
-	if comments == nil {
-		return nil, errors.CommentNotFoundError
-	}
 	result := dto.NewCommentResponse(comments)
 	return result, nil
 }
@@ -100,10 +103,11 @@ func (cs *CommentService) UpdateComment(userID uuid.UUID, commentIDRaw string, d
 
 	comment, err := cs.storage.CommentStore.GetCommentByID(commentID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			cs.logger.Error("Comment not found")
+			return errors.CommentNotFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
-	}
-	if comment == nil {
-		return errors.CommentNotFoundError
 	}
 
 	if comment.UserID != userID {
@@ -139,10 +143,11 @@ func (cs *CommentService) DeleteComment(userID uuid.UUID, commentIDRaw string) e
 
 	comment, err := cs.storage.CommentStore.GetCommentByID(commentID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			cs.logger.Error("Comment not found")
+			return errors.CommentNotFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
-	}
-	if comment == nil {
-		return errors.CommentNotFoundError
 	}
 
 	if comment.UserID != userID {

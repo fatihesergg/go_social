@@ -91,9 +91,6 @@ func (rs *ReplyStore) GetReplyByID(replyID uuid.UUID) (*model.Reply, error) {
 	err := rs.DB.QueryRow(query, replyID).Scan(&reply.ID, &reply.CommentID, &reply.UserID, &reply.Message)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		rs.logger.Error("Error while getting reply by id", zap.Error(err))
 		return nil, err
 	}
@@ -188,7 +185,7 @@ func (rs *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]mode
 		return nil, err
 	}
 	if len(replies) == 0 {
-		return nil, nil
+		return nil, sql.ErrNoRows
 	}
 	return replies, nil
 
@@ -271,7 +268,7 @@ func (rs *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.
 		return nil, err
 	}
 	if len(replies) == 0 {
-		return nil, nil
+		return nil, sql.ErrNoRows
 	}
 	return replies, nil
 

@@ -1,6 +1,8 @@
 package services
 
 import (
+	"database/sql"
+
 	"github.com/bytedance/gopkg/util/logger"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
@@ -31,11 +33,13 @@ func (ps *PostService) GetAllPosts(userID uuid.UUID, limit, offset, query string
 
 	posts, err := ps.storage.PostStore.GetPosts(pagination, search, userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ps.logger.Error("No posts found")
+			return nil, errors.NoPostsFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
-	if posts == nil {
-		return nil, errors.NoPostsFoundError
-	}
+
 	result := dto.NewAllPostResponse(posts)
 	return result, nil
 
@@ -61,11 +65,11 @@ func (ps *PostService) GetPostByID(userID uuid.UUID, postIDRaw string) (*dto.Pos
 
 	post, err := ps.storage.PostStore.GetPostDetailsByID(postID, userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ps.logger.Error("Post not found")
+			return nil, errors.NoPostsFoundError
+		}
 		return nil, errors.InternalServerError.Wrap(err)
-	}
-
-	if post == nil {
-		return nil, errors.PostNotFoundError
 	}
 
 	result := dto.NewPostDetailResponse(post)
@@ -102,11 +106,13 @@ func (ps *PostService) UpdatePost(userID uuid.UUID, postIDRaw string, dto dto.Up
 
 	existPost, err := ps.storage.PostStore.GetPostByID(postID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ps.logger.Error("Post not found")
+			return errors.PostNotFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
 	}
-	if existPost == nil {
-		return errors.PostNotFoundError
-	}
+
 	if existPost.UserID != userID {
 		ps.logger.Error("Request userid and post userid is different")
 		return errors.InvalidPermissionError
@@ -131,10 +137,11 @@ func (ps *PostService) DeletePost(userID uuid.UUID, postIDRaw string) error {
 	}
 	post, err := ps.storage.PostStore.GetPostByID(postID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ps.logger.Error("Post not found")
+			return errors.PostNotFoundError
+		}
 		return errors.InternalServerError.Wrap(err)
-	}
-	if post == nil {
-		return errors.PostNotFoundError
 	}
 	if post.UserID != userID {
 		ps.logger.Error("Request userid and post userid is different")
