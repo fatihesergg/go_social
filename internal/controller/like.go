@@ -31,7 +31,7 @@ func NewLikeController(likeService services.BaseLikeService) *LikeController {
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
-//	@Router	/posts/{id}/like [post]
+//	@Router			/posts/{id}/like [post]
 func (lc LikeController) LikePost(c *gin.Context) {
 
 	id := c.Param("id")
@@ -59,7 +59,7 @@ func (lc LikeController) LikePost(c *gin.Context) {
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
-//	@Router	/replies/{id}/like [post]
+//	@Router			/replies/{id}/like [post]
 func (lc LikeController) LikeReply(c *gin.Context) {
 
 	id := c.Param("id")
@@ -87,7 +87,7 @@ func (lc LikeController) LikeReply(c *gin.Context) {
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
-//	@Router	/posts/{id}/unlike [delete]
+//	@Router			/posts/{id}/unlike [delete]
 func (lc LikeController) UnlikePost(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
@@ -113,7 +113,7 @@ func (lc LikeController) UnlikePost(c *gin.Context) {
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
-//	@Router	/replies/{id}/unlike [delete]
+//	@Router			/replies/{id}/unlike [delete]
 func (lc LikeController) UnlikeReply(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
@@ -134,13 +134,13 @@ func (lc LikeController) UnlikeReply(c *gin.Context) {
 //	@Produce		json
 //	@Param			id	path		string	true	"Comment ID"
 //
-// @Success		200	{object}	util.SuccessMessageResponse
-// @Failure		400	{object}	util.ErrorResponse
-// @Failure		401	{object}	util.ErrorResponse
-// @Failure		404	{object}	util.ErrorResponse
-// @Failure		500	{object}	util.ErrorResponse
-// @Security		Bearer
-// @Router	/comments/{id}/like [post]
+//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		401	{object}	util.ErrorResponse
+//	@Failure		404	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
+//	@Security		Bearer
+//	@Router			/comments/{id}/like [post]
 func (lc *LikeController) LikeComment(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
@@ -167,7 +167,7 @@ func (lc *LikeController) LikeComment(c *gin.Context) {
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
-//	@Router	/comments/{id}/unlike [delete]
+//	@Router			/comments/{id}/unlike [delete]
 func (lc *LikeController) UnlikeComment(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)

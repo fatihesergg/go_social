@@ -19,7 +19,20 @@ func NewUserController(userService services.BaseUserService) *UserController {
 	}
 }
 
-// TODO: Add  docs
+// GetUserByID godoc
+//
+//	@Summary		Get user by user ID
+//	@Description	Get user by user ID
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"User ID"
+//	@Success		200	{object}	util.SuccessResultResponse{result=[]model.User}
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		404	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
+//	@Security		Bearer
+//	@Router			/users/{id} [get]
 func (uc UserController) GetUserByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -43,7 +56,7 @@ func (uc UserController) GetUserByID(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			user	body		dto.CreateUserDTO												true	"User signup data"
+//	@Param			user	body		dto.CreateUserDTO								true	"User signup data"
 //	@Success		201		{object}	util.SuccessMessageResponse{result=model.User}	"User registered successfully"
 //	@Failure		400		{object}	util.ErrorResponse{}
 //	@Failure		500		{object}	util.ErrorResponse{}
@@ -73,7 +86,7 @@ func (uc UserController) Signup(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			credentials	body		dto.LoginUserDTO				true	"User login credentials"
+//	@Param			credentials	body		dto.LoginUserDTO	true	"User login credentials"
 //	@Success		200			{object}	util.SuccessMessageResponse{result=string}
 //	@Failure		400			{object}	util.ErrorResponse{error=string}
 //	@Failure		401			{object}	util.ErrorResponse{error=string}
@@ -110,7 +123,7 @@ func (uc UserController) Login(c *gin.Context) {
 //	@Failure		404	{object}	util.ErrorResponse	"Not Found: User not found"
 //	@Failure		500	{object}	util.ErrorResponse	"Internal Server Error"
 //	@Security		Bearer
-//	@Router			/me [get]
+//	@Router			/users/me [get]
 func (uc UserController) GetMe(c *gin.Context) {
 	id := c.MustGet("userID").(uuid.UUID)
 	user, err := uc.UserService.GetUserByID(id.String())
@@ -130,7 +143,7 @@ func (uc UserController) GetMe(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"User ID"
-//	@Success		200	{object}		util.SuccessResultResponse{result=[]model.Follow}
+//	@Success		200	{object}	util.SuccessResultResponse{result=[]model.Follow}
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
@@ -159,7 +172,7 @@ func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"User ID"
-//	@Success		200	{object}		util.SuccessResultResponse{result=[]model.Follow}
+//	@Success		200	{object}	util.SuccessResultResponse{result=[]model.Follow}
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
@@ -189,7 +202,7 @@ func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string		true	"User ID"														true	"User ID to follow"
+//	@Param			id	path		string	true	"User ID"	true	"User ID to follow"
 //	@Success		200	{object}	util.SuccessMessageResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
@@ -219,7 +232,7 @@ func (uc UserController) FollowUser(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string		true	"User ID"													true	"User ID to unfollow"
+//	@Param			id	path		string	true	"User ID"	true	"User ID to unfollow"
 //	@Success		200	{object}	util.SuccessMessageResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
@@ -251,7 +264,7 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 //	@Param			limit	query		int		false	"Limit"		default(10)
 //	@Param			offset	query		int		false	"Offset"	default(0)
 //	@Param			search	query		string	false	"Search query"
-//	@Success		200		{object}		util.SuccessResultResponse{result=[]dto.AllPostResponse}
+//	@Success		200		{object}	util.SuccessResultResponse{result=[]dto.AllPostResponse}
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		403		{object}	util.ErrorResponse
 //	@Failure		404		{object}	util.ErrorResponse
@@ -305,8 +318,21 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 	c.JSON(200, util.SuccessMessageResponse{Message: "Password updated successfully"})
 }
 
-//TODO:  Add docs
-
+// TODO:  Add docs
+// SearchUserByUsername godoc
+//
+//	@Summary		Search user by username
+//	@Description	Gets all users by query
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Param			username	path		string	true	"Username"
+//	@Success		200			{object}	util.SuccessResultResponse{result=[]model.User}
+//	@Failure		400			{object}	util.ErrorResponse
+//	@Failure		404			{object}	util.ErrorResponse
+//	@Failure		500			{object}	util.ErrorResponse
+//	@Security		Bearer
+//	@Router			/users/search/{username} [get]
 func (uc UserController) SearchUserByUsername(c *gin.Context) {
 	username := c.Param("username")
 

@@ -22,7 +22,7 @@ func NewReplyController(replyService services.BaseReplyService) *ReplyController
 //
 //	@Summary		Get replies of a reply
 //	@Description	Get replies of a reply
-//	@Tags Replies
+//	@Tags			Replies
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Reply ID"
@@ -76,11 +76,11 @@ func (rc *ReplyController) GetCommentReplies(c *gin.Context) {
 //	@Tags			Comments
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string	true	"Comment ID"
-//	@Param			CreateReply	body		dto.CreateReply				true	"User login credentials"
-//	@Success		201	{object}	util.SuccessMessageResponse
-//	@Failure		400	{object}	util.ErrorResponse
-//	@Failure		500	{object}	util.ErrorResponse
+//	@Param			id			path		string			true	"Comment ID"
+//	@Param			CreateReply	body		dto.CreateReply	true	"User login credentials"
+//	@Success		201			{object}	util.SuccessMessageResponse
+//	@Failure		400			{object}	util.ErrorResponse
+//	@Failure		500			{object}	util.ErrorResponse
 //	@Router			/comments/{id}/reply [POST]
 //	@Security		Bearer
 func (rc *ReplyController) ReplyComment(c *gin.Context) {
@@ -105,14 +105,14 @@ func (rc *ReplyController) ReplyComment(c *gin.Context) {
 //
 //	@Summary		Reply a reply
 //	@Description	Reply a reply
-//	@Tags Replies
+//	@Tags			Replies
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		string	true	"Reply ID"
-//	@Param			CreateReply	body		dto.CreateReply				true	"User login credentials"
-//	@Success		201	{object}	util.SuccessMessageResponse
-//	@Failure		400	{object}	util.ErrorResponse
-//	@Failure		500	{object}	util.ErrorResponse
+//	@Param			id			path		string			true	"Reply ID"
+//	@Param			CreateReply	body		dto.CreateReply	true	"User login credentials"
+//	@Success		201			{object}	util.SuccessMessageResponse
+//	@Failure		400			{object}	util.ErrorResponse
+//	@Failure		500			{object}	util.ErrorResponse
 //	@Router			/replies/{id}/reply [POST]
 //	@Security		Bearer
 func (rc *ReplyController) ReplyAReply(c *gin.Context) {
@@ -135,20 +135,20 @@ func (rc *ReplyController) ReplyAReply(c *gin.Context) {
 
 // UpdateReply godoc
 //
-//		@Summary		Update a reply
-//		@Description	Update a reply
-//		@Tags Replies
-//		@Accept			json
-//		@Produce		json
-//		@Param			id	path		string	true	"Comment ID"
-//	 @Param 			reply body dto.UpdateReply true "Update reply"
-//		@Success		200 {object}	util.SuccessMessageResponse
-//		@Failure		400	{object}	util.ErrorResponse
-//		@Failure		404	{object}	util.ErrorResponse
-//		@Failure		403	{object}	util.ErrorResponse
-//		@Failure		500	{object}	util.ErrorResponse
-//		@Router			/replies/{id} [PUT]
-//		@Security		Bearer
+//	@Summary		Update a reply
+//	@Description	Update a reply
+//	@Tags			Replies
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string			true	"Comment ID"
+//	@Param			reply	body		dto.UpdateReply	true	"Update reply"
+//	@Success		200		{object}	util.SuccessMessageResponse
+//	@Failure		400		{object}	util.ErrorResponse
+//	@Failure		404		{object}	util.ErrorResponse
+//	@Failure		403		{object}	util.ErrorResponse
+//	@Failure		500		{object}	util.ErrorResponse
+//	@Router			/replies/{id} [PUT]
+//	@Security		Bearer
 func (rc *ReplyController) UpdateReply(c *gin.Context) {
 
 	id := c.Param("id")
@@ -173,11 +173,11 @@ func (rc *ReplyController) UpdateReply(c *gin.Context) {
 //
 //	@Summary		Delete a reply
 //	@Description	Delete a reply
-//	@Tags Replies
+//	@Tags			Replies
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Comment ID"
-//	@Success		200 {object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessMessageResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		403	{object}	util.ErrorResponse

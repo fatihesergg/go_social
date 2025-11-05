@@ -86,13 +86,18 @@ definitions:
         type: string
       image:
         type: string
+      visibility:
+        type: string
     required:
     - content
     type: object
   github_com_fatihesergg_go_social_internal_dto.CreateReply:
     properties:
       message:
+        maxLength: 100
         type: string
+    required:
+    - message
     type: object
   github_com_fatihesergg_go_social_internal_dto.CreateUserDTO:
     properties:
@@ -230,7 +235,10 @@ definitions:
   github_com_fatihesergg_go_social_internal_dto.UpdateReply:
     properties:
       message:
+        maxLength: 100
         type: string
+    required:
+    - message
     type: object
   github_com_fatihesergg_go_social_internal_model.Follow:
     properties:
@@ -666,40 +674,6 @@ paths:
                   type: string
               type: object
       summary: User login
-      tags:
-      - Users
-  /me:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve the authenticated user's details
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
-            - properties:
-                result:
-                  $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
-              type: object
-        "401":
-          description: 'Unauthorized: Invalid or missing token'
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "404":
-          description: 'Not Found: User not found'
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Get current user
       tags:
       - Users
   /posts:
@@ -1303,6 +1277,48 @@ paths:
       summary: User signup
       tags:
       - Users
+  /users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get user by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get user by user ID
+      tags:
+      - Users
   /users/{id}/follow:
     post:
       consumes:
@@ -1510,6 +1526,40 @@ paths:
       summary: Unfollow a user
       tags:
       - Users
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the authenticated user's details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+              type: object
+        "401":
+          description: 'Unauthorized: Invalid or missing token'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: 'Not Found: User not found'
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get current user
+      tags:
+      - Users
   /users/reset_password:
     post:
       consumes:
@@ -1545,6 +1595,48 @@ paths:
       security:
       - Bearer: []
       summary: Reset user password
+      tags:
+      - Users
+  /users/search/{username}:
+    get:
+      consumes:
+      - application/json
+      description: Gets all users by query
+      parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Search user by username
       tags:
       - Users
 securityDefinitions:

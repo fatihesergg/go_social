@@ -22,7 +22,7 @@ func MountRoutes(engine *gin.Engine,
 	userRouter.Use(middleware.AuthMiddleware())
 	userRouter.GET("/:id", userController.GetUserByID)
 	userRouter.GET("/:id/posts", userController.GetUsersPosts)
-	userRouter.GET("/getMe", userController.GetMe)
+	userRouter.GET("/me", userController.GetMe)
 	userRouter.POST("/:id/follow", userController.FollowUser)
 	userRouter.DELETE("/:id/unfollow", userController.UnfollowUser)
 	userRouter.GET("/:id/followers", userController.GetFollowerByUserID)

@@ -111,7 +111,7 @@ func (pc PostController) CreatePost(c *gin.Context) {
 //	@Tags			Posts
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		int			true	"Post ID"
+//	@Param			id		path		int					true	"Post ID"
 //	@Param			post	body		dto.UpdatePostDTO	true	"Updated post data"
 //	@Success		200		{object}	util.SuccessMessageResponse
 //	@Failure		400		{object}	util.ErrorResponse

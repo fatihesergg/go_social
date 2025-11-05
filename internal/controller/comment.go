@@ -58,11 +58,11 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Post ID"
-//	@Success		200		{object}	util.SuccessResultResponse{result=[]dto.CommentDetailResponse}
-//	@Failure		400		{object}	util.ErrorResponse
-//	@Failure		401		{object}	util.ErrorResponse
-//	@Failure		404		{object}	util.ErrorResponse
-//	@Failure		500		{object}	util.ErrorResponse
+//	@Success		200	{object}	util.SuccessResultResponse{result=[]dto.CommentDetailResponse}
+//	@Failure		400	{object}	util.ErrorResponse
+//	@Failure		401	{object}	util.ErrorResponse
+//	@Failure		404	{object}	util.ErrorResponse
+//	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
 //	@Router			/posts/{id}/comments [get]
 func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
@@ -84,7 +84,7 @@ func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
 //	@Tags			Comments
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		string			true	"Comment ID"
+//	@Param			id		path		string					true	"Comment ID"
 //	@Param			comment	body		dto.UpdateCommentDTO	true	"Updated comment data"
 //	@Success		200		{object}	util.SuccessMessageResponse
 //	@Failure		400		{object}	util.ErrorResponse
@@ -125,7 +125,7 @@ func (cc *CommentController) UpdateComment(c *gin.Context) {
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
-//	@Router	/comments/{id} [delete]
+//	@Router			/comments/{id} [delete]
 func (cc *CommentController) DeleteComment(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)

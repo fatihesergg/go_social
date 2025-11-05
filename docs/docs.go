@@ -664,64 +664,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/me": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Retrieve the authenticated user's details",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Get current user",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "result": {
-                                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized: Invalid or missing token",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found: User not found",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/posts": {
             "get": {
                 "security": [
@@ -1680,6 +1622,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieve the authenticated user's details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get current user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: Invalid or missing token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: User not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/reset_password": {
             "post": {
                 "security": [
@@ -1714,6 +1714,146 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/search/{username}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Gets all users by query",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Search user by username",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Username",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get user by user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user by user ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_model.User"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -2206,14 +2346,21 @@ const docTemplate = `{
                 },
                 "image": {
                     "type": "string"
+                },
+                "visibility": {
+                    "type": "string"
                 }
             }
         },
         "github_com_fatihesergg_go_social_internal_dto.CreateReply": {
             "type": "object",
+            "required": [
+                "message"
+            ],
             "properties": {
                 "message": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 }
             }
         },
@@ -2414,9 +2561,13 @@ const docTemplate = `{
         },
         "github_com_fatihesergg_go_social_internal_dto.UpdateReply": {
             "type": "object",
+            "required": [
+                "message"
+            ],
             "properties": {
                 "message": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 }
             }
         },
