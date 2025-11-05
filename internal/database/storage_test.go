@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 var testDB *sql.DB
@@ -47,15 +48,16 @@ func NewPostgresTestStorage() *Storage {
 		fmt.Println("Failed to run migrations:", err.Error())
 		panic(err)
 	}
+	logger := zap.Must(zap.NewDevelopment())
 
 	return &Storage{
-		UserStore:    NewUserStore(db),
-		PostStore:    NewPostStore(db),
-		CommentStore: NewCommentStore(db),
-		FollowStore:  NewFollowStore(db),
-		FeedStore:    NewFeedStore(db),
-		LikeStore:    NewLikeStore(db),
-		ReplyStore:   NewReplyStore(db),
+		UserStore:    NewUserStore(db, logger),
+		PostStore:    NewPostStore(db, logger),
+		CommentStore: NewCommentStore(db, logger),
+		FollowStore:  NewFollowStore(db, logger),
+		FeedStore:    NewFeedStore(db, logger),
+		LikeStore:    NewLikeStore(db, logger),
+		ReplyStore:   NewReplyStore(db, logger),
 	}
 }
 

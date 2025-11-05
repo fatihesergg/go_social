@@ -6,6 +6,7 @@ import (
 	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type BaseCommentService interface {
@@ -16,10 +17,11 @@ type BaseCommentService interface {
 }
 type CommentService struct {
 	storage *database.Storage
+	logger  *zap.Logger
 }
 
-func NewCommentService(storage *database.Storage) BaseCommentService {
-	return &CommentService{storage: storage}
+func NewCommentService(storage *database.Storage, logger *zap.Logger) BaseCommentService {
+	return &CommentService{storage: storage, logger: logger.Named("comment_service")}
 }
 
 func (cs *CommentService) AddCommentPost(userID uuid.UUID, dto dto.CreateCommentDTO) error {
@@ -30,6 +32,7 @@ func (cs *CommentService) AddCommentPost(userID uuid.UUID, dto dto.CreateComment
 	}
 
 	if !hasAccess {
+		cs.logger.Error("User has no access to post")
 		return errors.InvalidPermissionError
 	}
 
@@ -50,6 +53,7 @@ func (cs *CommentService) GetCommentsByPostID(userID uuid.UUID, postIDRaw string
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
+		cs.logger.Error("Error while parsing uuid", zap.Error(err))
 		return nil, errors.InvalidIDFormatError
 	}
 
@@ -59,6 +63,7 @@ func (cs *CommentService) GetCommentsByPostID(userID uuid.UUID, postIDRaw string
 	}
 
 	if !hasAccess {
+		cs.logger.Error("User has no access to this post")
 		return nil, errors.InvalidPermissionError
 	}
 
@@ -78,6 +83,7 @@ func (cs *CommentService) UpdateComment(userID uuid.UUID, commentIDRaw string, d
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
+		cs.logger.Error("Error while parsing commentID", zap.Error(err))
 		return errors.InvalidIDFormatError
 
 	}
@@ -88,6 +94,7 @@ func (cs *CommentService) UpdateComment(userID uuid.UUID, commentIDRaw string, d
 	}
 
 	if !hasAccess {
+		cs.logger.Error("User has no access to this comment")
 		return errors.InvalidPermissionError
 	}
 
@@ -97,6 +104,11 @@ func (cs *CommentService) UpdateComment(userID uuid.UUID, commentIDRaw string, d
 	}
 	if comment == nil {
 		return errors.CommentNotFoundError
+	}
+
+	if comment.UserID != userID {
+		cs.logger.Error("Request userid and comment userid is different")
+		return errors.InvalidPermissionError
 	}
 	comment.Content = dto.Content
 
@@ -111,6 +123,7 @@ func (cs *CommentService) DeleteComment(userID uuid.UUID, commentIDRaw string) e
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
+		cs.logger.Error("Error while parsing commentID", zap.Error(err))
 		return errors.InvalidIDFormatError
 	}
 
@@ -120,6 +133,7 @@ func (cs *CommentService) DeleteComment(userID uuid.UUID, commentIDRaw string) e
 	}
 
 	if !hasAccess {
+		cs.logger.Error("User has no access to this comment")
 		return errors.InvalidPermissionError
 	}
 
@@ -132,6 +146,7 @@ func (cs *CommentService) DeleteComment(userID uuid.UUID, commentIDRaw string) e
 	}
 
 	if comment.UserID != userID {
+		cs.logger.Error("Request userid and comment userid is different")
 		return errors.InvalidPermissionError
 	}
 

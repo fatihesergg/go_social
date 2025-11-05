@@ -1,11 +1,13 @@
 package services
 
 import (
+	"github.com/bytedance/gopkg/util/logger"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type BasePostService interface {
@@ -17,10 +19,11 @@ type BasePostService interface {
 }
 type PostService struct {
 	storage *database.Storage
+	logger  *zap.Logger
 }
 
-func NewPostService(storage *database.Storage) BasePostService {
-	return &PostService{storage: storage}
+func NewPostService(storage *database.Storage, logger *zap.Logger) BasePostService {
+	return &PostService{storage: storage, logger: logger.Named("post_service")}
 }
 func (ps *PostService) GetAllPosts(userID uuid.UUID, limit, offset, query string) ([]dto.AllPostResponse, error) {
 	pagination := database.NewPagination(limit, offset)
@@ -42,6 +45,7 @@ func (ps *PostService) GetPostByID(userID uuid.UUID, postIDRaw string) (*dto.Pos
 	postID, err := uuid.Parse(postIDRaw)
 
 	if err != nil {
+		ps.logger.Error("Error while parsing postID", zap.Error(err))
 		return nil, errors.InvalidIDFormatError
 	}
 
@@ -51,6 +55,7 @@ func (ps *PostService) GetPostByID(userID uuid.UUID, postIDRaw string) (*dto.Pos
 	}
 
 	if !hasAccess {
+		ps.logger.Error("User has no access to this post")
 		return nil, errors.InvalidPermissionError
 	}
 
@@ -91,6 +96,7 @@ func (ps *PostService) UpdatePost(userID uuid.UUID, postIDRaw string, dto dto.Up
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
+		logger.Error("Error while parsing postID", zap.Error(err))
 		return errors.InternalServerError.Wrap(err)
 	}
 
@@ -102,6 +108,7 @@ func (ps *PostService) UpdatePost(userID uuid.UUID, postIDRaw string, dto dto.Up
 		return errors.PostNotFoundError
 	}
 	if existPost.UserID != userID {
+		ps.logger.Error("Request userid and post userid is different")
 		return errors.InvalidPermissionError
 	}
 	post := &model.Post{
@@ -119,6 +126,7 @@ func (ps *PostService) DeletePost(userID uuid.UUID, postIDRaw string) error {
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
+		logger.Error("Error while parsing postID", zap.Error(err))
 		return errors.InvalidIDFormatError
 	}
 	post, err := ps.storage.PostStore.GetPostByID(postID)
@@ -129,6 +137,7 @@ func (ps *PostService) DeletePost(userID uuid.UUID, postIDRaw string) error {
 		return errors.PostNotFoundError
 	}
 	if post.UserID != userID {
+		ps.logger.Error("Request userid and post userid is different")
 		return errors.InvalidPermissionError
 	}
 

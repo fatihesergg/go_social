@@ -9,6 +9,7 @@ import (
 	"github.com/fatihesergg/go_social/internal/controller"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/middleware"
+	"github.com/fatihesergg/go_social/internal/routes"
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ import (
 	_ "github.com/lib/pq"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 )
 
 type App struct {
@@ -31,7 +33,8 @@ type App struct {
 // @host						localhost:3000
 // @BasePath					/api/v1
 func main() {
-	engine := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	engine := gin.New()
 
 	// Swagger info
 	docs.SwaggerInfo.BasePath = "/api/v1"
@@ -40,46 +43,56 @@ func main() {
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Host = "localhost:3000"
 
-	err := godotenv.Load()
+	loggerCfg := zap.NewProductionConfig()
+	loggerCfg.DisableCaller = true
+	loggerCfg.DisableStacktrace = true
+	logger, err := loggerCfg.Build()
+
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal(err)
+	}
+	defer logger.Sync()
+
+	engine.Use(middleware.LoggerMiddleware(logger.Named("logger_middleware")))
+	engine.Use(gin.Recovery())
+
+	err = godotenv.Load()
+	if err != nil {
+		logger.Fatal("Error loading .env file")
 	}
 
 	util.ApiConfig = util.LoadConfig()
 	util.ApiConfig.Validate()
 
-	DSN := fmt.Sprintf("postgres://%s:%s@db:5432/%s?sslmode=disable", util.ApiConfig.PGUser, util.ApiConfig.PGPass, util.ApiConfig.PGDB)
-	fmt.Println(DSN)
-	db, err := sql.Open("postgres", DSN)
+	DB_URI := fmt.Sprintf("postgres://%s:%s@db:5432/%s?sslmode=disable", util.ApiConfig.PGUser, util.ApiConfig.PGPass, util.ApiConfig.PGDB)
+	db, err := sql.Open("postgres", DB_URI)
 	if err != nil {
-		log.Fatal("Invalid postgres arguments")
+		logger.Fatal("Invalid postgres arguments")
 	}
 
 	if err := db.Ping(); err != nil {
-		log.Fatalf("Error connecting database")
+		logger.Fatal("Error connecting database")
 	}
 
-	userStore := database.NewUserStore(db)
-	postStore := database.NewPostStore(db)
-	commentStore := database.NewCommentStore(db)
-	followStore := database.NewFollowStore(db)
-	feedStore := database.NewFeedStore(db)
-	likeStore := database.NewLikeStore(db)
-	replyStore := database.NewReplyStore(db)
+	userStore := database.NewUserStore(db, logger)
+	postStore := database.NewPostStore(db, logger)
+	commentStore := database.NewCommentStore(db, logger)
+	followStore := database.NewFollowStore(db, logger)
+	feedStore := database.NewFeedStore(db, logger)
+	likeStore := database.NewLikeStore(db, logger)
+	replyStore := database.NewReplyStore(db, logger)
 
 	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore, likeStore, replyStore)
-	userService := services.NewUserService(storage)
-	postService := services.NewPostService(storage)
-	commentService := services.NewCommentService(storage)
-	feedService := services.NewFeedService(storage)
-	likeService := services.NewLikeService(storage)
-	replyService := services.NewReplyService(storage)
+	userService := services.NewUserService(storage, logger)
+	postService := services.NewPostService(storage, logger)
+	commentService := services.NewCommentService(storage, logger)
+	feedService := services.NewFeedService(storage, logger)
+	likeService := services.NewLikeService(storage, logger)
+	replyService := services.NewReplyService(storage, logger)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	rateLimiter := middleware.NewRateLimiter(1, 10)
 	engine.Use(rateLimiter.TokenBucketMiddleware())
-
-	base := engine.Group("/api/v1")
 
 	userController := controller.NewUserController(userService)
 	postController := controller.NewPostController(postService)
@@ -88,57 +101,10 @@ func main() {
 	likeController := controller.NewLikeController(likeService)
 	replyController := controller.NewReplyController(replyService)
 
-	base.POST("/signup", userController.Signup)
-	base.POST("/login", userController.Login)
-
-	userRouter := base.Group("/users")
-	userRouter.Use(middleware.AuthMiddleware())
-	userRouter.GET("/:id", userController.GetUserByID)
-	userRouter.GET("/:id/posts", userController.GetUsersPosts)
-	userRouter.GET("/getMe", userController.GetMe)
-	userRouter.POST("/:id/follow", userController.FollowUser)
-	userRouter.DELETE("/:id/unfollow", userController.UnfollowUser)
-	userRouter.GET("/:id/followers", userController.GetFollowerByUserID)
-	userRouter.GET("/:id/following", userController.GetFollowingByUserID)
-	userRouter.POST("/reset_password", userController.ResetPassword)
-	userRouter.GET("/search/:username", userController.SearchUserByUsername)
-
-	postRouter := base.Group("/posts")
-	postRouter.Use(middleware.AuthMiddleware())
-
-	postRouter.GET("/:id", postController.GetPostByID)
-	postRouter.GET("/", postController.GetPosts)
-	postRouter.POST("/", postController.CreatePost)
-	postRouter.PUT("/:id", postController.UpdatePost)
-	postRouter.POST("/:id/like", likeController.LikePost)
-	postRouter.DELETE("/:id/unlike", likeController.UnlikePost)
-	postRouter.GET("/:id/comments", commentController.GetCommentsByPostID)
-
-	feedRouter := base.Group("/feed")
-	feedRouter.Use(middleware.AuthMiddleware())
-	feedRouter.GET("/", feedController.GetFeed)
-
-	commentRouter := base.Group("/comments")
-	commentRouter.Use(middleware.AuthMiddleware())
-	commentRouter.POST("/", commentController.CreateComment)
-	commentRouter.PUT("/:id", commentController.UpdateComment)
-	commentRouter.GET("/:id/replies", replyController.GetCommentReplies)
-	commentRouter.DELETE("/:id", commentController.DeleteComment)
-	commentRouter.POST("/:id/reply", replyController.ReplyComment)
-	commentRouter.POST("/:id/like", likeController.LikeComment)
-	commentRouter.DELETE("/:id/unlike", likeController.UnlikeComment)
-
-	replyRouter := base.Group("/replies")
-	replyRouter.Use(middleware.AuthMiddleware())
-	replyRouter.GET("/:id/replies", replyController.GetRepliesByParent)
-	replyRouter.PUT("/:id", replyController.UpdateReply)
-	replyRouter.DELETE("/:id", replyController.DeleteReply)
-	replyRouter.POST("/:id/reply", replyController.ReplyAReply)
-	replyRouter.POST("/:id/like", likeController.LikeReply)
-	replyRouter.DELETE("/:id/unlike", likeController.UnlikeReply)
+	routes.MountRoutes(engine, userController, postController, commentController, likeController, feedController, replyController)
 
 	if err := engine.Run(":3000"); err != nil {
-		log.Fatal("Error starting the server")
+		logger.Fatal("Error starting the server")
 	}
 
 }

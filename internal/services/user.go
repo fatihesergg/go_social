@@ -1,10 +1,12 @@
 package services
 
 import (
+	"github.com/bytedance/gopkg/util/logger"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/util"
+	"go.uber.org/zap"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
@@ -26,10 +28,11 @@ type BaseUserService interface {
 
 type UserService struct {
 	storage *database.Storage
+	logger  *zap.Logger
 }
 
-func NewUserService(storage *database.Storage) BaseUserService {
-	return &UserService{storage: storage}
+func NewUserService(storage *database.Storage, logger *zap.Logger) BaseUserService {
+	return &UserService{storage: storage, logger: logger.Named("user_service")}
 }
 func (us *UserService) Register(dto dto.CreateUserDTO) error {
 	user := &model.User{
@@ -47,6 +50,7 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 		return errors.InternalServerError.Wrap(err)
 	}
 	if existEmail != nil {
+		us.logger.Error("Request user email already exist")
 		return errors.EmailExistError
 	}
 
@@ -55,11 +59,13 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 		return errors.InternalServerError.Wrap(err)
 	}
 	if existUsername != nil {
+		us.logger.Error("Request user username already exist")
 		return errors.UsernameExistError
 	}
 
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
+		us.logger.Error("Invalid credentials")
 		return errors.InternalServerError.Wrap(err)
 	}
 	user.Password = string(hashedPass)
@@ -75,6 +81,7 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 func (us *UserService) GetUserByID(rawID string) (*model.User, error) {
 	userID, err := uuid.Parse(rawID)
 	if err != nil {
+		logger.Error("Error while parsing userID", zap.Error(err))
 		return nil, errors.InvalidIDFormatError
 	}
 
@@ -101,11 +108,13 @@ func (us *UserService) Login(dto dto.LoginUserDTO) (string, error) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.Password))
 	if err != nil {
+		us.logger.Error("Invalid credentials")
 		return "", errors.InvalidCredentialsError
 	}
 
 	token, err := util.CreateJsonWebToken(user.ID)
 	if err != nil {
+		us.logger.Error("Error while creating jwt token", zap.Error(err))
 		return "", errors.InternalServerError.Wrap(err)
 	}
 	return token, nil
@@ -114,6 +123,7 @@ func (us *UserService) GetFollowerByUserID(rawID string) ([]model.Follow, error)
 
 	userID, err := uuid.Parse(rawID)
 	if err != nil {
+		logger.Error("Error while parsing userID", zap.Error(err))
 		return nil, errors.InvalidIDFormatError
 	}
 
@@ -131,6 +141,7 @@ func (us *UserService) GetFollowingByUserID(rawID string) ([]model.Follow, error
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
+		us.logger.Error("Error while parsing userID", zap.Error(err))
 		return nil, errors.InvalidIDFormatError
 	}
 
@@ -148,6 +159,7 @@ func (us *UserService) FollowUser(userID uuid.UUID, followID string) error {
 
 	followUserID, err := uuid.Parse(followID)
 	if err != nil {
+		logger.Error("Error while parsing followUserID", zap.Error(err))
 		return errors.InvalidIDFormatError
 	}
 
@@ -165,6 +177,7 @@ func (us *UserService) FollowUser(userID uuid.UUID, followID string) error {
 	}
 
 	if isFollowing {
+		us.logger.Error("Request user already follow this user")
 		return errors.AlreadyFollowingError
 	}
 	follow := model.Follow{
@@ -183,6 +196,7 @@ func (us *UserService) UnFollowUser(userID uuid.UUID, followID string) error {
 
 	unfUser, err := uuid.Parse(followID)
 	if err != nil {
+		logger.Error("Error while parsing unfUser", zap.Error(err))
 		return errors.InvalidIDFormatError
 	}
 
@@ -198,6 +212,7 @@ func (us *UserService) UnFollowUser(userID uuid.UUID, followID string) error {
 		}
 	}
 	if !isFollowing {
+		us.logger.Error("User has not following this user yet")
 		return errors.NotFollowingError
 	}
 	follow := model.Follow{
@@ -215,6 +230,7 @@ func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
+		us.logger.Error("Error while parsing userID")
 		return nil, errors.InvalidIDFormatError
 	}
 
@@ -248,6 +264,7 @@ func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset
 			return result, nil
 		}
 	}
+	us.logger.Error("Request user has not following this user yet")
 	return nil, errors.NotFollowingError
 }
 func (us *UserService) ResetPassword(meID uuid.UUID, dto dto.ResetUserPasswordDTO) error {
@@ -260,10 +277,12 @@ func (us *UserService) ResetPassword(meID uuid.UUID, dto dto.ResetUserPasswordDT
 		return errors.UserNotFoundError
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.OldPassword)); err != nil {
+		us.logger.Error("Invalid credentials")
 		return errors.InvalidCredentialsError
 	}
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(dto.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
+		us.logger.Error("Error while hashing password", zap.Error(err))
 		return errors.InternalServerError.Wrap(err)
 	}
 	user.Password = string(hashedPass)

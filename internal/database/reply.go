@@ -2,10 +2,10 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type BaseReplyStore interface {
@@ -20,12 +20,14 @@ type BaseReplyStore interface {
 }
 
 type ReplyStore struct {
-	DB *sql.DB
+	DB     *sql.DB
+	logger *zap.Logger
 }
 
-func NewReplyStore(db *sql.DB) *ReplyStore {
+func NewReplyStore(db *sql.DB, logger *zap.Logger) *ReplyStore {
 	return &ReplyStore{
-		DB: db,
+		DB:     db,
+		logger: logger.Named("reply_store"),
 	}
 }
 
@@ -46,6 +48,7 @@ func (rs *ReplyStore) HasAccessToReply(userID, replyID uuid.UUID) (bool, error) 
 	)`
 	err := rs.DB.QueryRow(query, userID, replyID).Scan(&result)
 	if err != nil {
+		rs.logger.Error("Error while checking reply access", zap.Error(err))
 		return false, err
 	}
 	return result, err
@@ -55,19 +58,31 @@ func (rs *ReplyStore) HasAccessToReply(userID, replyID uuid.UUID) (bool, error) 
 func (rs *ReplyStore) CreateCommentReply(reply *model.Reply) error {
 	query := "INSERT INTO replies ( id,comment_id,user_id,message ) VALUES ( $1,$2,$3,$4 )"
 	_, err := rs.DB.Exec(query, reply.ID, reply.CommentID, reply.UserID, reply.Message)
-	return err
+	if err != nil {
+		rs.logger.Error("Error while inserting reply", zap.Error(err))
+		return err
+	}
+	return nil
 }
 
 func (rs *ReplyStore) CreateNestedReply(reply *model.Reply) error {
 	query := "INSERT INTO replies ( id,parent_id,user_id,message ) VALUES ( $1,$2,$3,$4 )"
 	_, err := rs.DB.Exec(query, reply.ID, reply.ParentID, reply.UserID, reply.Message)
-	return err
+	if err != nil {
+		rs.logger.Error("Error while inserting nested reply", zap.Error(err))
+		return err
+	}
+	return nil
 }
 
 func (rs *ReplyStore) UpdateReply(reply *model.Reply) error {
 	query := "UPDATE replies SET comment_id = $1, user_id = $2, message = $3 WHERE id = $4"
 	_, err := rs.DB.Exec(query, reply.CommentID, reply.UserID, reply.Message, reply.ID)
-	return err
+	if err != nil {
+		rs.logger.Error("Error while updating reply", zap.Error(err))
+		return err
+	}
+	return nil
 }
 
 func (rs *ReplyStore) GetReplyByID(replyID uuid.UUID) (*model.Reply, error) {
@@ -79,6 +94,7 @@ func (rs *ReplyStore) GetReplyByID(replyID uuid.UUID) (*model.Reply, error) {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
+		rs.logger.Error("Error while getting reply by id", zap.Error(err))
 		return nil, err
 	}
 
@@ -86,12 +102,16 @@ func (rs *ReplyStore) GetReplyByID(replyID uuid.UUID) (*model.Reply, error) {
 
 }
 
-func (rc *ReplyStore) DeleteReply(replyID uuid.UUID) error {
+func (rs *ReplyStore) DeleteReply(replyID uuid.UUID) error {
 	query := "DELETE FROM replies WHERE id = $1"
-	_, err := rc.DB.Exec(query, replyID)
-	return err
+	_, err := rs.DB.Exec(query, replyID)
+	if err != nil {
+		rs.logger.Error("Error while deleting reply", zap.Error(err))
+		return err
+	}
+	return nil
 }
-func (rc *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]model.Reply, error) {
+func (rs *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]model.Reply, error) {
 	replies := []model.Reply{}
 	query := `
 
@@ -140,10 +160,9 @@ func (rc *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]mode
 	LEFT JOIN user_follows ON user_follows.follow_id = reply_user.id
 	WHERE replies.comment_id = $1
 	`
-	rows, err := rc.DB.Query(query, commentID, userID)
+	rows, err := rs.DB.Query(query, commentID, userID)
 	if err != nil {
-		fmt.Println(err)
-
+		rs.logger.Error("Error while getting replies by comment id", zap.Error(err))
 		return nil, err
 	}
 
@@ -157,6 +176,7 @@ func (rc *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]mode
 			&reply.LikeCount, &reply.ReplyCount, &reply.IsLiked, &reply.IsFollowing,
 		)
 		if err != nil {
+			rs.logger.Error("Error while scanning result", zap.Error(err))
 			return nil, err
 		}
 
@@ -164,6 +184,7 @@ func (rc *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]mode
 
 	}
 	if rows.Err() != nil {
+		rs.logger.Error("Error in result row", zap.Error(err))
 		return nil, err
 	}
 	if len(replies) == 0 {
@@ -173,7 +194,7 @@ func (rc *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]mode
 
 }
 
-func (rc *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.Reply, error) {
+func (rs *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.Reply, error) {
 	replies := []model.Reply{}
 	query := `
 
@@ -222,8 +243,9 @@ func (rc *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.
 	LEFT JOIN user_follows ON user_follows.follow_id = reply_user.id
 	WHERE replies.parent_id = $1
 	`
-	rows, err := rc.DB.Query(query, parentID, userID)
+	rows, err := rs.DB.Query(query, parentID, userID)
 	if err != nil {
+		rs.logger.Error("Error while getting replies by parent id", zap.Error(err))
 		return nil, err
 	}
 	defer rows.Close()
@@ -237,7 +259,7 @@ func (rc *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.
 			&reply.LikeCount, &reply.ReplyCount, &reply.IsLiked, &reply.IsFollowing,
 		)
 		if err != nil {
-
+			rs.logger.Error("Error while scanning result", zap.Error(err))
 			return nil, err
 		}
 
@@ -245,6 +267,7 @@ func (rc *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.
 
 	}
 	if rows.Err() != nil {
+		rs.logger.Error("Error in result row", zap.Error(err))
 		return nil, err
 	}
 	if len(replies) == 0 {

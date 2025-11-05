@@ -5,6 +5,7 @@ import (
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type BasePostStore interface {
@@ -19,11 +20,12 @@ type BasePostStore interface {
 }
 
 type PostStore struct {
-	DB *sql.DB
+	DB     *sql.DB
+	logger *zap.Logger
 }
 
-func NewPostStore(db *sql.DB) BasePostStore {
-	return &PostStore{DB: db}
+func NewPostStore(db *sql.DB, logger *zap.Logger) BasePostStore {
+	return &PostStore{DB: db, logger: logger.Named("post_store")}
 }
 
 func (s *PostStore) HasAccessToPost(userID, postID uuid.UUID) (bool, error) {
@@ -40,6 +42,7 @@ func (s *PostStore) HasAccessToPost(userID, postID uuid.UUID) (bool, error) {
 
 	err := s.DB.QueryRow(query, userID, postID).Scan(&result)
 	if err != nil {
+		s.logger.Error("Error while checking post access", zap.Error(err))
 		return false, err
 	}
 	return result, nil
@@ -113,6 +116,7 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
+		s.logger.Error("Error while getting all posts", zap.Error(err))
 		return nil, err
 	}
 	defer rows.Close()
@@ -128,6 +132,7 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 			&isLiked, &isFollowing,
 		)
 		if err != nil {
+			s.logger.Error("Error while scanning result", zap.Error(err))
 			return nil, err
 		}
 		post.LikeCount = *postLikeCount
@@ -139,7 +144,7 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 
 	}
 	if err := rows.Err(); err != nil {
-
+		s.logger.Error("Error in result row", zap.Error(err))
 		return nil, err
 	}
 
@@ -156,6 +161,7 @@ func (s *PostStore) GetPostByID(postID uuid.UUID) (*model.Post, error) {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
+		s.logger.Error("Error while getting post by id", zap.Error(err))
 		return nil, err
 	}
 	result.ID = *id
@@ -252,6 +258,7 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 
 	rows, err := s.DB.Query(postQuery, userID, postID)
 	if err != nil {
+		s.logger.Error("Error while getting post details by id", zap.Error(err))
 		return nil, err
 	}
 
@@ -276,6 +283,7 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 			&post.IsFollowing, &isCommentFollowing,
 		)
 		if err != nil {
+			s.logger.Error("Error while scanning result", zap.Error(err))
 			return nil, err
 		}
 		if commentID != nil {
@@ -301,7 +309,7 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 	}
 
 	if err := rows.Err(); err != nil {
-
+		s.logger.Error("Error in result row", zap.Error(err))
 		return nil, err
 	}
 	if post.ID == uuid.Nil {
@@ -334,6 +342,7 @@ func (s *PostStore) GetPostsByUserID(userID uuid.UUID, pagination Pagination, se
 	rows, err := s.DB.Query(postQuery, userID.String(), search.Query, pagination.Limit, pagination.Offset)
 
 	if err != nil {
+		s.logger.Error("Error while getting posts by user id", zap.Error(err))
 		return nil, err
 	}
 	defer rows.Close()
@@ -350,7 +359,7 @@ func (s *PostStore) GetPostsByUserID(userID uuid.UUID, pagination Pagination, se
 			&commentUserName, &commentUserLastName, &commentUserUsername,
 		)
 		if err != nil {
-
+			s.logger.Error("Error while scanning result", zap.Error(err))
 			return nil, err
 		}
 		if _, ok := postMap[post.ID]; !ok {
@@ -369,7 +378,7 @@ func (s *PostStore) GetPostsByUserID(userID uuid.UUID, pagination Pagination, se
 		}
 	}
 	if err := rows.Err(); err != nil {
-
+		s.logger.Error("Error in result row", zap.Error(err))
 		return nil, err
 	}
 
@@ -390,6 +399,7 @@ func (s *PostStore) CreatePost(post *model.Post) error {
 
 	_, err := s.DB.Exec(query, post.ID, post.Content, post.UserID, post.Visibility)
 	if err != nil {
+		s.logger.Error("Error while inserting post", zap.Error(err))
 		return err
 	}
 
@@ -400,6 +410,7 @@ func (s *PostStore) UpdatePost(post *model.Post) error {
 	query := "UPDATE posts SET content = $1 WHERE id = $2"
 	_, err := s.DB.Exec(query, post.Content, post.ID)
 	if err != nil {
+		s.logger.Error("Error while updating post", zap.Error(err))
 		return err
 	}
 
@@ -410,6 +421,7 @@ func (s *PostStore) DeletePost(id uuid.UUID) error {
 	query := "DELETE FROM posts WHERE id = $1"
 	_, err := s.DB.Exec(query, id)
 	if err != nil {
+		s.logger.Error("Error while deleting post", zap.Error(err))
 		return err
 	}
 	return nil

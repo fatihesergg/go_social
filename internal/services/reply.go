@@ -1,11 +1,13 @@
 package services
 
 import (
+	"github.com/bytedance/gopkg/util/logger"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type BaseReplyService interface {
@@ -19,14 +21,16 @@ type BaseReplyService interface {
 
 type ReplyService struct {
 	storage *database.Storage
+	logger  *zap.Logger
 }
 
-func NewReplyService(storage *database.Storage) BaseReplyService {
-	return &ReplyService{storage: storage}
+func NewReplyService(storage *database.Storage, logger *zap.Logger) BaseReplyService {
+	return &ReplyService{storage: storage, logger: logger.Named("reply_service")}
 }
 func (rp *ReplyService) GetCommentReplies(userID uuid.UUID, commentIDRaw string) ([]dto.ReplyResponse, error) {
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
+		logger.Error("Error while parsing commentID", zap.Error(err))
 		return nil, errors.InvalidIDFormatError
 	}
 
@@ -36,6 +40,7 @@ func (rp *ReplyService) GetCommentReplies(userID uuid.UUID, commentIDRaw string)
 	}
 
 	if !hasAccess {
+		rp.logger.Error("User has no access to this comment")
 		return nil, errors.InvalidPermissionError
 	}
 
@@ -65,6 +70,7 @@ func (rp *ReplyService) ReplyComment(userID uuid.UUID, commentIDRaw string, dto 
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
+		logger.Error("Error while parsing commentID", zap.Error(err))
 		return errors.InvalidIDFormatError
 	}
 
@@ -74,6 +80,7 @@ func (rp *ReplyService) ReplyComment(userID uuid.UUID, commentIDRaw string, dto 
 	}
 
 	if !hasAccess {
+		rp.logger.Error("User has no access to this comment")
 		return errors.InvalidPermissionError
 	}
 
@@ -103,6 +110,7 @@ func (rp *ReplyService) UpdateReply(userID uuid.UUID, replyIDRaw string, dto dto
 
 	replyID, err := uuid.Parse(replyIDRaw)
 	if err != nil {
+		logger.Error("Error while parsing replyID", zap.Error(err))
 		return errors.InternalServerError.Wrap(err)
 	}
 
@@ -112,6 +120,7 @@ func (rp *ReplyService) UpdateReply(userID uuid.UUID, replyIDRaw string, dto dto
 	}
 
 	if !hasAccess {
+		rp.logger.Error("User has no access to this reply")
 		return errors.InvalidPermissionError
 	}
 
@@ -124,6 +133,7 @@ func (rp *ReplyService) UpdateReply(userID uuid.UUID, replyIDRaw string, dto dto
 	}
 
 	if existReply.UserID != userID {
+		rp.logger.Error("Request userid and reply userid is different")
 		return errors.InvalidPermissionError
 	}
 
@@ -142,6 +152,7 @@ func (rp *ReplyService) DeleteReply(userID uuid.UUID, replyIDRaw string) error {
 
 	replyID, err := uuid.Parse(replyIDRaw)
 	if err != nil {
+		logger.Error("Error while parsing replyID", zap.Error(err))
 		return errors.InvalidIDFormatError
 	}
 
@@ -151,6 +162,7 @@ func (rp *ReplyService) DeleteReply(userID uuid.UUID, replyIDRaw string) error {
 	}
 
 	if !hasAccess {
+		rp.logger.Error("User has no access to this reply")
 		return errors.InvalidPermissionError
 	}
 
@@ -164,6 +176,7 @@ func (rp *ReplyService) DeleteReply(userID uuid.UUID, replyIDRaw string) error {
 	}
 
 	if existReply.UserID != userID {
+		rp.logger.Error("Request userid and reply id is different")
 		return errors.InvalidPermissionError
 	}
 
@@ -177,6 +190,7 @@ func (rp *ReplyService) GetRepliesByParentID(userID uuid.UUID, parentIDRaw strin
 
 	parentID, err := uuid.Parse(parentIDRaw)
 	if err != nil {
+		logger.Error("Error while parsing parentID", zap.Error(err))
 		return nil, errors.InvalidIDFormatError
 	}
 
@@ -186,6 +200,7 @@ func (rp *ReplyService) GetRepliesByParentID(userID uuid.UUID, parentIDRaw strin
 	}
 
 	if !hasAccess {
+		rp.logger.Error("User has no access to this reply")
 		return nil, errors.InvalidPermissionError
 	}
 
@@ -203,6 +218,7 @@ func (rp *ReplyService) GetRepliesByParentID(userID uuid.UUID, parentIDRaw strin
 func (rp *ReplyService) ReplyAReply(userID uuid.UUID, replyIDRaw string, dto dto.CreateReply) error {
 	parentID, err := uuid.Parse(replyIDRaw)
 	if err != nil {
+		logger.Error("Error while parsing parentID", zap.Error(err))
 		return errors.InvalidIDFormatError
 	}
 
@@ -212,6 +228,7 @@ func (rp *ReplyService) ReplyAReply(userID uuid.UUID, replyIDRaw string, dto dto
 	}
 
 	if !hasAccess {
+		rp.logger.Error("User has no access to this reply")
 		return errors.InvalidPermissionError
 	}
 
