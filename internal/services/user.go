@@ -48,11 +48,7 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 	}
 
 	existEmail, err := us.storage.UserStore.GetUserByEmail(user.Email)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			us.logger.Error("User not found")
-			return errors.UserNotFoundError
-		}
+	if err != nil && err != sql.ErrNoRows {
 		return errors.InternalServerError.Wrap(err)
 	}
 	if existEmail != nil {
@@ -61,7 +57,7 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 	}
 
 	existUsername, err := us.storage.UserStore.GetUserByUsername(user.Username)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return errors.InternalServerError.Wrap(err)
 	}
 	if existUsername != nil {
