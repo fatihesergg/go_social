@@ -50,10 +50,17 @@ func (s *LikeStore) LikeComment(like *model.CommentLike) error {
 }
 func (s *LikeStore) UnlikePost(postID uuid.UUID, userID uuid.UUID) error {
 	query := `DELETE FROM post_likes WHERE post_id = $1 AND user_id = $2`
-	_, err := s.DB.Exec(query, postID, userID)
+	result, err := s.DB.Exec(query, postID, userID)
 	if err != nil {
 		s.logger.Error("Error while delete post_like", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }
@@ -70,19 +77,33 @@ func (s *LikeStore) LikeReply(like *model.ReplyLike) error {
 
 func (s *LikeStore) UnlikeComment(commentID uuid.UUID, userID uuid.UUID) error {
 	query := `DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2`
-	_, err := s.DB.Exec(query, commentID, userID)
+	result, err := s.DB.Exec(query, commentID, userID)
 	if err != nil {
 		s.logger.Error("Error while deleting comment_like", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }
 func (s *LikeStore) UnlikeReply(replyID uuid.UUID, userID uuid.UUID) error {
 	query := `DELETE FROM reply_likes WHERE reply_id = $1 AND user_id = $2`
-	_, err := s.DB.Exec(query, replyID, userID)
+	result, err := s.DB.Exec(query, replyID, userID)
 	if err != nil {
 		s.logger.Error("Error while deleting reply_like", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }

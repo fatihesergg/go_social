@@ -406,10 +406,17 @@ func (s *PostStore) CreatePost(post *model.Post) error {
 
 func (s *PostStore) UpdatePost(post *model.Post) error {
 	query := "UPDATE posts SET content = $1 WHERE id = $2"
-	_, err := s.DB.Exec(query, post.Content, post.ID)
+	result, err := s.DB.Exec(query, post.Content, post.ID)
 	if err != nil {
 		s.logger.Error("Error while updating post", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil
@@ -417,10 +424,17 @@ func (s *PostStore) UpdatePost(post *model.Post) error {
 
 func (s *PostStore) DeletePost(id uuid.UUID) error {
 	query := "DELETE FROM posts WHERE id = $1"
-	_, err := s.DB.Exec(query, id)
+	result, err := s.DB.Exec(query, id)
 	if err != nil {
 		s.logger.Error("Error while deleting post", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }

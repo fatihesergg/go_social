@@ -101,10 +101,17 @@ func (rs *ReplyStore) GetReplyByID(replyID uuid.UUID) (*model.Reply, error) {
 
 func (rs *ReplyStore) DeleteReply(replyID uuid.UUID) error {
 	query := "DELETE FROM replies WHERE id = $1"
-	_, err := rs.DB.Exec(query, replyID)
+	result, err := rs.DB.Exec(query, replyID)
 	if err != nil {
 		rs.logger.Error("Error while deleting reply", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }

@@ -98,10 +98,17 @@ func (s FollowStore) FollowUser(model model.Follow) error {
 }
 func (s FollowStore) UnFollowUser(model model.Follow) error {
 	query := "DELETE FROM follows WHERE user_id = $1 AND follow_id = $2"
-	_, err := s.db.Exec(query, model.UserID, model.FollowID)
+	result, err := s.db.Exec(query, model.UserID, model.FollowID)
 	if err != nil {
 		s.logger.Error("Error while deleting follow", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }

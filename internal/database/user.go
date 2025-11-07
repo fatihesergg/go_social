@@ -85,20 +85,34 @@ func (s *UserStore) CreateUser(user *model.User) error {
 
 func (s *UserStore) UpdateUser(user *model.User) error {
 	query := "UPDATE users SET name = $1, last_name = $2, username = $3, email = $4, password = $5 WHERE id = $6"
-	_, err := s.DB.Exec(query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.ID.String())
+	result, err := s.DB.Exec(query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.ID.String())
 	if err != nil {
 		s.logger.Error("Error while updating user", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }
 
 func (s *UserStore) DeleteUser(id uuid.UUID) error {
 	query := "DELETE FROM users WHERE id = $1"
-	_, err := s.DB.Exec(query, id)
+	result, err := s.DB.Exec(query, id)
 	if err != nil {
 		s.logger.Error("Error while deleting user", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }

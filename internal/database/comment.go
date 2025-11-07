@@ -170,20 +170,34 @@ func (cs CommentStore) CreateComment(comment *model.Comment) error {
 
 func (cs CommentStore) UpdateComment(comment *model.Comment) error {
 	query := "UPDATE comments SET content = $1 WHERE id = $2"
-	_, err := cs.db.Exec(query, comment.Content, comment.ID)
+	result, err := cs.db.Exec(query, comment.Content, comment.ID)
 	if err != nil {
 		cs.logger.Error("Error while updating comment", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }
 
 func (cs CommentStore) DeleteComment(id uuid.UUID) error {
 	query := "DELETE FROM comments WHERE id = $1"
-	_, err := cs.db.Exec(query, id)
+	result, err := cs.db.Exec(query, id)
 	if err != nil {
 		cs.logger.Error("Error while deleting comment", zap.Error(err))
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }
