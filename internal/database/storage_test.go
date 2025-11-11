@@ -58,6 +58,7 @@ func NewPostgresTestStorage() *Storage {
 		FeedStore:    NewFeedStore(db, logger),
 		LikeStore:    NewLikeStore(db, logger),
 		ReplyStore:   NewReplyStore(db, logger),
+		TagStore:     NewTagStore(db, logger),
 	}
 }
 
@@ -170,6 +171,17 @@ func createTestFollow(t *testing.T, userID, followID uuid.UUID) *model.Follow {
 		UserID:   userID,
 		FollowID: followID,
 	}
+}
+
+func createTestTags(tags ...string) []model.Tag {
+	tagSlice := make([]model.Tag, len(tags))
+	for i := 0; i < len(tags); i++ {
+		tagSlice[i] = model.Tag{
+			ID:   uuid.New(),
+			Name: tags[i],
+		}
+	}
+	return tagSlice
 }
 
 func TestUserStore_CreateUser(t *testing.T) {
@@ -1321,6 +1333,52 @@ func TestReplyStore_GetRepliesByParentID(t *testing.T) {
 		_ = testStorage.CommentStore.DeleteComment(comment.ID)
 		_ = testStorage.ReplyStore.DeleteReply(post.ID)
 		_ = testStorage.UserStore.DeleteUser(user.ID)
+	})
+}
+
+func TestTagStore_AddPostTags(t *testing.T) {
+	user := createTestUser(t, "test", "test", "test", "test@test.com", "test")
+	err := testStorage.UserStore.CreateUser(user)
+	assert.NoError(t, err)
+
+	post1 := createTestPost(t, "test", user.ID, "public")
+	err = testStorage.PostStore.CreatePost(post1)
+	assert.NoError(t, err)
+
+	post2 := createTestPost(t, "test", user.ID, "public")
+	err = testStorage.PostStore.CreatePost(post2)
+	assert.NoError(t, err)
+
+	tags := createTestTags("test1", "test2")
+	tagStrs := []string{"test1", "test2"}
+
+	err = testStorage.TagStore.CreateMultipleTags(tags)
+	assert.NoError(t, err)
+
+	err = testStorage.TagStore.CreatePostTag(tagStrs, post1.ID)
+	assert.NoError(t, err)
+
+	err = testStorage.TagStore.CreatePostTag([]string{"test1"}, post2.ID)
+	assert.NoError(t, err)
+
+	pagination := createTestPagination(t)
+	posts, err := testStorage.PostStore.GetPostsByTag(pagination, "test1", user.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(posts))
+
+	posts, err = testStorage.PostStore.GetPostsByTag(pagination, "test2", user.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(posts))
+
+	t.Run("Create post tag fail", func(t *testing.T) {
+		err = testStorage.TagStore.CreatePostTag(nil, post2.ID)
+		assert.Error(t, err)
+	})
+
+	t.Cleanup(func() {
+		_ = testStorage.UserStore.DeleteUser(user.ID)
+		_ = testStorage.PostStore.DeletePost(post1.ID)
+		_ = testStorage.PostStore.DeletePost(post2.ID)
 	})
 }
 
