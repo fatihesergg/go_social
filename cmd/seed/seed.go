@@ -45,6 +45,28 @@ func GeneratePost(amount int, users []model.User) []model.Post {
 
 }
 
+func GenerateTags(amount int) []model.Tag {
+	tags := map[string]model.Tag{}
+	for i := 0; i < amount; i++ {
+		name := strings.TrimSpace(strings.ToLower(gofakeit.BuzzWord()))
+		_, ok := tags[name]
+		for ok || strings.Contains(name, "-") || strings.Contains(name, " ") {
+			name = strings.ToLower(gofakeit.BuzzWord())
+			_, ok = tags[name]
+		}
+
+		tags[name] = model.Tag{
+			ID:   uuid.New(),
+			Name: name,
+		}
+	}
+	tagSlice := []model.Tag{}
+	for _, v := range tags {
+		tagSlice = append(tagSlice, v)
+	}
+	return tagSlice
+}
+
 func GeneratePostLike(amount int, users []model.User, posts []model.Post) []model.PostLike {
 	postLikes := make([]model.PostLike, 0, amount)
 	used := make(map[string]bool)
@@ -207,6 +229,7 @@ func main() {
 	replies := GenerateRepliesToReply(amount, users, parentReplies)
 	parentReplyLikes := GenerateReplyLikes(amount, users, parentReplies)
 	replyLikes := GenerateReplyLikes(amount, users, replies)
+	tags := GenerateTags(amount)
 
 	var sb strings.Builder
 	sb.WriteString("-- Seed data using gofakeit/v7\n")
@@ -304,6 +327,31 @@ func main() {
 				replyLike.ID,
 				replyLike.UserID,
 				replyLike.ReplyID))
+	}
+	sb.WriteString("\n")
+
+	for _, tag := range tags {
+		sb.WriteString(
+			fmt.Sprintf("INSERT INTO tags(id,name) VALUES('%s','%s') ON CONFLICT(name) DO NOTHING;\n", tag.ID, tag.Name),
+		)
+	}
+	sb.WriteString("\n")
+	used := map[string]bool{}
+	randTag := tags[gofakeit.Number(0, len(tags)-1)]
+	randPost := posts[gofakeit.Number(0, len(posts)-1)]
+	i := 0
+	for i < len(tags) {
+		randTag = tags[gofakeit.Number(0, len(tags)-1)]
+		randPost = posts[gofakeit.Number(0, len(posts)-1)]
+		key := fmt.Sprintf("%s:%s", randTag.ID, randPost.ID)
+		if _, ok := used[key]; ok {
+			continue
+		}
+		i++
+		sb.WriteString(
+			fmt.Sprintf("INSERT INTO post_tags(post_id,tag_id) VALUES('%s','%s');\n", randPost.ID, randTag.ID),
+		)
+		used[key] = true
 	}
 	sb.WriteString("\n")
 

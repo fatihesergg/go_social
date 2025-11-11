@@ -38,3 +38,4 @@ var UnauthorizedError = AppError{Message: "You are not authorized to perform thi
 var IDRequiredError = AppError{Message: "ID is required", Code: http.StatusBadRequest}
 var InvalidIDFormatError = AppError{Message: "Invalid ID format", Code: http.StatusBadRequest}
 var InvalidPermissionError = AppError{Message: "You don't have enough permission to do this operation", Code: http.StatusForbidden}
+var InvalidTag = AppError{Message: "Tag query must only contain word and/or digit", Code: http.StatusBadRequest}

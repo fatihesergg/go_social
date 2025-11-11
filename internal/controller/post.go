@@ -10,11 +10,13 @@ import (
 
 type PostController struct {
 	PostService services.BasePostService
+	TagService  services.BaseTagService
 }
 
-func NewPostController(postService services.BasePostService) *PostController {
+func NewPostController(postService services.BasePostService, tagService services.BaseTagService) *PostController {
 	return &PostController{
 		PostService: postService,
+		TagService:  tagService,
 	}
 }
 
@@ -40,6 +42,35 @@ func (pc PostController) GetPosts(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 
 	posts, err := pc.PostService.GetAllPosts(userID, limit, offset, searchQuery)
+	if err != nil {
+		util.WriteAppError(c, err)
+		return
+	}
+	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: posts})
+}
+
+// GetPosts godoc
+//
+//	@Summary		Get all posts by tag
+//	@Description	Retrieve a list of all posts with optional pagination and tag
+//	@Tags			Posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			limit	query		int		false	"Limit"		default(20)
+//	@Param			offset	query		int		false	"Offset"	default(0)
+//	@Param			tag	path		string	false	"Tag query"
+//	@Success		200		{array}		util.SuccessResultResponse{result=[]dto.AllPostResponse}
+//	@Failure		400		{object}	util.ErrorResponse
+//	@Failure		500		{object}	util.ErrorResponse
+//	@Router			/posts/tag/{tag} [get]
+//	@Security		Bearer
+func (pc PostController) GetPostsByTag(c *gin.Context) {
+	limit := c.Query("limit")
+	offset := c.Query("offset")
+	tagParam := c.Param("tag")
+	userID := c.MustGet("userID").(uuid.UUID)
+
+	posts, err := pc.PostService.GetAllPostsByTag(userID, limit, offset, tagParam)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -95,11 +126,22 @@ func (pc PostController) CreatePost(c *gin.Context) {
 	}
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	err := pc.PostService.CreatePost(userID, params)
+	tags, content := pc.TagService.ExtractTagStringFromContent(params.Content)
+
+	params.Content = content
+
+	postID, err := pc.PostService.CreatePost(userID, params)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
 	}
+
+	err = pc.TagService.AddPostTags(postID, tags)
+	if err != nil {
+		util.WriteAppError(c, err)
+		return
+	}
+
 	c.JSON(201, util.SuccessMessageResponse{Message: "Post created succesfully"})
 
 }

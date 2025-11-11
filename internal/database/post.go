@@ -12,6 +12,7 @@ type BasePostStore interface {
 	HasAccessToPost(userID, postID uuid.UUID) (bool, error)
 	GetPostByID(postID uuid.UUID) (*model.Post, error)
 	GetPosts(pagination Pagination, search Search, userID uuid.UUID) ([]model.Post, error)
+	GetPostsByTag(pagination Pagination, tag string, userID uuid.UUID) ([]model.Post, error)
 	GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, error)
 	GetPostsByUserID(userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error)
 	CreatePost(post *model.Post) error
@@ -52,15 +53,6 @@ func (s *PostStore) HasAccessToPost(userID, postID uuid.UUID) (bool, error) {
 func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.UUID) ([]model.Post, error) {
 	var posts []model.Post
 
-	// 	ID           uuid.UUID  `json:"id"`
-	// Content      string     `json:"content"`
-	// CreatedAt    string     `json:"created_at"`
-	// UpdatedAt    string     `json:"updated_at"`
-	// User         model.User `json:"user"`
-	// LikeCount    int        `json:"total_likes"`
-	// CommentCount int        `json:"total_comment"`
-	// IsLiked      bool       `json:"is_liked"`
-	// IsFollowing  bool       `json:"is_following"`
 	query := `
 	WITH likes_count AS (
 		SELECT post_id ,COUNT(*) as total_likes FROM post_likes
@@ -114,6 +106,105 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 	rows, err := s.DB.Query(query, search.Query, pagination.Limit, pagination.Offset, userID, userID)
 	if err != nil {
 		s.logger.Error("Error while getting all posts", zap.Error(err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		post := model.Post{}
+		var commentCount, postLikeCount *int
+		var isLiked, isFollowing *bool
+
+		err := rows.Scan(&post.ID, &post.Content, &post.CreatedAt, &post.UpdatedAt,
+			&post.User.ID, &post.User.Name, &post.User.LastName, &post.User.Username,
+			&postLikeCount, &commentCount,
+			&isLiked, &isFollowing,
+		)
+		if err != nil {
+			s.logger.Error("Error while scanning result", zap.Error(err))
+			return nil, err
+		}
+		post.LikeCount = *postLikeCount
+		post.CommentCount = *commentCount
+		post.IsLiked = *isLiked
+		post.IsFollowing = *isFollowing
+
+		posts = append(posts, post)
+
+	}
+	if err := rows.Err(); err != nil {
+		s.logger.Error("Error in result row", zap.Error(err))
+		return nil, err
+	}
+
+	if len(posts) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return posts, nil
+}
+func (s *PostStore) GetPostsByTag(pagination Pagination, tag string, userID uuid.UUID) ([]model.Post, error) {
+	var posts []model.Post
+
+	query := `
+	WITH likes_count AS (
+		SELECT post_id ,COUNT(*) as total_likes FROM post_likes
+		GROUP BY post_id
+	),
+
+	comments_count AS (
+		SELECT post_id, COUNT(*) as total_comments FROM comments
+		GROUP BY post_id
+	),
+
+	user_likes AS (
+		SELECT post_id FROM post_likes
+		WHERE user_id = $4
+	),
+
+	user_follows AS (
+		SELECT follow_id
+		FROM follows
+		WHERE user_id = $4
+	),
+
+	tag_post_ids AS (
+	SELECT post_id FROM post_tags
+	JOIN tags ON tags.id = post_tags.tag_id AND tags.name = $1
+	),
+
+	limited_posts AS (
+		SELECT posts.* FROM tag_post_ids
+		JOIN posts ON tag_post_ids.post_id = posts.id
+		WHERE posts.visibility = 'public' OR posts.user_id IN (SELECT follow_id FROM user_follows)
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	)
+
+
+
+	SELECT 
+	posts.id,posts.content,posts.created_at,posts.updated_at,
+    post_user.id,post_user.name,post_user.last_name,post_user.username,
+	
+	COALESCE(likes_count.total_likes,0),
+	COALESCE(comments_count.total_comments,0),
+
+	(user_likes.post_id IS NOT NULL),
+	(user_follows.follow_id IS NOT NULL)
+
+    FROM limited_posts as posts 
+    JOIN users as post_user ON posts.user_id = post_user.id
+    LEFT JOIN likes_count ON likes_count.post_id = posts.id
+	LEFT JOIN comments_count ON comments_count.post_id = posts.id
+	LEFT JOIN user_likes ON user_likes.post_id = posts.id
+	LEFT JOIN user_follows ON user_follows.follow_id = post_user.id
+;
+	`
+
+	rows, err := s.DB.Query(query, tag, pagination.Limit, pagination.Offset, userID)
+	if err != nil {
+		s.logger.Error("Error while getting all posts by tags", zap.Error(err))
 		return nil, err
 	}
 	defer rows.Close()

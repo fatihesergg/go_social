@@ -34,6 +34,7 @@ func MountRoutes(engine *gin.Engine,
 	postRouter.Use(middleware.AuthMiddleware())
 
 	postRouter.GET("/:id", postController.GetPostByID)
+	postRouter.GET("/tag/:tag", postController.GetPostsByTag)
 	postRouter.GET("/", postController.GetPosts)
 	postRouter.POST("/", postController.CreatePost)
 	postRouter.PUT("/:id", postController.UpdatePost)

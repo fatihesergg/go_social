@@ -8,9 +8,10 @@ type Storage struct {
 	FeedStore    BaseFeedStore
 	LikeStore    BaseLikeStore
 	ReplyStore   BaseReplyStore
+	TagStore     BaseTagStore
 }
 
-func NewPostgresStorage(userStore BaseUserStore, postStore BasePostStore, commentStore BaseCommentStore, followStore BaseFollowStore, feedStore BaseFeedStore, likeStore BaseLikeStore, replyStore BaseReplyStore) *Storage {
+func NewPostgresStorage(userStore BaseUserStore, postStore BasePostStore, commentStore BaseCommentStore, followStore BaseFollowStore, feedStore BaseFeedStore, likeStore BaseLikeStore, replyStore BaseReplyStore, tagStore BaseTagStore) *Storage {
 	return &Storage{
 		UserStore:    userStore,
 		PostStore:    postStore,
@@ -19,5 +20,6 @@ func NewPostgresStorage(userStore BaseUserStore, postStore BasePostStore, commen
 		FeedStore:    feedStore,
 		LikeStore:    likeStore,
 		ReplyStore:   replyStore,
+		TagStore:     tagStore,
 	}
 }

@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql"
+	"regexp"
 
 	"github.com/bytedance/gopkg/util/logger"
 	"github.com/fatihesergg/go_social/internal/database"
@@ -14,8 +15,9 @@ import (
 
 type BasePostService interface {
 	GetAllPosts(userID uuid.UUID, limit, offset, query string) ([]dto.AllPostResponse, error)
+	GetAllPostsByTag(userID uuid.UUID, limit, offset string, tag string) ([]dto.AllPostResponse, error)
 	GetPostByID(userID uuid.UUID, postIDRaw string) (*dto.PostDetailResponse, error)
-	CreatePost(userID uuid.UUID, dto dto.CreatePostDTO) error
+	CreatePost(userID uuid.UUID, dto dto.CreatePostDTO) (uuid.UUID, error)
 	UpdatePost(userID uuid.UUID, postIDRaw string, dto dto.UpdatePostDTO) error
 	DeletePost(userID uuid.UUID, postIDRaw string) error
 }
@@ -75,7 +77,7 @@ func (ps *PostService) GetPostByID(userID uuid.UUID, postIDRaw string) (*dto.Pos
 	result := dto.NewPostDetailResponse(post)
 	return result, nil
 }
-func (ps *PostService) CreatePost(userID uuid.UUID, dto dto.CreatePostDTO) error {
+func (ps *PostService) CreatePost(userID uuid.UUID, dto dto.CreatePostDTO) (uuid.UUID, error) {
 
 	if dto.Visibility == "private" {
 		dto.Visibility = "private"
@@ -92,9 +94,10 @@ func (ps *PostService) CreatePost(userID uuid.UUID, dto dto.CreatePostDTO) error
 
 	err := ps.storage.PostStore.CreatePost(post)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return uuid.Nil, errors.InternalServerError.Wrap(err)
 	}
-	return nil
+
+	return post.ID, nil
 }
 func (ps *PostService) UpdatePost(userID uuid.UUID, postIDRaw string, dto dto.UpdatePostDTO) error {
 
@@ -153,4 +156,27 @@ func (ps *PostService) DeletePost(userID uuid.UUID, postIDRaw string) error {
 		return errors.InternalServerError.Wrap(err)
 	}
 	return nil
+}
+func (ps *PostService) GetAllPostsByTag(userID uuid.UUID, limit, offset string, tag string) ([]dto.AllPostResponse, error) {
+
+	pagination := database.NewPagination(limit, offset)
+	tagExpr, err := regexp.Compile(`[\w\d]+`)
+	if err != nil {
+		return nil, errors.InternalServerError
+	}
+	isValid := tagExpr.MatchString(tag)
+	if !isValid {
+		return nil, errors.InvalidTag
+	}
+
+	posts, err := ps.storage.PostStore.GetPostsByTag(pagination, tag, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.NoPostsFoundError
+		}
+		return nil, errors.InternalServerError.Wrap(err)
+	}
+
+	return dto.NewAllPostResponse(posts), nil
+
 }
