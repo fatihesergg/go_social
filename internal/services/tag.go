@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var tagExpr = regexp.MustCompile(`\#[\w]+`)
+
 type BaseTagService interface {
 	AddPostTags(postID uuid.UUID, tags []string) error
 	ExtractTagStringFromContent(content string) ([]string, string)
@@ -29,7 +31,6 @@ func NewTagService(storage *database.Storage, logger *zap.Logger) *TagService {
 }
 
 func (ts *TagService) ExtractTagStringFromContent(content string) ([]string, string) {
-	tagExpr := regexp.MustCompile(`\#[\w]+`)
 	lowerContent := strings.ToLower(content)
 	var tags []string
 	if tagExpr.MatchString(lowerContent) {
