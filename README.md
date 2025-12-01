@@ -1,113 +1,73 @@
 # Go Social API
 
-Go Social is a backend API for a social media application built with Go. It provides a robust foundation for features like user authentication, content creation, and social interactions. The project follows modern Go development practices, emphasizing a clean, layered architecture and security.
+![Go](https://img.shields.io/badge/Go-1.24-00ADD8?style=flat&logo=go)
+![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat&logo=postgresql)
+![Swagger](https://img.shields.io/badge/Swagger-Docs-85EA2D?style=flat&logo=swagger)
 
-## ✨ Features
+A production-ready, layered REST API for a social media platform. Built with **Go**, **Gin**, and **PostgreSQL**, featuring clean architecture, JWT authentication, and automated seeding.
 
-### Core Functionality
+## ⚡ Features
 
-- **User Management**: Secure user sign up and login.
-- **JWT Authentication**: Endpoints are protected using JSON Web Tokens.
-- **User Profiles**: Fetch user data and profile information.
-- **Social Graph**: Users can follow and unfollow each other.Users can search other users by their usernames.
-- **Follower/Following Lists**: View lists of who a user follows and who follows them.
-- **Post Management**: Full CRUD (Create, Read, Update, Delete) operations for posts.
-- **Likes**: Create and Delete operations for likes on posts and comments.
-- **Comment System**: Full CRUD operations for comments on posts.
-- **Reply Comment**: Full CRUD operations for replies on comments.
-- **Personalized Feed**: A user-specific feed that aggregates posts from the users they follow.
+- **🔐 Auth:** Secure JWT authentication (Signup, Login, Password Reset).
+- **📝 Content:** CRUD for Posts, Comments, and Nested Replies.
+- **❤️ Social:** Like system, Follow/Unfollow users, and Tagging.
+- **📰 Feed:** Personalized feeds based on follower graph.
+- **🔍 Search:** User search and Tag filtering.
+- **🐳 DevOps:** Fully Dockerized with Make automation and Migrations.
 
-### Architecture & Design
+## 🚀 Quick Start
 
-- **Layered Architecture**: The project is structured into distinct layers (Controller, Database/Store, Model) to enforce separation of concerns.
-  - `internal/controller`: Handles incoming HTTP requests, validates input, and calls the appropriate services.
-  - `internal/database`: Implements the Repository Pattern. The `...Store` structs abstract all database interactions, making the business logic independent of the database implementation.
-  - `internal/services`: Responsible for business logic validation, permission checks.Uses `Storage` struct as dependency
-  - `internal/model`: Defines the core data structures of the application.
-  - `internal/dto`: Defines struct for both request body parameters and responses.
-- **Dependency Injection**: Dependencies (like database stores) are created in `main.go` and injected into the controllers. This promotes loose coupling and makes components highly testable.
-- **Centralized Routing**: All API routes are clearly defined in `cmd/go_social/main.go` using the Gin Gonic framework, providing a single source of truth for the API's structure.
-- **Middleware**: Authentication is handled cleanly using Gin middleware (`internal/middleware/auth.go`), which intercepts requests to protected routes and validates the JWT.
-- **Types**:
+### 1. Environment Setup
 
-  - **Errors**: `AppErr` use by services.It can wrap Actual error for debugging purposes using ` Wrap(actual error)` method.Later we can access the wrapped error using `Actual` method.
+Create a `.env` file in the root directory:
 
-  - **Dtos**:`...DTO` use by controller and services.Structs can be found in `internal/dto`
+```env
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_DB=social_db
+JWT_SECRET=supersecretkey
+TEST_DB_URL=postgres://postgres:password@localhost:5432/social_db_test
+```
 
-  - **Response Types**: This api has **3** response types named `SuccessMessageResponse`, `SuccessResultResponse` and `ErrorResponse`.It can be found in `internal/utils.go`.
+### 2. Run with Docker
 
-### Security
+The easiest way to start the API and Database:
 
-- **JWT-Based Authentication**: Stateless authentication is implemented using JWTs, which are issued upon successful login.
-- **Password Hashing**: Users passwords hashed before storing in database.Using `brcypt`library.
-- **Authorization Logic**: Operations like updating or deleting a post/comment include checks to ensure that the request is made by the authorized owner of the resource.
+```bash
+make up
+```
 
-### Database
+_API will be available at `http://localhost:3000`_
 
-- **PostgreSQL**: A powerful, open-source relational database is used for data persistence.
-- **Database Migrations**: The `golang-migrate` tool is used to manage database schema changes in a version-controlled, systematic way. This ensures the database schema is always in sync with the application code.
+## 📚 Documentation
 
-## 🛠️ Technologies Used
+Interactive API documentation is available via Swagger UI:
 
-- **Backend**: Go
-- **Framework**: Gin Gonic
-- **Database**: PostgreSQL
-- **Authentication**: JWT (JSON Web Tokens)
-- **Database Migrations**: `golang-migrate`
-- **API Documentation**: `swag`
-- **Environment Management**: `godotenv`
-- **Deployment**: `docker` and `docker-compose`
-- **Test**:`testify` and `testing`
+👉 **[http://localhost:3000/swagger/index.html](http://localhost:3000/swagger/index.html)**
 
-### Developer Experience
+## 🛠 Make Commands
 
-- **Interactive API Documentation**: The entire API is documented using Swagger. The documentation is automatically generated from code comments, ensuring it's always up-to-date.
+| Command           | Description                               |
+| :---------------- | :---------------------------------------- |
+| `make up`         | Start API and DB containers in background |
+| `make down`       | Stop and remove containers                |
+| `make logs`       | View live container logs                  |
+| `make run`        | Run the application locally (requires DB) |
+| `make test`       | Run unit tests                            |
+| `make swagger`    | Regenerate Swagger documentation          |
+| `make migrate-up` | Apply database migrations                 |
 
-## 📖 API Documentation
+## 📂 Architecture
 
-This project uses `swag` to automatically generate interactive API documentation in the Swagger 2.0 format.
+The project follows a **Clean Architecture** pattern to ensure separation of concerns and scalability:
 
-Once the application is running, you can access the Swagger UI at:
+- **`cmd/`**: Application entry points (API server, Seeder).
+- **`internal/controller`**: **Gin** handlers responsible for request validation and response formatting.
+- **`internal/services`**: Pure business logic layer, decoupled from HTTP and Database details.
+- **`internal/database`**: Data access layer using raw SQL for **PostgreSQL** interactions.
+- **`internal/model`**: Core domain entities and database schemas.
+- **`internal/dto`**: Data Transfer Objects for strict API contract definition.
+- **`internal/middleware`**: Cross-cutting concerns like **JWT Auth**, Logging, and Rate Limiting.
 
-[http://localhost:3000/swagger/index.html](http://localhost:3000/swagger/index.html)
-
-The documentation provides a clear overview of all available endpoints, their parameters, and expected responses. You can also execute API requests directly from the UI, which is useful for testing and exploration.
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Docker and Docker Compose
-
-### Installation & Setup
-
-1.  **Clone the repository:**
-
-    ```bash
-    git clone github.com/fatihesergg/go_social
-    cd go_social
-    ```
-
-2.  **Configure Environment Variables:**
-    Create a `.env` file in the root directory and add the following variables:
-
-    ```env
-    POSTGRES_USER="postgres user name"
-    POSTGRES_PASSWORD="postgres user password"
-    POSTGRES_DB="postgres database name"
-    JWT_SECRET="your-super-secret-key"
-    TEST_DB_URL="test postgres database url"
-    ```
-
-3.  **Run containers with docker-compose:**
-
-    ```bash
-    docker compose up
-    ```
-
-    The server will start on port `3000`.
-
-4.  **Run tests:**
-    ```bash
-    go test ./...
-    ```
+#### Note: ( Readme generated via AI )
