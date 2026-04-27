@@ -11,7 +11,7 @@ services:
     restart: always
 
   db:
-    image: postgres:latest
+    image: postgres:18
     restart: always
     container_name: go_social_db
     env_file:
@@ -24,6 +24,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
     volumes:
-        - db_data:/var/lib/postgresql/data
+        - db_data:/var/lib/postgresql
 volumes:
   db_data:
