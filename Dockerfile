@@ -19,7 +19,6 @@ COPY --from=builder /app/app .
 COPY --from=builder /go/bin/migrate /usr/local/bin/migrate
 
 COPY ./internal/migration ./internal/migration
-COPY .env ./.env
 
 EXPOSE 3000
 CMD ["sh", "-c", "migrate -path ./internal/migration -database \"postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable\" up || exit 1 && ./app"]
