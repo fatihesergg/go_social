@@ -4,7 +4,7 @@ ifneq (,$(wildcard ./.env))
 endif
 
 ## ENV
-DB_URL=postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(DB_HOST):5432/$(POSTGRES_DB)?sslmode=disable
+DB_URL=postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(DB_HOST):${POSTGRES_PORT}/$(POSTGRES_DB)?sslmode=disable
 MIGRATIONS_DIR=internal/migration
 DOCKER_COMPOSE_FILE=compose.yaml
 SEED_FILE=seed.sql
