@@ -2,10 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 type BaseFollowStore interface {
@@ -16,12 +16,11 @@ type BaseFollowStore interface {
 }
 
 type FollowStore struct {
-	db     *sql.DB
-	logger *zap.Logger
+	db *sql.DB
 }
 
-func NewFollowStore(db *sql.DB, logger *zap.Logger) BaseFollowStore {
-	return &FollowStore{db: db, logger: logger.Named("follow_store")}
+func NewFollowStore(db *sql.DB) BaseFollowStore {
+	return &FollowStore{db: db}
 }
 
 func (s FollowStore) GetFollowerByUserID(userID uuid.UUID) ([]model.Follow, error) {
@@ -29,21 +28,18 @@ func (s FollowStore) GetFollowerByUserID(userID uuid.UUID) ([]model.Follow, erro
 	query := "SELECT id, user_id, follow_id FROM follows WHERE follow_id = $1"
 	rows, err := s.db.Query(query, userID)
 	if err != nil {
-		s.logger.Error("Error while getting follower by userid", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error while getting follower by userid: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var follow model.Follow
 		if err := rows.Scan(&follow.ID, &follow.UserID, &follow.FollowID); err != nil {
-			s.logger.Error("Error while scanning result", zap.Error(err))
-			return nil, err
+			return nil, fmt.Errorf("Error while scanning result: %w", err)
 		}
 		follows = append(follows, follow)
 	}
 	if err := rows.Err(); err != nil {
-		s.logger.Error("Error in result row", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error in result row: %w", err)
 	}
 
 	if len(follows) == 0 {
@@ -61,22 +57,19 @@ func (s FollowStore) GetFollowingByUserID(userID uuid.UUID) ([]model.Follow, err
 		if err == sql.ErrNoRows {
 			return follows, nil
 		}
-		s.logger.Error("Error while getting followings by userid", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error while getting followings by userid: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var follow model.Follow
 		if err := rows.Scan(&follow.ID, &follow.UserID, &follow.FollowID); err != nil {
-			s.logger.Error("Error while scanning result", zap.Error(err))
-			return nil, err
+			return nil, fmt.Errorf("Error while scanning result: %w", err)
 		}
 		follows = append(follows, follow)
 	}
 
 	if err := rows.Err(); err != nil {
-		s.logger.Error("Error in result row", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error in result row: %w", err)
 
 	}
 
@@ -91,8 +84,7 @@ func (s FollowStore) FollowUser(model model.Follow) error {
 	query := "INSERT INTO follows (id,user_id, follow_id) VALUES ($1, $2,$3)"
 	_, err := s.db.Exec(query, model.ID, model.UserID, model.FollowID)
 	if err != nil {
-		s.logger.Error("Error while inserting follow", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while inserting follow: %w", err)
 	}
 	return nil
 }
@@ -100,8 +92,7 @@ func (s FollowStore) UnFollowUser(model model.Follow) error {
 	query := "DELETE FROM follows WHERE user_id = $1 AND follow_id = $2"
 	result, err := s.db.Exec(query, model.UserID, model.FollowID)
 	if err != nil {
-		s.logger.Error("Error while deleting follow", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while deleting follow: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {

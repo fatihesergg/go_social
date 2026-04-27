@@ -2,10 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 type BaseReplyStore interface {
@@ -20,14 +20,12 @@ type BaseReplyStore interface {
 }
 
 type ReplyStore struct {
-	DB     *sql.DB
-	logger *zap.Logger
+	DB *sql.DB
 }
 
-func NewReplyStore(db *sql.DB, logger *zap.Logger) *ReplyStore {
+func NewReplyStore(db *sql.DB) *ReplyStore {
 	return &ReplyStore{
-		DB:     db,
-		logger: logger.Named("reply_store"),
+		DB: db,
 	}
 }
 
@@ -48,8 +46,7 @@ func (rs *ReplyStore) HasAccessToReply(userID, replyID uuid.UUID) (bool, error) 
 	)`
 	err := rs.DB.QueryRow(query, userID, replyID).Scan(&result)
 	if err != nil {
-		rs.logger.Error("Error while checking reply access", zap.Error(err))
-		return false, err
+		return false, fmt.Errorf("Error while checking reply access: %w", err)
 	}
 	return result, err
 
@@ -59,8 +56,7 @@ func (rs *ReplyStore) CreateCommentReply(reply *model.Reply) error {
 	query := "INSERT INTO replies ( id,comment_id,user_id,message ) VALUES ( $1,$2,$3,$4 )"
 	_, err := rs.DB.Exec(query, reply.ID, reply.CommentID, reply.UserID, reply.Message)
 	if err != nil {
-		rs.logger.Error("Error while inserting reply", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while inserting reply: %w", err)
 	}
 	return nil
 }
@@ -69,8 +65,7 @@ func (rs *ReplyStore) CreateNestedReply(reply *model.Reply) error {
 	query := "INSERT INTO replies ( id,parent_id,user_id,message ) VALUES ( $1,$2,$3,$4 )"
 	_, err := rs.DB.Exec(query, reply.ID, reply.ParentID, reply.UserID, reply.Message)
 	if err != nil {
-		rs.logger.Error("Error while inserting nested reply", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while inserting nested reply: %w", err)
 	}
 	return nil
 }
@@ -79,8 +74,7 @@ func (rs *ReplyStore) UpdateReply(reply *model.Reply) error {
 	query := "UPDATE replies SET comment_id = $1, user_id = $2, message = $3 WHERE id = $4"
 	_, err := rs.DB.Exec(query, reply.CommentID, reply.UserID, reply.Message, reply.ID)
 	if err != nil {
-		rs.logger.Error("Error while updating reply", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while updating reply: %w", err)
 	}
 	return nil
 }
@@ -91,8 +85,7 @@ func (rs *ReplyStore) GetReplyByID(replyID uuid.UUID) (*model.Reply, error) {
 	err := rs.DB.QueryRow(query, replyID).Scan(&reply.ID, &reply.CommentID, &reply.UserID, &reply.Message)
 
 	if err != nil {
-		rs.logger.Error("Error while getting reply by id", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error while getting reply by id: %w", err)
 	}
 
 	return &reply, err
@@ -103,8 +96,7 @@ func (rs *ReplyStore) DeleteReply(replyID uuid.UUID) error {
 	query := "DELETE FROM replies WHERE id = $1"
 	result, err := rs.DB.Exec(query, replyID)
 	if err != nil {
-		rs.logger.Error("Error while deleting reply", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while deleting reply: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -166,8 +158,7 @@ func (rs *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]mode
 	`
 	rows, err := rs.DB.Query(query, commentID, userID)
 	if err != nil {
-		rs.logger.Error("Error while getting replies by comment id", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error while getting replies by comment id: %w", err)
 	}
 
 	defer rows.Close()
@@ -180,16 +171,14 @@ func (rs *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]mode
 			&reply.LikeCount, &reply.ReplyCount, &reply.IsLiked, &reply.IsFollowing,
 		)
 		if err != nil {
-			rs.logger.Error("Error while scanning result", zap.Error(err))
-			return nil, err
+			return nil, fmt.Errorf("Error while scanning result: %w", err)
 		}
 
 		replies = append(replies, reply)
 
 	}
 	if rows.Err() != nil {
-		rs.logger.Error("Error in result row", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error in result row: %w", err)
 	}
 	if len(replies) == 0 {
 		return nil, sql.ErrNoRows
@@ -249,8 +238,7 @@ func (rs *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.
 	`
 	rows, err := rs.DB.Query(query, parentID, userID)
 	if err != nil {
-		rs.logger.Error("Error while getting replies by parent id", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error while getting replies by parent id: %w", err)
 	}
 	defer rows.Close()
 
@@ -263,16 +251,14 @@ func (rs *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.
 			&reply.LikeCount, &reply.ReplyCount, &reply.IsLiked, &reply.IsFollowing,
 		)
 		if err != nil {
-			rs.logger.Error("Error while scanning result", zap.Error(err))
-			return nil, err
+			return nil, fmt.Errorf("Error while scanning result: %w", err)
 		}
 
 		replies = append(replies, reply)
 
 	}
 	if rows.Err() != nil {
-		rs.logger.Error("Error in result row", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error in result row: %w", err)
 	}
 	if len(replies) == 0 {
 		return nil, sql.ErrNoRows

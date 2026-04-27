@@ -2,10 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 type BaseUserStore interface {
@@ -19,12 +19,11 @@ type BaseUserStore interface {
 }
 
 type UserStore struct {
-	DB     *sql.DB
-	logger *zap.Logger
+	DB *sql.DB
 }
 
-func NewUserStore(db *sql.DB, logger *zap.Logger) BaseUserStore {
-	return &UserStore{DB: db, logger: logger.Named("user_store")}
+func NewUserStore(db *sql.DB) BaseUserStore {
+	return &UserStore{DB: db}
 }
 
 func (s *UserStore) GetUserByID(id uuid.UUID) (*model.User, error) {
@@ -36,8 +35,10 @@ func (s *UserStore) GetUserByID(id uuid.UUID) (*model.User, error) {
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.Avatar, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
-		s.logger.Error("Error while getting user by id", zap.Error(err))
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+		return nil, fmt.Errorf("Error while getting user by id: %w", err)
 	}
 	return user, nil
 }
@@ -51,8 +52,10 @@ func (s *UserStore) GetUserByUsername(username string) (*model.User, error) {
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.Avatar, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
-		s.logger.Error("Error while getting user by username", zap.Error(err))
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+		return nil, fmt.Errorf("Error while getting user by username: %w", err)
 	}
 	return user, nil
 }
@@ -66,8 +69,10 @@ func (s *UserStore) GetUserByEmail(email string) (*model.User, error) {
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt, &user.Avatar)
 
 	if err != nil {
-		s.logger.Error("Error while getting user by email", zap.Error(err))
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+		return nil, fmt.Errorf("Error while getting user by email: %w", err)
 	}
 	return user, nil
 }
@@ -77,8 +82,7 @@ func (s *UserStore) CreateUser(user *model.User) error {
 	query := "INSERT INTO users (id, name, last_name, username, email, password, avatar) VALUES ($1, $2, $3, $4, $5, $6,$7) RETURNING id"
 	err := s.DB.QueryRow(query, user.ID, user.Name, user.LastName, user.Username, user.Email, user.Password, user.Avatar).Scan(&id)
 	if err != nil {
-		s.logger.Error("Error while creating user", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while creating user: %w", err)
 	}
 	return nil
 }
@@ -87,8 +91,7 @@ func (s *UserStore) UpdateUser(user *model.User) error {
 	query := "UPDATE users SET name = $1, last_name = $2, username = $3, email = $4, password = $5 WHERE id = $6"
 	result, err := s.DB.Exec(query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.ID.String())
 	if err != nil {
-		s.logger.Error("Error while updating user", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while updating user: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -104,8 +107,7 @@ func (s *UserStore) DeleteUser(id uuid.UUID) error {
 	query := "DELETE FROM users WHERE id = $1"
 	result, err := s.DB.Exec(query, id)
 	if err != nil {
-		s.logger.Error("Error while deleting user", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while deleting user: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -123,23 +125,20 @@ func (s *UserStore) GetUsersByUsername(userName string) ([]model.User, error) {
 	rows, err := s.DB.Query(query, userName)
 
 	if err != nil {
-		s.logger.Error("Error while getting users by username", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error while getting users by username: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		user := model.User{}
 		err := rows.Scan(&user.ID, &user.Name, &user.LastName, &user.Username)
 		if err != nil {
-			s.logger.Error("Error while scanning result set", zap.Error(err))
-			return nil, err
+			return nil, fmt.Errorf("Error while scanning result set: %w", err)
 		}
 
 		users = append(users, user)
 	}
 	if rows.Err() != nil {
-		s.logger.Error("Error in result row", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error in result row: %w", err)
 	}
 	if len(users) == 0 {
 		return nil, sql.ErrNoRows

@@ -98,10 +98,13 @@ func GetErrorMessage(fe validator.FieldError) string {
 }
 
 func WriteAppError(c *gin.Context, err error) {
+
 	appErr, ok := err.(errors.AppError)
 	if !ok {
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: errors.InternalServerError.Message})
 		return
 	}
 	c.JSON(appErr.Code, ErrorResponse{Error: appErr.Error()})
+	c.Error(appErr.Actual)
 }

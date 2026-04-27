@@ -2,13 +2,12 @@ package services
 
 import (
 	"database/sql"
+	"fmt"
 
-	"github.com/bytedance/gopkg/util/logger"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/util"
-	"go.uber.org/zap"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
@@ -30,11 +29,10 @@ type BaseUserService interface {
 
 type UserService struct {
 	storage *database.Storage
-	logger  *zap.Logger
 }
 
-func NewUserService(storage *database.Storage, logger *zap.Logger) BaseUserService {
-	return &UserService{storage: storage, logger: logger.Named("user_service")}
+func NewUserService(storage *database.Storage) BaseUserService {
+	return &UserService{storage: storage}
 }
 func (us *UserService) Register(dto dto.CreateUserDTO) error {
 	user := &model.User{
@@ -52,8 +50,7 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 		return errors.InternalServerError.Wrap(err)
 	}
 	if existEmail != nil {
-		us.logger.Error("Request user email already exist")
-		return errors.EmailExistError
+		return errors.EmailExistError.Wrap(fmt.Errorf("Request user email already exist"))
 	}
 
 	existUsername, err := us.storage.UserStore.GetUserByUsername(user.Username)
@@ -61,14 +58,12 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 		return errors.InternalServerError.Wrap(err)
 	}
 	if existUsername != nil {
-		us.logger.Error("Request user username already exist")
-		return errors.UsernameExistError
+		return errors.UsernameExistError.Wrap(fmt.Errorf("Request user username already exist"))
 	}
 
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		us.logger.Error("Invalid credentials")
-		return errors.InternalServerError.Wrap(err)
+		return errors.InternalServerError.Wrap(fmt.Errorf("Invalid credentials: %w", err)).Wrap(err)
 	}
 	user.Password = string(hashedPass)
 
@@ -83,15 +78,13 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 func (us *UserService) GetUserByID(rawID string) (*model.User, error) {
 	userID, err := uuid.Parse(rawID)
 	if err != nil {
-		logger.Error("Error while parsing userID", zap.Error(err))
-		return nil, errors.InvalidIDFormatError
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
 	}
 
 	user, err := us.storage.UserStore.GetUserByID(userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			us.logger.Error("User not found")
-			return nil, errors.UserNotFoundError
+			return nil, errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -104,22 +97,19 @@ func (us *UserService) Login(dto dto.LoginUserDTO) (string, error) {
 	user, err := us.storage.UserStore.GetUserByEmail(dto.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			us.logger.Error("User not found")
-			return "", errors.UserNotFoundError
+			return "", errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
 		}
 		return "", errors.InternalServerError
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.Password))
 	if err != nil {
-		us.logger.Error("Invalid credentials")
-		return "", errors.InvalidCredentialsError
+		return "", errors.InvalidCredentialsError.Wrap(fmt.Errorf("Invalid credentials: %w", err))
 	}
 
 	token, err := util.CreateJsonWebToken(user.ID)
 	if err != nil {
-		us.logger.Error("Error while creating jwt token", zap.Error(err))
-		return "", errors.InternalServerError.Wrap(err)
+		return "", errors.InternalServerError.Wrap(err).Wrap(fmt.Errorf("Error while creating jwt token: %w", err))
 	}
 	return token, nil
 }
@@ -127,15 +117,13 @@ func (us *UserService) GetFollowerByUserID(rawID string) ([]model.Follow, error)
 
 	userID, err := uuid.Parse(rawID)
 	if err != nil {
-		logger.Error("Error while parsing userID", zap.Error(err))
-		return nil, errors.InvalidIDFormatError
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
 	}
 
 	followers, err := us.storage.FollowStore.GetFollowerByUserID(userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			us.logger.Error("No followers found")
-			return nil, errors.NoFollowersFoundError
+			return nil, errors.NoFollowersFoundError.Wrap(fmt.Errorf("No followers found"))
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -146,15 +134,13 @@ func (us *UserService) GetFollowingByUserID(rawID string) ([]model.Follow, error
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
-		us.logger.Error("Error while parsing userID", zap.Error(err))
-		return nil, errors.InvalidIDFormatError
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
 	}
 
 	followings, err := us.storage.FollowStore.GetFollowingByUserID(userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			us.logger.Error("No followings found")
-			return nil, errors.NoFollowingsFoundError
+			return nil, errors.NoFollowingsFoundError.Wrap(fmt.Errorf("No followings found"))
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -165,8 +151,7 @@ func (us *UserService) FollowUser(userID uuid.UUID, followID string) error {
 
 	followUserID, err := uuid.Parse(followID)
 	if err != nil {
-		logger.Error("Error while parsing followUserID", zap.Error(err))
-		return errors.InvalidIDFormatError
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing followUserID: %w", err))
 	}
 
 	followings, err := us.storage.FollowStore.GetFollowingByUserID(userID)
@@ -183,8 +168,7 @@ func (us *UserService) FollowUser(userID uuid.UUID, followID string) error {
 	}
 
 	if isFollowing {
-		us.logger.Error("Request user already follow this user")
-		return errors.AlreadyFollowingError
+		return errors.AlreadyFollowingError.Wrap(fmt.Errorf("Request user already follow this user"))
 	}
 	follow := model.Follow{
 		ID:       uuid.New(),
@@ -202,15 +186,13 @@ func (us *UserService) UnFollowUser(userID uuid.UUID, followID string) error {
 
 	unfUser, err := uuid.Parse(followID)
 	if err != nil {
-		logger.Error("Error while parsing unfUser", zap.Error(err))
-		return errors.InvalidIDFormatError
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing unfUser: %w", err))
 	}
 
 	followings, err := us.storage.FollowStore.GetFollowingByUserID(userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			us.logger.Error("No followings found")
-			return errors.NoFollowingsFoundError
+			return errors.NoFollowingsFoundError.Wrap(fmt.Errorf("No followings found"))
 		}
 		return errors.InternalServerError.Wrap(err)
 	}
@@ -222,8 +204,7 @@ func (us *UserService) UnFollowUser(userID uuid.UUID, followID string) error {
 		}
 	}
 	if !isFollowing {
-		us.logger.Error("User has not following this user yet")
-		return errors.NotFollowingError
+		return errors.NotFollowingError.Wrap(fmt.Errorf("User has not following this user yet: %w", err))
 	}
 	follow := model.Follow{
 		UserID:   userID,
@@ -240,15 +221,13 @@ func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
-		us.logger.Error("Error while parsing userID")
-		return nil, errors.InvalidIDFormatError
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
 	}
 
 	user, err := us.storage.UserStore.GetUserByID(userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			us.logger.Error("User not found")
-			return nil, errors.UserNotFoundError
+			return nil, errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -266,8 +245,7 @@ func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset
 			posts, err := us.storage.PostStore.GetPostsByUserID(user.ID, pagination, search)
 			if err != nil {
 				if err == sql.ErrNoRows {
-					us.logger.Error("No posts found")
-					return nil, errors.NoPostsFoundError
+					return nil, errors.NoPostsFoundError.Wrap(fmt.Errorf("No posts found"))
 				}
 				return nil, errors.InternalServerError.Wrap(err)
 			}
@@ -276,28 +254,24 @@ func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset
 			return result, nil
 		}
 	}
-	us.logger.Error("Request user has not following this user yet")
-	return nil, errors.NotFollowingError
+	return nil, errors.NotFollowingError.Wrap(fmt.Errorf("Request user has not following this user yet: %w", err))
 }
 func (us *UserService) ResetPassword(meID uuid.UUID, dto dto.ResetUserPasswordDTO) error {
 
 	user, err := us.storage.UserStore.GetUserByID(meID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			us.logger.Error("User not found")
-			return errors.UserNotFoundError
+			return errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
 		}
 		return errors.InternalServerError.Wrap(err)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.OldPassword)); err != nil {
-		us.logger.Error("Invalid credentials")
-		return errors.InvalidCredentialsError
+		return errors.InvalidCredentialsError.Wrap(fmt.Errorf("Invalid credentials"))
 	}
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(dto.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
-		us.logger.Error("Error while hashing password", zap.Error(err))
-		return errors.InternalServerError.Wrap(err)
+		return errors.InternalServerError.Wrap(fmt.Errorf("Error while hashing password: %w", err)).Wrap(err)
 	}
 	user.Password = string(hashedPass)
 
@@ -312,8 +286,7 @@ func (us *UserService) GetUsersByUsername(username string) ([]model.User, error)
 	users, err := us.storage.UserStore.GetUsersByUsername(username)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			us.logger.Error("No users found")
-			return nil, errors.NoUsersFoundError
+			return nil, errors.NoUsersFoundError.Wrap(fmt.Errorf("No users found"))
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}

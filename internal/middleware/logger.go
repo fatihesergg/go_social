@@ -29,6 +29,7 @@ func LoggerMiddleware(logger *zap.Logger) gin.HandlerFunc {
 
 		if len(ctx.Errors) > 0 {
 			for _, err := range ctx.Errors {
+
 				logger.Error(err.Error(), fields...)
 			}
 		} else {

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -8,7 +9,6 @@ import (
 	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 var tagExpr = regexp.MustCompile(`\#[\w]+`)
@@ -20,13 +20,11 @@ type BaseTagService interface {
 
 type TagService struct {
 	storage *database.Storage
-	logger  *zap.Logger
 }
 
-func NewTagService(storage *database.Storage, logger *zap.Logger) *TagService {
+func NewTagService(storage *database.Storage) *TagService {
 	return &TagService{
 		storage: storage,
-		logger:  logger.Named("tag_service"),
 	}
 }
 
@@ -65,14 +63,12 @@ func (ts *TagService) AddPostTags(postID uuid.UUID, tags []string) error {
 
 	err := ts.storage.TagStore.CreateMultipleTags(tagModels)
 	if err != nil {
-		ts.logger.Error("Error while creating post tags", zap.Error(err))
-		return errors.InternalServerError.Wrap(err)
+		return errors.InternalServerError.Wrap(fmt.Errorf("Error while creating post tags: %w", err)).Wrap(err)
 	}
 
 	err = ts.storage.TagStore.CreatePostTag(tags, postID)
 	if err != nil {
-		ts.logger.Error("Error while matching post to tags", zap.Error(err))
-		return errors.InternalServerError.Wrap(err)
+		return errors.InternalServerError.Wrap(fmt.Errorf("Error while matching post to tags: %w", err)).Wrap(err)
 	}
 	return nil
 }

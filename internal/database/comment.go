@@ -2,10 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 type BaseCommentStore interface {
@@ -18,14 +18,12 @@ type BaseCommentStore interface {
 }
 
 type CommentStore struct {
-	db     *sql.DB
-	logger *zap.Logger
+	db *sql.DB
 }
 
-func NewCommentStore(db *sql.DB, logger *zap.Logger) BaseCommentStore {
+func NewCommentStore(db *sql.DB) BaseCommentStore {
 	return &CommentStore{
-		db:     db,
-		logger: logger.Named("comment_store"),
+		db: db,
 	}
 }
 
@@ -44,8 +42,7 @@ func (cs *CommentStore) HasAccessToComment(userID, commentID uuid.UUID) (bool, e
 
 	err := cs.db.QueryRow(query, userID, commentID).Scan(&result)
 	if err != nil {
-		cs.logger.Error("Error while checking comment access", zap.Error(err))
-		return false, err
+		return false, fmt.Errorf("Error while checking comment access: %w", err)
 	}
 	return result, nil
 
@@ -103,8 +100,7 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 	WHERE comments.post_id = $1`
 	rows, err := cs.db.Query(query, postID, userID)
 	if err != nil {
-		cs.logger.Error("Error while getting comments by postid", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error while getting comments by postid: %w", err)
 	}
 	defer rows.Close()
 	commentMap := make(map[uuid.UUID]*model.Comment)
@@ -116,8 +112,7 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 			&comment.LikeCount, &comment.ReplyCount,
 			&comment.IsLiked, &comment.IsFollowing)
 		if err != nil {
-			cs.logger.Error("Error while scanning result", zap.Error(err))
-			return nil, err
+			return nil, fmt.Errorf("Error while scanning result: %w", err)
 		}
 		if _, ok := commentMap[comment.ID]; !ok {
 			commentMap[comment.ID] = &comment
@@ -125,8 +120,7 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 
 	}
 	if rows.Err() != nil {
-		cs.logger.Error("Error in result row", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error in result row: %w", err)
 	}
 
 	for _, comment := range commentMap {
@@ -150,8 +144,7 @@ func (cs CommentStore) GetCommentByID(id uuid.UUID) (*model.Comment, error) {
 	err := cs.db.QueryRow(query, id).Scan(&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.CreatedAt, &comment.UpdatedAt, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email)
 
 	if err != nil {
-		cs.logger.Error("Error wile getting comment by id", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error wile getting comment by id: %w", err)
 	}
 
 	return &comment, nil
@@ -162,8 +155,7 @@ func (cs CommentStore) CreateComment(comment *model.Comment) error {
 	query := "INSERT INTO comments (id,post_id, user_id, content) VALUES ($1, $2, $3,$4)"
 	_, err := cs.db.Exec(query, comment.ID, comment.PostID, comment.UserID, comment.Content)
 	if err != nil {
-		cs.logger.Error("Error while inserting comment", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while inserting comment: %w", err)
 	}
 	return nil
 }
@@ -172,8 +164,7 @@ func (cs CommentStore) UpdateComment(comment *model.Comment) error {
 	query := "UPDATE comments SET content = $1 WHERE id = $2"
 	result, err := cs.db.Exec(query, comment.Content, comment.ID)
 	if err != nil {
-		cs.logger.Error("Error while updating comment", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while updating comment: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -189,8 +180,7 @@ func (cs CommentStore) DeleteComment(id uuid.UUID) error {
 	query := "DELETE FROM comments WHERE id = $1"
 	result, err := cs.db.Exec(query, id)
 	if err != nil {
-		cs.logger.Error("Error while deleting comment", zap.Error(err))
-		return err
+		return fmt.Errorf("Error while deleting comment: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {

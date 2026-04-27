@@ -58,7 +58,7 @@ func main() {
 
 	err = godotenv.Load()
 	if err != nil {
-		logger.Fatal("Error loading .env file")
+		logger.Info("Error loading .env file, using env variables")
 	}
 
 	util.ApiConfig = util.LoadConfig()
@@ -74,23 +74,23 @@ func main() {
 		logger.Fatal("Error connecting database")
 	}
 
-	userStore := database.NewUserStore(db, logger)
-	postStore := database.NewPostStore(db, logger)
-	commentStore := database.NewCommentStore(db, logger)
-	followStore := database.NewFollowStore(db, logger)
-	feedStore := database.NewFeedStore(db, logger)
-	likeStore := database.NewLikeStore(db, logger)
-	replyStore := database.NewReplyStore(db, logger)
-	tagStore := database.NewTagStore(db, logger)
+	userStore := database.NewUserStore(db)
+	postStore := database.NewPostStore(db)
+	commentStore := database.NewCommentStore(db)
+	followStore := database.NewFollowStore(db)
+	feedStore := database.NewFeedStore(db)
+	likeStore := database.NewLikeStore(db)
+	replyStore := database.NewReplyStore(db)
+	tagStore := database.NewTagStore(db)
 
 	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore, likeStore, replyStore, tagStore)
-	userService := services.NewUserService(storage, logger)
-	postService := services.NewPostService(storage, logger)
-	commentService := services.NewCommentService(storage, logger)
-	feedService := services.NewFeedService(storage, logger)
-	likeService := services.NewLikeService(storage, logger)
-	replyService := services.NewReplyService(storage, logger)
-	tagService := services.NewTagService(storage, logger)
+	userService := services.NewUserService(storage)
+	postService := services.NewPostService(storage)
+	commentService := services.NewCommentService(storage)
+	feedService := services.NewFeedService(storage)
+	likeService := services.NewLikeService(storage)
+	replyService := services.NewReplyService(storage)
+	tagService := services.NewTagService(storage)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	rateLimiter := middleware.NewRateLimiter(1, 10)

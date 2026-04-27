@@ -1,11 +1,12 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 type BaseLikeService interface {
@@ -19,17 +20,15 @@ type BaseLikeService interface {
 
 type LikeService struct {
 	storage *database.Storage
-	logger  *zap.Logger
 }
 
-func NewLikeService(storage *database.Storage, logger *zap.Logger) BaseLikeService {
-	return &LikeService{storage: storage, logger: logger.Named("like_service")}
+func NewLikeService(storage *database.Storage) BaseLikeService {
+	return &LikeService{storage: storage}
 }
 func (ls *LikeService) LikePost(userID uuid.UUID, postIDRaw string) error {
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		ls.logger.Error("Error while parsing postID", zap.Error(err))
-		return errors.InternalServerError.Wrap(err)
+		return errors.InternalServerError.Wrap(fmt.Errorf("Error while parsing postID: %w", err)).Wrap(err)
 	}
 
 	hasAccess, err := ls.storage.PostStore.HasAccessToPost(userID, postID)
@@ -38,8 +37,7 @@ func (ls *LikeService) LikePost(userID uuid.UUID, postIDRaw string) error {
 	}
 
 	if !hasAccess {
-		ls.logger.Error("User has no access to this post")
-		return errors.InvalidPermissionError
+		return errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this post"))
 	}
 
 	liked, err := ls.storage.LikeStore.IsPostLiked(postID, userID)
@@ -47,8 +45,7 @@ func (ls *LikeService) LikePost(userID uuid.UUID, postIDRaw string) error {
 		return errors.InternalServerError.Wrap(err)
 	}
 	if liked {
-		ls.logger.Error("User already liked this post")
-		return errors.AlreadyPostLikeError
+		return errors.AlreadyPostLikeError.Wrap(fmt.Errorf("User already liked this post"))
 	}
 
 	err = ls.storage.LikeStore.LikePost(&model.PostLike{
@@ -67,8 +64,7 @@ func (ls *LikeService) UnlikePost(userID uuid.UUID, postIDRaw string) error {
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		ls.logger.Error("Error while parsing uuid", zap.Error(err))
-		return errors.InvalidIDFormatError
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing uuid: %w", err))
 	}
 
 	hasAccess, err := ls.storage.PostStore.HasAccessToPost(userID, postID)
@@ -77,8 +73,7 @@ func (ls *LikeService) UnlikePost(userID uuid.UUID, postIDRaw string) error {
 	}
 
 	if !hasAccess {
-		ls.logger.Error("User has no access to this post")
-		return errors.InvalidPermissionError
+		return errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this post"))
 	}
 
 	liked, err := ls.storage.LikeStore.IsPostLiked(postID, userID)
@@ -86,8 +81,7 @@ func (ls *LikeService) UnlikePost(userID uuid.UUID, postIDRaw string) error {
 		return errors.InternalServerError.Wrap(err)
 	}
 	if !liked {
-		ls.logger.Error("User has not liked post yet")
-		return errors.PostNotLikedError
+		return errors.PostNotLikedError.Wrap(fmt.Errorf("User has not liked post yet"))
 	}
 
 	err = ls.storage.LikeStore.UnlikePost(postID, userID)
@@ -101,8 +95,7 @@ func (ls *LikeService) LikeComment(userID uuid.UUID, commentRawID string) error 
 
 	commentID, err := uuid.Parse(commentRawID)
 	if err != nil {
-		ls.logger.Error("Error while parsing commentID", zap.Error(err))
-		return errors.InvalidIDFormatError
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing commentID: %w", err))
 	}
 	hasAccess, err := ls.storage.CommentStore.HasAccessToComment(userID, commentID)
 
@@ -111,8 +104,7 @@ func (ls *LikeService) LikeComment(userID uuid.UUID, commentRawID string) error 
 	}
 
 	if !hasAccess {
-		ls.logger.Error("User has no access to this comment")
-		return errors.InvalidPermissionError
+		return errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this comment"))
 	}
 
 	existLike, err := ls.storage.LikeStore.IsCommentLiked(commentID, userID)
@@ -137,8 +129,7 @@ func (ls *LikeService) UnlikeComment(userID uuid.UUID, commentRawID string) erro
 
 	commentID, err := uuid.Parse(commentRawID)
 	if err != nil {
-		ls.logger.Error("Error while parsing commentID", zap.Error(err))
-		return errors.InvalidIDFormatError
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing commentID: %w", err))
 	}
 	hasAccess, err := ls.storage.CommentStore.HasAccessToComment(userID, commentID)
 
@@ -147,8 +138,7 @@ func (ls *LikeService) UnlikeComment(userID uuid.UUID, commentRawID string) erro
 	}
 
 	if !hasAccess {
-		ls.logger.Error("User has no access to this comment")
-		return errors.InvalidPermissionError
+		return errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this comment"))
 	}
 
 	existLike, err := ls.storage.LikeStore.IsCommentLiked(commentID, userID)
@@ -157,8 +147,7 @@ func (ls *LikeService) UnlikeComment(userID uuid.UUID, commentRawID string) erro
 	}
 
 	if !existLike {
-		ls.logger.Error("User has not liked comment yet")
-		return errors.CommentNotLikedError
+		return errors.CommentNotLikedError.Wrap(fmt.Errorf("User has not liked comment yet"))
 	}
 
 	err = ls.storage.LikeStore.UnlikeComment(commentID, userID)
@@ -172,8 +161,7 @@ func (ls *LikeService) UnlikeComment(userID uuid.UUID, commentRawID string) erro
 func (ls *LikeService) LikeReply(userID uuid.UUID, replyRawID string) error {
 	replyID, err := uuid.Parse(replyRawID)
 	if err != nil {
-		ls.logger.Error("Error while parsing replyID", zap.Error(err))
-		return errors.InternalServerError.Wrap(err)
+		return errors.InternalServerError.Wrap(fmt.Errorf("Error while parsing replyID: %w", err)).Wrap(err)
 	}
 
 	liked, err := ls.storage.LikeStore.IsReplyLiked(replyID, userID)
@@ -181,8 +169,7 @@ func (ls *LikeService) LikeReply(userID uuid.UUID, replyRawID string) error {
 		return errors.InternalServerError.Wrap(err)
 	}
 	if liked {
-		ls.logger.Error("User already liked reply")
-		return errors.AlreadyReplyLikeError
+		return errors.AlreadyReplyLikeError.Wrap(fmt.Errorf("User already liked reply"))
 	}
 
 	err = ls.storage.LikeStore.LikeReply(&model.ReplyLike{
@@ -199,8 +186,7 @@ func (ls *LikeService) LikeReply(userID uuid.UUID, replyRawID string) error {
 func (ls *LikeService) UnlikeReply(userID uuid.UUID, replyRawID string) error {
 	replyID, err := uuid.Parse(replyRawID)
 	if err != nil {
-		ls.logger.Error("Error while parsing replyID", zap.Error(err))
-		return errors.InvalidIDFormatError
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing replyID: %w", err))
 	}
 
 	existLike, err := ls.storage.LikeStore.IsReplyLiked(replyID, userID)
@@ -209,8 +195,7 @@ func (ls *LikeService) UnlikeReply(userID uuid.UUID, replyRawID string) error {
 	}
 
 	if !existLike {
-		ls.logger.Error("User has not liked reply yet")
-		return errors.ReplyNotLikedError
+		return errors.ReplyNotLikedError.Wrap(fmt.Errorf("User has not liked reply yet"))
 	}
 
 	err = ls.storage.LikeStore.UnlikeReply(replyID, userID)

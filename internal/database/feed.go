@@ -2,10 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 type BaseFeedStore interface {
@@ -13,14 +13,12 @@ type BaseFeedStore interface {
 }
 
 type FeedStore struct {
-	DB     *sql.DB
-	logger *zap.Logger
+	DB *sql.DB
 }
 
-func NewFeedStore(db *sql.DB, logger *zap.Logger) BaseFeedStore {
+func NewFeedStore(db *sql.DB) BaseFeedStore {
 	return &FeedStore{
-		DB:     db,
-		logger: logger.Named("feed_store"),
+		DB: db,
 	}
 }
 
@@ -76,8 +74,7 @@ func (fs FeedStore) GetFeed(userID uuid.UUID, pagination Pagination, search Sear
 
 	rows, err := fs.DB.Query(query, userID, pagination.Limit, pagination.Offset, search.Query)
 	if err != nil {
-		fs.logger.Error("Error while getting user feed", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error while getting user feed: %w", err)
 	}
 	defer rows.Close()
 
@@ -89,16 +86,14 @@ func (fs FeedStore) GetFeed(userID uuid.UUID, pagination Pagination, search Sear
 			&post.IsLiked,
 		)
 		if err != nil {
-			fs.logger.Error("Error while scanning result", zap.Error(err))
-			return nil, err
+			return nil, fmt.Errorf("Error while scanning result: %w", err)
 		}
 
 		posts = append(posts, post)
 
 	}
 	if err := rows.Err(); err != nil {
-		fs.logger.Error("Error in result row", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("Error in result row: %w", err)
 	}
 
 	if len(posts) == 0 {
