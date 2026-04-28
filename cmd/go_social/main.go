@@ -1,9 +1,15 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	docs "github.com/fatihesergg/go_social/docs"
 	"github.com/fatihesergg/go_social/internal/controller"
@@ -105,8 +111,24 @@ func main() {
 
 	routes.MountRoutes(engine, userController, postController, commentController, likeController, feedController, replyController)
 
-	if err := engine.Run(":3000"); err != nil {
-		logger.Fatal("Error starting the server")
-	}
+	server := &http.Server{Addr: ":3000", Handler: engine.Handler()}
 
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			logger.Fatal("Error starting the server")
+		} else {
+			logger.Info("Server listening on port 3000")
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	logger.Info("Shutdown signal received.Shutdown server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Info("Error while shutdown server")
+	}
+	logger.Info("Server shutdown successfully")
 }
