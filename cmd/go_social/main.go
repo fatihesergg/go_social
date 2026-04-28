@@ -114,7 +114,7 @@ func main() {
 	server := &http.Server{Addr: ":3000", Handler: engine.Handler()}
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Fatal("Error starting the server")
 		} else {
 			logger.Info("Server listening on port 3000")
