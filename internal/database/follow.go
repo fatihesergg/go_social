@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -9,10 +10,10 @@ import (
 )
 
 type BaseFollowStore interface {
-	GetFollowerByUserID(userID uuid.UUID) ([]model.Follow, error)
-	GetFollowingByUserID(userID uuid.UUID) ([]model.Follow, error)
-	FollowUser(model model.Follow) error
-	UnFollowUser(model model.Follow) error
+	GetFollowerByUserID(ctx context.Context, userID uuid.UUID) ([]model.Follow, error)
+	GetFollowingByUserID(ctx context.Context, userID uuid.UUID) ([]model.Follow, error)
+	FollowUser(ctx context.Context, model model.Follow) error
+	UnFollowUser(ctx context.Context, model model.Follow) error
 }
 
 type FollowStore struct {
@@ -23,10 +24,10 @@ func NewFollowStore(db *sql.DB) BaseFollowStore {
 	return &FollowStore{db: db}
 }
 
-func (s FollowStore) GetFollowerByUserID(userID uuid.UUID) ([]model.Follow, error) {
+func (s FollowStore) GetFollowerByUserID(ctx context.Context, userID uuid.UUID) ([]model.Follow, error) {
 	var follows []model.Follow
 	query := "SELECT id, user_id, follow_id FROM follows WHERE follow_id = $1"
-	rows, err := s.db.Query(query, userID)
+	rows, err := s.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting follower by userid: %w", err)
 	}
@@ -49,10 +50,10 @@ func (s FollowStore) GetFollowerByUserID(userID uuid.UUID) ([]model.Follow, erro
 	return follows, nil
 }
 
-func (s FollowStore) GetFollowingByUserID(userID uuid.UUID) ([]model.Follow, error) {
+func (s FollowStore) GetFollowingByUserID(ctx context.Context, userID uuid.UUID) ([]model.Follow, error) {
 	var follows []model.Follow
 	query := "SELECT id, user_id, follow_id FROM follows WHERE user_id = $1"
-	rows, err := s.db.Query(query, userID)
+	rows, err := s.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return follows, nil
@@ -80,17 +81,17 @@ func (s FollowStore) GetFollowingByUserID(userID uuid.UUID) ([]model.Follow, err
 	return follows, nil
 }
 
-func (s FollowStore) FollowUser(model model.Follow) error {
+func (s FollowStore) FollowUser(ctx context.Context, model model.Follow) error {
 	query := "INSERT INTO follows (id,user_id, follow_id) VALUES ($1, $2,$3)"
-	_, err := s.db.Exec(query, model.ID, model.UserID, model.FollowID)
+	_, err := s.db.ExecContext(ctx, query, model.ID, model.UserID, model.FollowID)
 	if err != nil {
 		return fmt.Errorf("Error while inserting follow: %w", err)
 	}
 	return nil
 }
-func (s FollowStore) UnFollowUser(model model.Follow) error {
+func (s FollowStore) UnFollowUser(ctx context.Context, model model.Follow) error {
 	query := "DELETE FROM follows WHERE user_id = $1 AND follow_id = $2"
-	result, err := s.db.Exec(query, model.UserID, model.FollowID)
+	result, err := s.db.ExecContext(ctx, query, model.UserID, model.FollowID)
 	if err != nil {
 		return fmt.Errorf("Error while deleting follow: %w", err)
 	}

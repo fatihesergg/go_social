@@ -36,7 +36,7 @@ func (lc LikeController) LikePost(c *gin.Context) {
 
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
-	err := lc.LikeService.LikePost(userID, id)
+	err := lc.LikeService.LikePost(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -64,7 +64,7 @@ func (lc LikeController) LikeReply(c *gin.Context) {
 
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
-	err := lc.LikeService.LikeReply(userID, id)
+	err := lc.LikeService.LikeReply(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -91,7 +91,7 @@ func (lc LikeController) LikeReply(c *gin.Context) {
 func (lc LikeController) UnlikePost(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
-	err := lc.LikeService.UnlikePost(userID, id)
+	err := lc.LikeService.UnlikePost(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -117,7 +117,7 @@ func (lc LikeController) UnlikePost(c *gin.Context) {
 func (lc LikeController) UnlikeReply(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
-	err := lc.LikeService.UnlikeReply(userID, id)
+	err := lc.LikeService.UnlikeReply(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -144,7 +144,7 @@ func (lc LikeController) UnlikeReply(c *gin.Context) {
 func (lc *LikeController) LikeComment(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
-	err := lc.LikeService.LikeComment(userID, id)
+	err := lc.LikeService.LikeComment(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -172,7 +172,7 @@ func (lc *LikeController) UnlikeComment(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	err := lc.LikeService.UnlikeComment(userID, id)
+	err := lc.LikeService.UnlikeComment(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return

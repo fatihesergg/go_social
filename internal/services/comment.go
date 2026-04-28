@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -12,10 +13,10 @@ import (
 )
 
 type BaseCommentService interface {
-	AddCommentPost(userID uuid.UUID, dto dto.CreateCommentDTO) error
-	GetCommentsByPostID(userID uuid.UUID, postIDRaw string) ([]dto.CommentResponse, error)
-	UpdateComment(userID uuid.UUID, commentIDRaw string, dto dto.UpdateCommentDTO) error
-	DeleteComment(userID uuid.UUID, commentIDRaw string) error
+	AddCommentPost(ctx context.Context, userID uuid.UUID, dto dto.CreateCommentDTO) error
+	GetCommentsByPostID(ctx context.Context, userID uuid.UUID, postIDRaw string) ([]dto.CommentResponse, error)
+	UpdateComment(ctx context.Context, userID uuid.UUID, commentIDRaw string, dto dto.UpdateCommentDTO) error
+	DeleteComment(ctx context.Context, userID uuid.UUID, commentIDRaw string) error
 }
 type CommentService struct {
 	storage *database.Storage
@@ -25,9 +26,9 @@ func NewCommentService(storage *database.Storage) BaseCommentService {
 	return &CommentService{storage: storage}
 }
 
-func (cs *CommentService) AddCommentPost(userID uuid.UUID, dto dto.CreateCommentDTO) error {
+func (cs *CommentService) AddCommentPost(ctx context.Context, userID uuid.UUID, dto dto.CreateCommentDTO) error {
 
-	hasAccess, err := cs.storage.PostStore.HasAccessToPost(userID, dto.PostID)
+	hasAccess, err := cs.storage.PostStore.HasAccessToPost(ctx, userID, dto.PostID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
@@ -43,20 +44,20 @@ func (cs *CommentService) AddCommentPost(userID uuid.UUID, dto dto.CreateComment
 		Content: dto.Content,
 	}
 
-	err = cs.storage.CommentStore.CreateComment(comment)
+	err = cs.storage.CommentStore.CreateComment(ctx, comment)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
 	return nil
 }
-func (cs *CommentService) GetCommentsByPostID(userID uuid.UUID, postIDRaw string) ([]dto.CommentResponse, error) {
+func (cs *CommentService) GetCommentsByPostID(ctx context.Context, userID uuid.UUID, postIDRaw string) ([]dto.CommentResponse, error) {
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
 		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing uuid: %w", err))
 	}
 
-	hasAccess, err := cs.storage.PostStore.HasAccessToPost(userID, postID)
+	hasAccess, err := cs.storage.PostStore.HasAccessToPost(ctx, userID, postID)
 	if err != nil {
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -65,7 +66,7 @@ func (cs *CommentService) GetCommentsByPostID(userID uuid.UUID, postIDRaw string
 		return nil, errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this post"))
 	}
 
-	comments, err := cs.storage.CommentStore.GetCommentsByPostID(postID, userID)
+	comments, err := cs.storage.CommentStore.GetCommentsByPostID(ctx, postID, userID)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -77,7 +78,7 @@ func (cs *CommentService) GetCommentsByPostID(userID uuid.UUID, postIDRaw string
 	result := dto.NewCommentResponse(comments)
 	return result, nil
 }
-func (cs *CommentService) UpdateComment(userID uuid.UUID, commentIDRaw string, dto dto.UpdateCommentDTO) error {
+func (cs *CommentService) UpdateComment(ctx context.Context, userID uuid.UUID, commentIDRaw string, dto dto.UpdateCommentDTO) error {
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
@@ -85,7 +86,7 @@ func (cs *CommentService) UpdateComment(userID uuid.UUID, commentIDRaw string, d
 
 	}
 
-	hasAccess, err := cs.storage.CommentStore.HasAccessToComment(userID, commentID)
+	hasAccess, err := cs.storage.CommentStore.HasAccessToComment(ctx, userID, commentID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
@@ -94,7 +95,7 @@ func (cs *CommentService) UpdateComment(userID uuid.UUID, commentIDRaw string, d
 		return errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this comment"))
 	}
 
-	comment, err := cs.storage.CommentStore.GetCommentByID(commentID)
+	comment, err := cs.storage.CommentStore.GetCommentByID(ctx, commentID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return errors.CommentNotFoundError.Wrap(fmt.Errorf("Comment not found"))
@@ -107,21 +108,21 @@ func (cs *CommentService) UpdateComment(userID uuid.UUID, commentIDRaw string, d
 	}
 	comment.Content = dto.Content
 
-	err = cs.storage.CommentStore.UpdateComment(comment)
+	err = cs.storage.CommentStore.UpdateComment(ctx, comment)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 
 	}
 	return nil
 }
-func (cs *CommentService) DeleteComment(userID uuid.UUID, commentIDRaw string) error {
+func (cs *CommentService) DeleteComment(ctx context.Context, userID uuid.UUID, commentIDRaw string) error {
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
 		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing commentID: %w", err))
 	}
 
-	hasAccess, err := cs.storage.CommentStore.HasAccessToComment(userID, commentID)
+	hasAccess, err := cs.storage.CommentStore.HasAccessToComment(ctx, userID, commentID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
@@ -130,7 +131,7 @@ func (cs *CommentService) DeleteComment(userID uuid.UUID, commentIDRaw string) e
 		return errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this comment"))
 	}
 
-	comment, err := cs.storage.CommentStore.GetCommentByID(commentID)
+	comment, err := cs.storage.CommentStore.GetCommentByID(ctx, commentID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return errors.CommentNotFoundError.Wrap(fmt.Errorf("Comment not found"))
@@ -142,7 +143,7 @@ func (cs *CommentService) DeleteComment(userID uuid.UUID, commentIDRaw string) e
 		return errors.InvalidPermissionError.Wrap(fmt.Errorf("Request userid and comment userid is different"))
 	}
 
-	err = cs.storage.CommentStore.DeleteComment(commentID)
+	err = cs.storage.CommentStore.DeleteComment(ctx, commentID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}

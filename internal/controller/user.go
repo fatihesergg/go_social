@@ -40,7 +40,7 @@ func (uc UserController) GetUserByID(c *gin.Context) {
 		return
 	}
 
-	user, err := uc.UserService.GetUserByID(id)
+	user, err := uc.UserService.GetUserByID(c.Request.Context(), id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -69,7 +69,7 @@ func (uc UserController) Signup(c *gin.Context) {
 		return
 	}
 
-	err := uc.UserService.Register(params)
+	err := uc.UserService.Register(c.Request.Context(), params)
 
 	if err != nil {
 		util.WriteAppError(c, err)
@@ -101,7 +101,7 @@ func (uc UserController) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := uc.UserService.Login(params)
+	token, err := uc.UserService.Login(c.Request.Context(), params)
 
 	if err != nil {
 		util.WriteAppError(c, err)
@@ -126,7 +126,7 @@ func (uc UserController) Login(c *gin.Context) {
 //	@Router			/users/me [get]
 func (uc UserController) GetMe(c *gin.Context) {
 	id := c.MustGet("userID").(uuid.UUID)
-	user, err := uc.UserService.GetUserByID(id.String())
+	user, err := uc.UserService.GetUserByID(c.Request.Context(), id.String())
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -155,7 +155,7 @@ func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
 		return
 	}
-	followers, err := uc.UserService.GetFollowerByUserID(id)
+	followers, err := uc.UserService.GetFollowerByUserID(c.Request.Context(), id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -185,7 +185,7 @@ func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 		return
 	}
 
-	followings, err := uc.UserService.GetFollowingByUserID(id)
+	followings, err := uc.UserService.GetFollowingByUserID(c.Request.Context(), id)
 
 	if err != nil {
 		util.WriteAppError(c, err)
@@ -216,7 +216,7 @@ func (uc UserController) FollowUser(c *gin.Context) {
 	}
 	me := c.MustGet("userID").(uuid.UUID)
 
-	err := uc.UserService.FollowUser(me, id)
+	err := uc.UserService.FollowUser(c.Request.Context(), me, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -245,7 +245,7 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 		return
 	}
 	me := c.MustGet("userID").(uuid.UUID)
-	err := uc.UserService.UnFollowUser(me, id)
+	err := uc.UserService.UnFollowUser(c.Request.Context(), me, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -279,7 +279,7 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 	offset := c.Query("offset")
 	searchQuery := c.Query("search")
 
-	posts, err := uc.UserService.GetUsersPosts(id, meID, limit, offset, searchQuery)
+	posts, err := uc.UserService.GetUsersPosts(c.Request.Context(), id, meID, limit, offset, searchQuery)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -309,7 +309,7 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 		util.HandleBindError(c, err)
 		return
 	}
-	err := uc.UserService.ResetPassword(meID, params)
+	err := uc.UserService.ResetPassword(c.Request.Context(), meID, params)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -336,7 +336,7 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 func (uc UserController) SearchUserByUsername(c *gin.Context) {
 	username := c.Param("username")
 
-	users, err := uc.UserService.GetUsersByUsername(username)
+	users, err := uc.UserService.GetUsersByUsername(c.Request.Context(), username)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return

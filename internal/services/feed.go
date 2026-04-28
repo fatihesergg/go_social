@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type BaseFeedService interface {
-	GetFeed(userID uuid.UUID, limit, offset, query string) ([]dto.FeedResponse, error)
+	GetFeed(ctx context.Context, userID uuid.UUID, limit, offset, query string) ([]dto.FeedResponse, error)
 }
 
 type FeedService struct {
@@ -21,10 +22,10 @@ type FeedService struct {
 func NewFeedService(storage *database.Storage) BaseFeedService {
 	return &FeedService{storage: storage}
 }
-func (fs *FeedService) GetFeed(userID uuid.UUID, limit, offset, query string) ([]dto.FeedResponse, error) {
+func (fs *FeedService) GetFeed(ctx context.Context, userID uuid.UUID, limit, offset, query string) ([]dto.FeedResponse, error) {
 	search := database.NewSearch(query)
 	pagination := database.NewPagination(limit, offset)
-	posts, err := fs.storage.FeedStore.GetFeed(userID, pagination, search)
+	posts, err := fs.storage.FeedStore.GetFeed(ctx, userID, pagination, search)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.NoPostsFoundError.Wrap(fmt.Errorf("No posts found"))

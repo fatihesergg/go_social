@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -15,16 +16,16 @@ import (
 )
 
 type BaseUserService interface {
-	Register(dto dto.CreateUserDTO) error
-	Login(dto dto.LoginUserDTO) (string, error)
-	ResetPassword(meID uuid.UUID, dto dto.ResetUserPasswordDTO) error
-	GetUsersByUsername(username string) ([]model.User, error)
-	GetUserByID(rawID string) (*model.User, error)
-	GetFollowerByUserID(rawID string) ([]model.Follow, error)
-	GetFollowingByUserID(rawID string) ([]model.Follow, error)
-	FollowUser(userID uuid.UUID, followID string) error
-	UnFollowUser(userID uuid.UUID, followID string) error
-	GetUsersPosts(rawID string, meID uuid.UUID, limit, offset, search string) ([]dto.AllPostResponse, error)
+	Register(ctx context.Context, dto dto.CreateUserDTO) error
+	Login(ctx context.Context, dto dto.LoginUserDTO) (string, error)
+	ResetPassword(ctx context.Context, meID uuid.UUID, dto dto.ResetUserPasswordDTO) error
+	GetUsersByUsername(ctx context.Context, username string) ([]model.User, error)
+	GetUserByID(ctx context.Context, rawID string) (*model.User, error)
+	GetFollowerByUserID(ctx context.Context, rawID string) ([]model.Follow, error)
+	GetFollowingByUserID(ctx context.Context, rawID string) ([]model.Follow, error)
+	FollowUser(ctx context.Context, userID uuid.UUID, followID string) error
+	UnFollowUser(ctx context.Context, userID uuid.UUID, followID string) error
+	GetUsersPosts(ctx context.Context, rawID string, meID uuid.UUID, limit, offset, search string) ([]dto.AllPostResponse, error)
 }
 
 type UserService struct {
@@ -34,7 +35,7 @@ type UserService struct {
 func NewUserService(storage *database.Storage) BaseUserService {
 	return &UserService{storage: storage}
 }
-func (us *UserService) Register(dto dto.CreateUserDTO) error {
+func (us *UserService) Register(ctx context.Context, dto dto.CreateUserDTO) error {
 	user := &model.User{
 		ID:       uuid.New(),
 		Name:     dto.Name,
@@ -45,7 +46,7 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 		Password: dto.Password,
 	}
 
-	existEmail, err := us.storage.UserStore.GetUserByEmail(user.Email)
+	existEmail, err := us.storage.UserStore.GetUserByEmail(ctx, user.Email)
 	if err != nil && err != sql.ErrNoRows {
 		return errors.InternalServerError.Wrap(err)
 	}
@@ -53,7 +54,7 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 		return errors.EmailExistError.Wrap(fmt.Errorf("Request user email already exist"))
 	}
 
-	existUsername, err := us.storage.UserStore.GetUserByUsername(user.Username)
+	existUsername, err := us.storage.UserStore.GetUserByUsername(ctx, user.Username)
 	if err != nil && err != sql.ErrNoRows {
 		return errors.InternalServerError.Wrap(err)
 	}
@@ -67,7 +68,7 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 	}
 	user.Password = string(hashedPass)
 
-	err = us.storage.UserStore.CreateUser(user)
+	err = us.storage.UserStore.CreateUser(ctx, user)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
@@ -75,13 +76,13 @@ func (us *UserService) Register(dto dto.CreateUserDTO) error {
 	return nil
 }
 
-func (us *UserService) GetUserByID(rawID string) (*model.User, error) {
+func (us *UserService) GetUserByID(ctx context.Context, rawID string) (*model.User, error) {
 	userID, err := uuid.Parse(rawID)
 	if err != nil {
 		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
 	}
 
-	user, err := us.storage.UserStore.GetUserByID(userID)
+	user, err := us.storage.UserStore.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
@@ -93,8 +94,8 @@ func (us *UserService) GetUserByID(rawID string) (*model.User, error) {
 
 }
 
-func (us *UserService) Login(dto dto.LoginUserDTO) (string, error) {
-	user, err := us.storage.UserStore.GetUserByEmail(dto.Email)
+func (us *UserService) Login(ctx context.Context, dto dto.LoginUserDTO) (string, error) {
+	user, err := us.storage.UserStore.GetUserByEmail(ctx, dto.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return "", errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
@@ -113,14 +114,14 @@ func (us *UserService) Login(dto dto.LoginUserDTO) (string, error) {
 	}
 	return token, nil
 }
-func (us *UserService) GetFollowerByUserID(rawID string) ([]model.Follow, error) {
+func (us *UserService) GetFollowerByUserID(ctx context.Context, rawID string) ([]model.Follow, error) {
 
 	userID, err := uuid.Parse(rawID)
 	if err != nil {
 		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
 	}
 
-	followers, err := us.storage.FollowStore.GetFollowerByUserID(userID)
+	followers, err := us.storage.FollowStore.GetFollowerByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.NoFollowersFoundError.Wrap(fmt.Errorf("No followers found"))
@@ -130,14 +131,14 @@ func (us *UserService) GetFollowerByUserID(rawID string) ([]model.Follow, error)
 
 	return followers, nil
 }
-func (us *UserService) GetFollowingByUserID(rawID string) ([]model.Follow, error) {
+func (us *UserService) GetFollowingByUserID(ctx context.Context, rawID string) ([]model.Follow, error) {
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
 		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
 	}
 
-	followings, err := us.storage.FollowStore.GetFollowingByUserID(userID)
+	followings, err := us.storage.FollowStore.GetFollowingByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.NoFollowingsFoundError.Wrap(fmt.Errorf("No followings found"))
@@ -147,14 +148,14 @@ func (us *UserService) GetFollowingByUserID(rawID string) ([]model.Follow, error
 
 	return followings, nil
 }
-func (us *UserService) FollowUser(userID uuid.UUID, followID string) error {
+func (us *UserService) FollowUser(ctx context.Context, userID uuid.UUID, followID string) error {
 
 	followUserID, err := uuid.Parse(followID)
 	if err != nil {
 		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing followUserID: %w", err))
 	}
 
-	followings, err := us.storage.FollowStore.GetFollowingByUserID(userID)
+	followings, err := us.storage.FollowStore.GetFollowingByUserID(ctx, userID)
 
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
@@ -176,20 +177,20 @@ func (us *UserService) FollowUser(userID uuid.UUID, followID string) error {
 		FollowID: followUserID,
 	}
 
-	err = us.storage.FollowStore.FollowUser(follow)
+	err = us.storage.FollowStore.FollowUser(ctx, follow)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
 	return nil
 }
-func (us *UserService) UnFollowUser(userID uuid.UUID, followID string) error {
+func (us *UserService) UnFollowUser(ctx context.Context, userID uuid.UUID, followID string) error {
 
 	unfUser, err := uuid.Parse(followID)
 	if err != nil {
 		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing unfUser: %w", err))
 	}
 
-	followings, err := us.storage.FollowStore.GetFollowingByUserID(userID)
+	followings, err := us.storage.FollowStore.GetFollowingByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return errors.NoFollowingsFoundError.Wrap(fmt.Errorf("No followings found"))
@@ -211,20 +212,20 @@ func (us *UserService) UnFollowUser(userID uuid.UUID, followID string) error {
 		FollowID: unfUser,
 	}
 
-	err = us.storage.FollowStore.UnFollowUser(follow)
+	err = us.storage.FollowStore.UnFollowUser(ctx, follow)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
 	return nil
 }
-func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset string, query string) ([]dto.AllPostResponse, error) {
+func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uuid.UUID, limit, offset string, query string) ([]dto.AllPostResponse, error) {
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
 		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
 	}
 
-	user, err := us.storage.UserStore.GetUserByID(userID)
+	user, err := us.storage.UserStore.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
@@ -232,7 +233,7 @@ func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset
 		return nil, errors.InternalServerError.Wrap(err)
 	}
 
-	followers, err := us.storage.FollowStore.GetFollowerByUserID(user.ID)
+	followers, err := us.storage.FollowStore.GetFollowerByUserID(ctx, user.ID)
 	if err != nil {
 		return nil, errors.InternalServerError
 	}
@@ -242,7 +243,7 @@ func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset
 	for i := range followers {
 		followerID := followers[i].ID
 		if followerID == userID {
-			posts, err := us.storage.PostStore.GetPostsByUserID(user.ID, pagination, search)
+			posts, err := us.storage.PostStore.GetPostsByUserID(ctx, user.ID, pagination, search)
 			if err != nil {
 				if err == sql.ErrNoRows {
 					return nil, errors.NoPostsFoundError.Wrap(fmt.Errorf("No posts found"))
@@ -256,9 +257,9 @@ func (us *UserService) GetUsersPosts(rawID string, meID uuid.UUID, limit, offset
 	}
 	return nil, errors.NotFollowingError.Wrap(fmt.Errorf("Request user has not following this user yet: %w", err))
 }
-func (us *UserService) ResetPassword(meID uuid.UUID, dto dto.ResetUserPasswordDTO) error {
+func (us *UserService) ResetPassword(ctx context.Context, meID uuid.UUID, dto dto.ResetUserPasswordDTO) error {
 
-	user, err := us.storage.UserStore.GetUserByID(meID)
+	user, err := us.storage.UserStore.GetUserByID(ctx, meID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
@@ -275,15 +276,15 @@ func (us *UserService) ResetPassword(meID uuid.UUID, dto dto.ResetUserPasswordDT
 	}
 	user.Password = string(hashedPass)
 
-	err = us.storage.UserStore.UpdateUser(user)
+	err = us.storage.UserStore.UpdateUser(ctx, user)
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
 	return nil
 }
-func (us *UserService) GetUsersByUsername(username string) ([]model.User, error) {
+func (us *UserService) GetUsersByUsername(ctx context.Context, username string) ([]model.User, error) {
 
-	users, err := us.storage.UserStore.GetUsersByUsername(username)
+	users, err := us.storage.UserStore.GetUsersByUsername(ctx, username)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.NoUsersFoundError.Wrap(fmt.Errorf("No users found"))

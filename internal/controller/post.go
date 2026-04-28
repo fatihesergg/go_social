@@ -41,7 +41,7 @@ func (pc PostController) GetPosts(c *gin.Context) {
 	searchQuery := c.Query("search")
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	posts, err := pc.PostService.GetAllPosts(userID, limit, offset, searchQuery)
+	posts, err := pc.PostService.GetAllPosts(c.Request.Context(), userID, limit, offset, searchQuery)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -70,7 +70,7 @@ func (pc PostController) GetPostsByTag(c *gin.Context) {
 	tagParam := c.Param("tag")
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	posts, err := pc.PostService.GetAllPostsByTag(userID, limit, offset, tagParam)
+	posts, err := pc.PostService.GetAllPostsByTag(c.Request.Context(), userID, limit, offset, tagParam)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -96,7 +96,7 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 	id := c.Param("id")
 	meID := c.MustGet("userID").(uuid.UUID)
 
-	post, err := pc.PostService.GetPostByID(meID, id)
+	post, err := pc.PostService.GetPostByID(c.Request.Context(), meID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -130,13 +130,13 @@ func (pc PostController) CreatePost(c *gin.Context) {
 
 	params.Content = content
 
-	postID, err := pc.PostService.CreatePost(userID, params)
+	postID, err := pc.PostService.CreatePost(c.Request.Context(), userID, params)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
 	}
 
-	err = pc.TagService.AddPostTags(postID, tags)
+	err = pc.TagService.AddPostTags(c.Request.Context(), postID, tags)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -171,7 +171,7 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	err := pc.PostService.UpdatePost(userID, id, params)
+	err := pc.PostService.UpdatePost(c.Request.Context(), userID, id, params)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -200,7 +200,7 @@ func (pc PostController) DeletePost(c *gin.Context) {
 	id := c.Param("id")
 
 	userID := c.MustGet("userID").(uuid.UUID)
-	err := pc.PostService.DeletePost(userID, id)
+	err := pc.PostService.DeletePost(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return

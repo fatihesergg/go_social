@@ -35,7 +35,7 @@ func NewReplyController(replyService services.BaseReplyService) *ReplyController
 func (rc *ReplyController) GetRepliesByParent(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
-	replies, err := rc.ReplyService.GetRepliesByParentID(userID, id)
+	replies, err := rc.ReplyService.GetRepliesByParentID(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -60,7 +60,7 @@ func (rc *ReplyController) GetRepliesByParent(c *gin.Context) {
 func (rc *ReplyController) GetCommentReplies(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
-	replies, err := rc.ReplyService.GetCommentReplies(userID, id)
+	replies, err := rc.ReplyService.GetCommentReplies(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -91,7 +91,7 @@ func (rc *ReplyController) ReplyComment(c *gin.Context) {
 		util.HandleBindError(c, err)
 		return
 	}
-	err := rc.ReplyService.ReplyComment(userID, id, params)
+	err := rc.ReplyService.ReplyComment(c.Request.Context(), userID, id, params)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -123,7 +123,7 @@ func (rc *ReplyController) ReplyAReply(c *gin.Context) {
 		util.HandleBindError(c, err)
 		return
 	}
-	err := rc.ReplyService.ReplyAReply(userID, id, params)
+	err := rc.ReplyService.ReplyAReply(c.Request.Context(), userID, id, params)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -159,7 +159,7 @@ func (rc *ReplyController) UpdateReply(c *gin.Context) {
 		util.HandleBindError(c, err)
 		return
 	}
-	err := rc.ReplyService.UpdateReply(userID, id, params)
+	err := rc.ReplyService.UpdateReply(c.Request.Context(), userID, id, params)
 
 	if err != nil {
 		util.WriteAppError(c, err)
@@ -189,7 +189,7 @@ func (rc *ReplyController) DeleteReply(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	err := rc.ReplyService.DeleteReply(userID, id)
+	err := rc.ReplyService.DeleteReply(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return

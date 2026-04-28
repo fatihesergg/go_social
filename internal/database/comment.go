@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -9,12 +10,12 @@ import (
 )
 
 type BaseCommentStore interface {
-	HasAccessToComment(userID, commentID uuid.UUID) (bool, error)
-	GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Comment, error)
-	GetCommentByID(id uuid.UUID) (*model.Comment, error)
-	CreateComment(comment *model.Comment) error
-	UpdateComment(comment *model.Comment) error
-	DeleteComment(id uuid.UUID) error
+	HasAccessToComment(ctx context.Context, userID, commentID uuid.UUID) (bool, error)
+	GetCommentsByPostID(ctx context.Context, postID, userID uuid.UUID) ([]model.Comment, error)
+	GetCommentByID(ctx context.Context, id uuid.UUID) (*model.Comment, error)
+	CreateComment(ctx context.Context, comment *model.Comment) error
+	UpdateComment(ctx context.Context, comment *model.Comment) error
+	DeleteComment(ctx context.Context, id uuid.UUID) error
 }
 
 type CommentStore struct {
@@ -27,7 +28,7 @@ func NewCommentStore(db *sql.DB) BaseCommentStore {
 	}
 }
 
-func (cs *CommentStore) HasAccessToComment(userID, commentID uuid.UUID) (bool, error) {
+func (cs *CommentStore) HasAccessToComment(ctx context.Context, userID, commentID uuid.UUID) (bool, error) {
 	var result bool
 	query := `
 	SELECT EXISTS(SELECT 1 FROM comments
@@ -40,7 +41,7 @@ func (cs *CommentStore) HasAccessToComment(userID, commentID uuid.UUID) (bool, e
 	OR (follows.user_id IS NOT NULL AND follows.user_id = $1)
 	))`
 
-	err := cs.db.QueryRow(query, userID, commentID).Scan(&result)
+	err := cs.db.QueryRowContext(ctx, query, userID, commentID).Scan(&result)
 	if err != nil {
 		return false, fmt.Errorf("Error while checking comment access: %w", err)
 	}
@@ -48,7 +49,7 @@ func (cs *CommentStore) HasAccessToComment(userID, commentID uuid.UUID) (bool, e
 
 }
 
-func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Comment, error) {
+func (cs CommentStore) GetCommentsByPostID(ctx context.Context, postID, userID uuid.UUID) ([]model.Comment, error) {
 	var comments []model.Comment
 	query := `
 	WITH comment_likes_count AS (
@@ -98,7 +99,7 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 	LEFT JOIN user_likes ON user_likes.comment_id = comments.id
 	LEFT JOIN user_follows ON user_follows.follow_id = users.id
 	WHERE comments.post_id = $1`
-	rows, err := cs.db.Query(query, postID, userID)
+	rows, err := cs.db.QueryContext(ctx, query, postID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting comments by postid: %w", err)
 	}
@@ -134,14 +135,14 @@ func (cs CommentStore) GetCommentsByPostID(postID, userID uuid.UUID) ([]model.Co
 	return comments, nil
 
 }
-func (cs CommentStore) GetCommentByID(id uuid.UUID) (*model.Comment, error) {
+func (cs CommentStore) GetCommentByID(ctx context.Context, id uuid.UUID) (*model.Comment, error) {
 	var comment model.Comment
 	query := `SELECT comments.id,comments.post_id,comments.user_id,comments.content,comments.created_at,comments.updated_at,
 		users.name,users.last_name,users.username,users.email	
 	FROM comments 
 	JOIN users ON comments.user_id = users.id
 	WHERE comments.id = $1`
-	err := cs.db.QueryRow(query, id).Scan(&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.CreatedAt, &comment.UpdatedAt, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email)
+	err := cs.db.QueryRowContext(ctx, query, id).Scan(&comment.ID, &comment.PostID, &comment.UserID, &comment.Content, &comment.CreatedAt, &comment.UpdatedAt, &comment.User.Name, &comment.User.LastName, &comment.User.Username, &comment.User.Email)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error wile getting comment by id: %w", err)
@@ -150,19 +151,19 @@ func (cs CommentStore) GetCommentByID(id uuid.UUID) (*model.Comment, error) {
 	return &comment, nil
 }
 
-func (cs CommentStore) CreateComment(comment *model.Comment) error {
+func (cs CommentStore) CreateComment(ctx context.Context, comment *model.Comment) error {
 
 	query := "INSERT INTO comments (id,post_id, user_id, content) VALUES ($1, $2, $3,$4)"
-	_, err := cs.db.Exec(query, comment.ID, comment.PostID, comment.UserID, comment.Content)
+	_, err := cs.db.ExecContext(ctx, query, comment.ID, comment.PostID, comment.UserID, comment.Content)
 	if err != nil {
 		return fmt.Errorf("Error while inserting comment: %w", err)
 	}
 	return nil
 }
 
-func (cs CommentStore) UpdateComment(comment *model.Comment) error {
+func (cs CommentStore) UpdateComment(ctx context.Context, comment *model.Comment) error {
 	query := "UPDATE comments SET content = $1 WHERE id = $2"
-	result, err := cs.db.Exec(query, comment.Content, comment.ID)
+	result, err := cs.db.ExecContext(ctx, query, comment.Content, comment.ID)
 	if err != nil {
 		return fmt.Errorf("Error while updating comment: %w", err)
 	}
@@ -176,9 +177,9 @@ func (cs CommentStore) UpdateComment(comment *model.Comment) error {
 	return nil
 }
 
-func (cs CommentStore) DeleteComment(id uuid.UUID) error {
+func (cs CommentStore) DeleteComment(ctx context.Context, id uuid.UUID) error {
 	query := "DELETE FROM comments WHERE id = $1"
-	result, err := cs.db.Exec(query, id)
+	result, err := cs.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("Error while deleting comment: %w", err)
 	}

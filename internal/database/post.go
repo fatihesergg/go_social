@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -9,15 +10,15 @@ import (
 )
 
 type BasePostStore interface {
-	HasAccessToPost(userID, postID uuid.UUID) (bool, error)
-	GetPostByID(postID uuid.UUID) (*model.Post, error)
-	GetPosts(pagination Pagination, search Search, userID uuid.UUID) ([]model.Post, error)
-	GetPostsByTag(pagination Pagination, tag string, userID uuid.UUID) ([]model.Post, error)
-	GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, error)
-	GetPostsByUserID(userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error)
-	CreatePost(post *model.Post) error
-	UpdatePost(post *model.Post) error
-	DeletePost(id uuid.UUID) error
+	HasAccessToPost(ctx context.Context, userID, postID uuid.UUID) (bool, error)
+	GetPostByID(ctx context.Context, postID uuid.UUID) (*model.Post, error)
+	GetPosts(ctx context.Context, pagination Pagination, search Search, userID uuid.UUID) ([]model.Post, error)
+	GetPostsByTag(ctx context.Context, pagination Pagination, tag string, userID uuid.UUID) ([]model.Post, error)
+	GetPostDetailsByID(ctx context.Context, postID, userID uuid.UUID) (*model.Post, error)
+	GetPostsByUserID(ctx context.Context, userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error)
+	CreatePost(ctx context.Context, post *model.Post) error
+	UpdatePost(ctx context.Context, post *model.Post) error
+	DeletePost(ctx context.Context, id uuid.UUID) error
 }
 
 type PostStore struct {
@@ -28,7 +29,7 @@ func NewPostStore(db *sql.DB) BasePostStore {
 	return &PostStore{DB: db}
 }
 
-func (s *PostStore) HasAccessToPost(userID, postID uuid.UUID) (bool, error) {
+func (s *PostStore) HasAccessToPost(ctx context.Context, userID, postID uuid.UUID) (bool, error) {
 	var result bool
 	query := `
 	SELECT EXISTS(SELECT 1 FROM posts
@@ -40,7 +41,7 @@ func (s *PostStore) HasAccessToPost(userID, postID uuid.UUID) (bool, error) {
 	OR ( follows.user_id IS NOT NULL AND follows.user_id = $1))
 	)`
 
-	err := s.DB.QueryRow(query, userID, postID).Scan(&result)
+	err := s.DB.QueryRowContext(ctx, query, userID, postID).Scan(&result)
 	if err != nil {
 		return false, fmt.Errorf("Error while checking post access: %w", err)
 	}
@@ -48,7 +49,7 @@ func (s *PostStore) HasAccessToPost(userID, postID uuid.UUID) (bool, error) {
 
 }
 
-func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.UUID) ([]model.Post, error) {
+func (s *PostStore) GetPosts(ctx context.Context, pagination Pagination, search Search, userID uuid.UUID) ([]model.Post, error) {
 	var posts []model.Post
 
 	query := `
@@ -101,7 +102,7 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 ;
 	`
 
-	rows, err := s.DB.Query(query, search.Query, pagination.Limit, pagination.Offset, userID, userID)
+	rows, err := s.DB.QueryContext(ctx, query, search.Query, pagination.Limit, pagination.Offset, userID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting all posts: %w", err)
 	}
@@ -138,7 +139,7 @@ func (s *PostStore) GetPosts(pagination Pagination, search Search, userID uuid.U
 
 	return posts, nil
 }
-func (s *PostStore) GetPostsByTag(pagination Pagination, tag string, userID uuid.UUID) ([]model.Post, error) {
+func (s *PostStore) GetPostsByTag(ctx context.Context, pagination Pagination, tag string, userID uuid.UUID) ([]model.Post, error) {
 	var posts []model.Post
 
 	query := `
@@ -197,7 +198,7 @@ func (s *PostStore) GetPostsByTag(pagination Pagination, tag string, userID uuid
 ;
 	`
 
-	rows, err := s.DB.Query(query, tag, pagination.Limit, pagination.Offset, userID)
+	rows, err := s.DB.QueryContext(ctx, query, tag, pagination.Limit, pagination.Offset, userID)
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting all posts by tags: %w", err)
 	}
@@ -235,12 +236,12 @@ func (s *PostStore) GetPostsByTag(pagination Pagination, tag string, userID uuid
 	return posts, nil
 }
 
-func (s *PostStore) GetPostByID(postID uuid.UUID) (*model.Post, error) {
+func (s *PostStore) GetPostByID(ctx context.Context, postID uuid.UUID) (*model.Post, error) {
 	result := &model.Post{}
 	var id, userID *uuid.UUID
 	var content *string
 	query := `SELECT id,user_id,content FROM posts WHERE id = $1`
-	err := s.DB.QueryRow(query, postID).Scan(&id, &userID, &content)
+	err := s.DB.QueryRowContext(ctx, query, postID).Scan(&id, &userID, &content)
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting post by id: %w", err)
 	}
@@ -251,7 +252,7 @@ func (s *PostStore) GetPostByID(postID uuid.UUID) (*model.Post, error) {
 	return result, nil
 }
 
-func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, error) {
+func (s *PostStore) GetPostDetailsByID(ctx context.Context, postID, userID uuid.UUID) (*model.Post, error) {
 
 	postQuery := `
 
@@ -336,7 +337,7 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 		LEFT JOIN post_like_count ON  post_like_count.post_id = posts.id
         WHERE posts.id = $2`
 
-	rows, err := s.DB.Query(postQuery, userID, postID)
+	rows, err := s.DB.QueryContext(ctx, postQuery, userID, postID)
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting post details by id: %w", err)
 	}
@@ -397,7 +398,7 @@ func (s *PostStore) GetPostDetailsByID(postID, userID uuid.UUID) (*model.Post, e
 
 }
 
-func (s *PostStore) GetPostsByUserID(userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error) {
+func (s *PostStore) GetPostsByUserID(ctx context.Context, userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error) {
 	posts := []model.Post{}
 
 	postQuery := `
@@ -416,7 +417,7 @@ func (s *PostStore) GetPostsByUserID(userID uuid.UUID, pagination Pagination, se
 		LEFT JOIN comments ON posts.id = comments.post_id
 		LEFT JOIN users as comment_user ON comments.user_id = comment_user.id`
 
-	rows, err := s.DB.Query(postQuery, userID.String(), search.Query, pagination.Limit, pagination.Offset)
+	rows, err := s.DB.QueryContext(ctx, postQuery, userID.String(), search.Query, pagination.Limit, pagination.Offset)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting posts by user id: %w", err)
@@ -467,11 +468,11 @@ func (s *PostStore) GetPostsByUserID(userID uuid.UUID, pagination Pagination, se
 	return posts, nil
 }
 
-func (s *PostStore) CreatePost(post *model.Post) error {
+func (s *PostStore) CreatePost(ctx context.Context, post *model.Post) error {
 
 	query := "INSERT INTO posts (id, content, user_id, visibility) VALUES ($1, $2, $3,$4)"
 
-	_, err := s.DB.Exec(query, post.ID, post.Content, post.UserID, post.Visibility)
+	_, err := s.DB.ExecContext(ctx, query, post.ID, post.Content, post.UserID, post.Visibility)
 	if err != nil {
 		return fmt.Errorf("Error while inserting post: %w", err)
 	}
@@ -479,9 +480,9 @@ func (s *PostStore) CreatePost(post *model.Post) error {
 	return nil
 }
 
-func (s *PostStore) UpdatePost(post *model.Post) error {
+func (s *PostStore) UpdatePost(ctx context.Context, post *model.Post) error {
 	query := "UPDATE posts SET content = $1 WHERE id = $2"
-	result, err := s.DB.Exec(query, post.Content, post.ID)
+	result, err := s.DB.ExecContext(ctx, query, post.Content, post.ID)
 	if err != nil {
 		return fmt.Errorf("Error while updating post: %w", err)
 	}
@@ -496,9 +497,9 @@ func (s *PostStore) UpdatePost(post *model.Post) error {
 	return nil
 }
 
-func (s *PostStore) DeletePost(id uuid.UUID) error {
+func (s *PostStore) DeletePost(ctx context.Context, id uuid.UUID) error {
 	query := "DELETE FROM posts WHERE id = $1"
-	result, err := s.DB.Exec(query, id)
+	result, err := s.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("Error while deleting post: %w", err)
 	}

@@ -40,7 +40,7 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 		return
 	}
 	userID := c.MustGet("userID").(uuid.UUID)
-	err := cc.CommentService.AddCommentPost(userID, params)
+	err := cc.CommentService.AddCommentPost(c.Request.Context(), userID, params)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -69,7 +69,7 @@ func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	comments, err := cc.CommentService.GetCommentsByPostID(userID, id)
+	comments, err := cc.CommentService.GetCommentsByPostID(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -103,7 +103,7 @@ func (cc *CommentController) UpdateComment(c *gin.Context) {
 	}
 
 	userID := c.MustGet("userID").(uuid.UUID)
-	err := cc.CommentService.UpdateComment(userID, id, params)
+	err := cc.CommentService.UpdateComment(c.Request.Context(), userID, id, params)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
@@ -130,7 +130,7 @@ func (cc *CommentController) DeleteComment(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	err := cc.CommentService.DeleteComment(userID, id)
+	err := cc.CommentService.DeleteComment(c.Request.Context(), userID, id)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return

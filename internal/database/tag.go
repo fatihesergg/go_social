@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -10,8 +11,8 @@ import (
 )
 
 type BaseTagStore interface {
-	CreateMultipleTags(tags []model.Tag) error
-	CreatePostTag(tags []string, postID uuid.UUID) error
+	CreateMultipleTags(ctx context.Context, tags []model.Tag) error
+	CreatePostTag(ctx context.Context, tags []string, postID uuid.UUID) error
 }
 
 type TagStore struct {
@@ -24,8 +25,8 @@ func NewTagStore(db *sql.DB) *TagStore {
 	}
 }
 
-func (ts *TagStore) CreateMultipleTags(tags []model.Tag) error {
-	tx, err := ts.db.Begin()
+func (ts *TagStore) CreateMultipleTags(ctx context.Context, tags []model.Tag) error {
+	tx, err := ts.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -33,7 +34,7 @@ func (ts *TagStore) CreateMultipleTags(tags []model.Tag) error {
 
 	defer tx.Rollback()
 	for _, tag := range tags {
-		_, err := tx.Exec("INSERT INTO tags(id,name) VALUES($1,$2) ON CONFLICT(name) DO NOTHING;", tag.ID, tag.Name)
+		_, err := tx.ExecContext(ctx, "INSERT INTO tags(id,name) VALUES($1,$2) ON CONFLICT(name) DO NOTHING;", tag.ID, tag.Name)
 		if err != nil {
 			return fmt.Errorf("Error while inserting tag: %w", err)
 		}
@@ -45,9 +46,9 @@ func (ts *TagStore) CreateMultipleTags(tags []model.Tag) error {
 	return nil
 }
 
-func (ts *TagStore) CreatePostTag(tags []string, postID uuid.UUID) error {
+func (ts *TagStore) CreatePostTag(ctx context.Context, tags []string, postID uuid.UUID) error {
 	query := "INSERT INTO post_tags(post_id,tag_id) SELECT $1,id FROM tags WHERE tags.name = ANY($2);"
-	result, err := ts.db.Exec(query, postID, pq.StringArray(tags))
+	result, err := ts.db.ExecContext(ctx, query, postID, pq.StringArray(tags))
 	if err != nil {
 		return fmt.Errorf("Error while inserting post tag: %w", err)
 	}

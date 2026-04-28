@@ -42,7 +42,7 @@ func (fc FeedController) GetFeed(c *gin.Context) {
 	limit := c.Query("limit")
 	offset := c.Query("offset")
 	searchQuery := c.Query("search")
-	posts, err := fc.FeedService.GetFeed(userID, limit, offset, searchQuery)
+	posts, err := fc.FeedService.GetFeed(c.Request.Context(), userID, limit, offset, searchQuery)
 	if err != nil {
 		util.WriteAppError(c, err)
 		return

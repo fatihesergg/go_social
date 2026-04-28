@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -14,7 +15,7 @@ import (
 var tagExpr = regexp.MustCompile(`\#[\w]+`)
 
 type BaseTagService interface {
-	AddPostTags(postID uuid.UUID, tags []string) error
+	AddPostTags(ctx context.Context, postID uuid.UUID, tags []string) error
 	ExtractTagStringFromContent(content string) ([]string, string)
 }
 
@@ -52,7 +53,7 @@ func (ts *TagService) ExtractTagStringFromContent(content string) ([]string, str
 
 }
 
-func (ts *TagService) AddPostTags(postID uuid.UUID, tags []string) error {
+func (ts *TagService) AddPostTags(ctx context.Context, postID uuid.UUID, tags []string) error {
 	tagModels := make([]model.Tag, len(tags))
 	for i := 0; i < len(tags); i++ {
 		tagModels[i] = model.Tag{
@@ -61,12 +62,12 @@ func (ts *TagService) AddPostTags(postID uuid.UUID, tags []string) error {
 		}
 	}
 
-	err := ts.storage.TagStore.CreateMultipleTags(tagModels)
+	err := ts.storage.TagStore.CreateMultipleTags(ctx, tagModels)
 	if err != nil {
 		return errors.InternalServerError.Wrap(fmt.Errorf("Error while creating post tags: %w", err)).Wrap(err)
 	}
 
-	err = ts.storage.TagStore.CreatePostTag(tags, postID)
+	err = ts.storage.TagStore.CreatePostTag(ctx, tags, postID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(fmt.Errorf("Error while matching post to tags: %w", err)).Wrap(err)
 	}

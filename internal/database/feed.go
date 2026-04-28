@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -9,7 +10,7 @@ import (
 )
 
 type BaseFeedStore interface {
-	GetFeed(userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error)
+	GetFeed(ctx context.Context, userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error)
 }
 
 type FeedStore struct {
@@ -22,7 +23,7 @@ func NewFeedStore(db *sql.DB) BaseFeedStore {
 	}
 }
 
-func (fs FeedStore) GetFeed(userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error) {
+func (fs FeedStore) GetFeed(ctx context.Context, userID uuid.UUID, pagination Pagination, search Search) ([]model.Post, error) {
 	var posts []model.Post
 
 	query := `
@@ -72,7 +73,7 @@ func (fs FeedStore) GetFeed(userID uuid.UUID, pagination Pagination, search Sear
 	LEFT JOIN user_likes ON user_likes.post_id = posts.id
 	`
 
-	rows, err := fs.DB.Query(query, userID, pagination.Limit, pagination.Offset, search.Query)
+	rows, err := fs.DB.QueryContext(ctx, query, userID, pagination.Limit, pagination.Offset, search.Query)
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting user feed: %w", err)
 	}

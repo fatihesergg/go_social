@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -9,14 +10,14 @@ import (
 )
 
 type BaseReplyStore interface {
-	HasAccessToReply(userID, replyID uuid.UUID) (bool, error)
-	CreateCommentReply(reply *model.Reply) error
-	CreateNestedReply(reply *model.Reply) error
-	UpdateReply(reply *model.Reply) error
-	GetRepliesByCommentID(commentID, userID uuid.UUID) ([]model.Reply, error)
-	GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.Reply, error)
-	GetReplyByID(replyID uuid.UUID) (*model.Reply, error)
-	DeleteReply(replyID uuid.UUID) error
+	HasAccessToReply(ctx context.Context, userID, replyID uuid.UUID) (bool, error)
+	CreateCommentReply(ctx context.Context, reply *model.Reply) error
+	CreateNestedReply(ctx context.Context, reply *model.Reply) error
+	UpdateReply(ctx context.Context, reply *model.Reply) error
+	GetRepliesByCommentID(ctx context.Context, commentID, userID uuid.UUID) ([]model.Reply, error)
+	GetRepliesByParentID(ctx context.Context, parentID, userID uuid.UUID) ([]model.Reply, error)
+	GetReplyByID(ctx context.Context, replyID uuid.UUID) (*model.Reply, error)
+	DeleteReply(ctx context.Context, replyID uuid.UUID) error
 }
 
 type ReplyStore struct {
@@ -29,7 +30,7 @@ func NewReplyStore(db *sql.DB) *ReplyStore {
 	}
 }
 
-func (rs *ReplyStore) HasAccessToReply(userID, replyID uuid.UUID) (bool, error) {
+func (rs *ReplyStore) HasAccessToReply(ctx context.Context, userID, replyID uuid.UUID) (bool, error) {
 	var result bool
 	query := `SELECT EXISTS(
 	SELECT 1 FROM replies
@@ -44,7 +45,7 @@ func (rs *ReplyStore) HasAccessToReply(userID, replyID uuid.UUID) (bool, error) 
 	OR (follows.user_id IS NOT NULL AND follows.user_id = $1)
 	)
 	)`
-	err := rs.DB.QueryRow(query, userID, replyID).Scan(&result)
+	err := rs.DB.QueryRowContext(ctx, query, userID, replyID).Scan(&result)
 	if err != nil {
 		return false, fmt.Errorf("Error while checking reply access: %w", err)
 	}
@@ -52,37 +53,37 @@ func (rs *ReplyStore) HasAccessToReply(userID, replyID uuid.UUID) (bool, error) 
 
 }
 
-func (rs *ReplyStore) CreateCommentReply(reply *model.Reply) error {
+func (rs *ReplyStore) CreateCommentReply(ctx context.Context, reply *model.Reply) error {
 	query := "INSERT INTO replies ( id,comment_id,user_id,message ) VALUES ( $1,$2,$3,$4 )"
-	_, err := rs.DB.Exec(query, reply.ID, reply.CommentID, reply.UserID, reply.Message)
+	_, err := rs.DB.ExecContext(ctx, query, reply.ID, reply.CommentID, reply.UserID, reply.Message)
 	if err != nil {
 		return fmt.Errorf("Error while inserting reply: %w", err)
 	}
 	return nil
 }
 
-func (rs *ReplyStore) CreateNestedReply(reply *model.Reply) error {
+func (rs *ReplyStore) CreateNestedReply(ctx context.Context, reply *model.Reply) error {
 	query := "INSERT INTO replies ( id,parent_id,user_id,message ) VALUES ( $1,$2,$3,$4 )"
-	_, err := rs.DB.Exec(query, reply.ID, reply.ParentID, reply.UserID, reply.Message)
+	_, err := rs.DB.ExecContext(ctx, query, reply.ID, reply.ParentID, reply.UserID, reply.Message)
 	if err != nil {
 		return fmt.Errorf("Error while inserting nested reply: %w", err)
 	}
 	return nil
 }
 
-func (rs *ReplyStore) UpdateReply(reply *model.Reply) error {
+func (rs *ReplyStore) UpdateReply(ctx context.Context, reply *model.Reply) error {
 	query := "UPDATE replies SET comment_id = $1, user_id = $2, message = $3 WHERE id = $4"
-	_, err := rs.DB.Exec(query, reply.CommentID, reply.UserID, reply.Message, reply.ID)
+	_, err := rs.DB.ExecContext(ctx, query, reply.CommentID, reply.UserID, reply.Message, reply.ID)
 	if err != nil {
 		return fmt.Errorf("Error while updating reply: %w", err)
 	}
 	return nil
 }
 
-func (rs *ReplyStore) GetReplyByID(replyID uuid.UUID) (*model.Reply, error) {
+func (rs *ReplyStore) GetReplyByID(ctx context.Context, replyID uuid.UUID) (*model.Reply, error) {
 	reply := model.Reply{}
 	query := "SELECT id,comment_id,user_id,message FROM replies WHERE id = $1"
-	err := rs.DB.QueryRow(query, replyID).Scan(&reply.ID, &reply.CommentID, &reply.UserID, &reply.Message)
+	err := rs.DB.QueryRowContext(ctx, query, replyID).Scan(&reply.ID, &reply.CommentID, &reply.UserID, &reply.Message)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting reply by id: %w", err)
@@ -92,9 +93,9 @@ func (rs *ReplyStore) GetReplyByID(replyID uuid.UUID) (*model.Reply, error) {
 
 }
 
-func (rs *ReplyStore) DeleteReply(replyID uuid.UUID) error {
+func (rs *ReplyStore) DeleteReply(ctx context.Context, replyID uuid.UUID) error {
 	query := "DELETE FROM replies WHERE id = $1"
-	result, err := rs.DB.Exec(query, replyID)
+	result, err := rs.DB.ExecContext(ctx, query, replyID)
 	if err != nil {
 		return fmt.Errorf("Error while deleting reply: %w", err)
 	}
@@ -107,7 +108,7 @@ func (rs *ReplyStore) DeleteReply(replyID uuid.UUID) error {
 	}
 	return nil
 }
-func (rs *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]model.Reply, error) {
+func (rs *ReplyStore) GetRepliesByCommentID(ctx context.Context, commentID, userID uuid.UUID) ([]model.Reply, error) {
 	replies := []model.Reply{}
 	query := `
 
@@ -156,7 +157,7 @@ func (rs *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]mode
 	LEFT JOIN user_follows ON user_follows.follow_id = reply_user.id
 	WHERE replies.comment_id = $1
 	`
-	rows, err := rs.DB.Query(query, commentID, userID)
+	rows, err := rs.DB.QueryContext(ctx, query, commentID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting replies by comment id: %w", err)
 	}
@@ -187,7 +188,7 @@ func (rs *ReplyStore) GetRepliesByCommentID(commentID, userID uuid.UUID) ([]mode
 
 }
 
-func (rs *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.Reply, error) {
+func (rs *ReplyStore) GetRepliesByParentID(ctx context.Context, parentID, userID uuid.UUID) ([]model.Reply, error) {
 	replies := []model.Reply{}
 	query := `
 
@@ -236,7 +237,7 @@ func (rs *ReplyStore) GetRepliesByParentID(parentID, userID uuid.UUID) ([]model.
 	LEFT JOIN user_follows ON user_follows.follow_id = reply_user.id
 	WHERE replies.parent_id = $1
 	`
-	rows, err := rs.DB.Query(query, parentID, userID)
+	rows, err := rs.DB.QueryContext(ctx, query, parentID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting replies by parent id: %w", err)
 	}
