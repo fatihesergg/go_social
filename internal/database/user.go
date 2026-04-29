@@ -16,7 +16,7 @@ type BaseUserStore interface {
 	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 	CreateUser(ctx context.Context, user *model.User) error
 	UpdateUser(ctx context.Context, user *model.User) error
-	DeleteUser(id uuid.UUID) error
+	DeleteUser(ctx context.Context, id uuid.UUID) error
 }
 
 type UserStore struct {
@@ -104,9 +104,9 @@ func (s *UserStore) UpdateUser(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (s *UserStore) DeleteUser(id uuid.UUID) error {
+func (s *UserStore) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	query := "DELETE FROM users WHERE id = $1"
-	result, err := s.DB.Exec(query, id)
+	result, err := s.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("Error while deleting user: %w", err)
 	}
