@@ -136,10 +136,12 @@ func (pc PostController) CreatePost(c *gin.Context) {
 		return
 	}
 
-	err = pc.TagService.AddPostTags(c.Request.Context(), postID, tags)
-	if err != nil {
-		util.WriteAppError(c, err)
-		return
+	if len(tags) > 0 {
+		err = pc.TagService.AddPostTags(c.Request.Context(), postID, tags)
+		if err != nil {
+			util.WriteAppError(c, err)
+			return
+		}
 	}
 
 	c.JSON(201, util.SuccessMessageResponse{Message: "Post created succesfully"})
