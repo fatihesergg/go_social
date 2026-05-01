@@ -157,7 +157,7 @@ func (us *UserService) FollowUser(ctx context.Context, userID uuid.UUID, followI
 
 	followings, err := us.storage.FollowStore.GetFollowingByUserID(ctx, userID)
 
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return errors.InternalServerError.Wrap(err)
 	}
 

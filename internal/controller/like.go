@@ -8,12 +8,14 @@ import (
 )
 
 type LikeController struct {
-	LikeService services.BaseLikeService
+	LikeService         services.BaseLikeService
+	NotificationService services.BaseNotificationService
 }
 
-func NewLikeController(likeService services.BaseLikeService) *LikeController {
+func NewLikeController(likeService services.BaseLikeService, notificationService services.BaseNotificationService) *LikeController {
 	return &LikeController{
-		LikeService: likeService,
+		LikeService:         likeService,
+		NotificationService: notificationService,
 	}
 }
 
@@ -41,6 +43,14 @@ func (lc LikeController) LikePost(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
+
+	err = lc.NotificationService.SavePostLikedNotification(c.Request.Context(), userID, id, false)
+
+	if err != nil {
+		util.WriteAppError(c, err)
+		return
+	}
+
 	c.JSON(201, util.SuccessMessageResponse{Message: "Post liked successfully"})
 
 }

@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/fatihesergg/go_social/internal/broker"
 	"github.com/fatihesergg/go_social/internal/database"
+	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
@@ -20,11 +22,12 @@ type BaseLikeService interface {
 }
 
 type LikeService struct {
-	storage *database.Storage
+	storage   *database.Storage
+	publisher broker.EventPublisher
 }
 
-func NewLikeService(storage *database.Storage) BaseLikeService {
-	return &LikeService{storage: storage}
+func NewLikeService(storage *database.Storage, publisher broker.EventPublisher) BaseLikeService {
+	return &LikeService{storage: storage, publisher: publisher}
 }
 func (ls *LikeService) LikePost(ctx context.Context, userID uuid.UUID, postIDRaw string) error {
 	postID, err := uuid.Parse(postIDRaw)
@@ -58,6 +61,17 @@ func (ls *LikeService) LikePost(ctx context.Context, userID uuid.UUID, postIDRaw
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
+
+	event := dto.PostLikedEvent{
+		LikerID: userID,
+		PostID:  postID,
+	}
+	err = ls.publisher.Publish(ctx, "notification_queue", event)
+
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
 	return nil
 }
 

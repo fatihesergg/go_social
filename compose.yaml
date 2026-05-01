@@ -3,6 +3,7 @@ services:
     build: .
     depends_on:
       - db
+      - rabbitmq
     container_name: go_social
     env_file:
       - .env
@@ -25,5 +26,14 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
     volumes:
         - db_data:/var/lib/postgresql
+  rabbitmq:
+    image: rabbitmq:management-alpine
+    ports:
+    - "5672:5672"
+    - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+
 volumes:
   db_data:

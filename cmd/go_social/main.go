@@ -12,12 +12,14 @@ import (
 	"time"
 
 	docs "github.com/fatihesergg/go_social/docs"
+	"github.com/fatihesergg/go_social/internal/broker"
 	"github.com/fatihesergg/go_social/internal/controller"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/middleware"
 	"github.com/fatihesergg/go_social/internal/routes"
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
+	"github.com/fatihesergg/go_social/internal/worker"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -80,6 +82,14 @@ func main() {
 		logger.Fatal("Error connecting database")
 	}
 
+	rabbitmq, err := broker.NewRabbitMq(util.ApiConfig.RabbitMQ)
+	fmt.Println(util.ApiConfig.RabbitMQ)
+	if err != nil {
+		logger.Fatal(err.Error())
+	}
+
+	defer rabbitmq.Close()
+
 	userStore := database.NewUserStore(db)
 	postStore := database.NewPostStore(db)
 	commentStore := database.NewCommentStore(db)
@@ -88,15 +98,27 @@ func main() {
 	likeStore := database.NewLikeStore(db)
 	replyStore := database.NewReplyStore(db)
 	tagStore := database.NewTagStore(db)
+	notificationStore := database.NewNotificationStore(db)
 
-	storage := database.NewPostgresStorage(userStore, postStore, commentStore, followStore, feedStore, likeStore, replyStore, tagStore)
+	storage := database.NewPostgresStorage(
+		userStore,
+		postStore,
+		commentStore,
+		followStore,
+		feedStore,
+		likeStore,
+		replyStore,
+		tagStore,
+		notificationStore,
+	)
 	userService := services.NewUserService(storage)
 	postService := services.NewPostService(storage)
 	commentService := services.NewCommentService(storage)
 	feedService := services.NewFeedService(storage)
-	likeService := services.NewLikeService(storage)
+	likeService := services.NewLikeService(storage, rabbitmq)
 	replyService := services.NewReplyService(storage)
 	tagService := services.NewTagService(storage)
+	notificationService := services.NewNotificationService(storage)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	rateLimiter := middleware.NewRateLimiter(1, 10)
@@ -106,7 +128,7 @@ func main() {
 	postController := controller.NewPostController(postService, tagService)
 	commentController := controller.NewCommentController(commentService)
 	feedController := controller.NewFeedController(feedService)
-	likeController := controller.NewLikeController(likeService)
+	likeController := controller.NewLikeController(likeService, notificationService)
 	replyController := controller.NewReplyController(replyService)
 
 	routes.MountRoutes(engine, userController, postController, commentController, likeController, feedController, replyController)
@@ -119,6 +141,20 @@ func main() {
 		} else {
 			logger.Info("Server listening on port 3000")
 		}
+	}()
+
+	_, err = rabbitmq.DeclareQueue("notification_queue")
+	if err != nil {
+		logger.Error("Notification queue error", zap.Error(err))
+	}
+
+	notificationWorker := worker.NewNotificationWorker(rabbitmq.Channel, logger)
+	go func() {
+		logger.Info("NotificationWorker started")
+		if err := notificationWorker.Consume(); err != nil {
+			logger.Error("NotificationWorker consume error", zap.Error(err))
+		}
+
 	}()
 
 	quit := make(chan os.Signal, 1)

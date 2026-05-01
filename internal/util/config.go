@@ -13,6 +13,7 @@ type Config struct {
 	PGDB      string
 	JWTSecret string
 	TestDB    string
+	RabbitMQ  string
 }
 
 func LoadConfig() *Config {
@@ -22,6 +23,7 @@ func LoadConfig() *Config {
 		PGDB:      os.Getenv("POSTGRES_DB"),
 		JWTSecret: os.Getenv("JWT_SECRET"),
 		TestDB:    os.Getenv("TEST_DB_URL"),
+		RabbitMQ:  os.Getenv("RABBITMQ_URL"),
 	}
 }
 
@@ -40,5 +42,8 @@ func (c *Config) Validate() {
 	}
 	if c.TestDB == "" {
 		log.Fatal("Environment TEST_DB_URL not set")
+	}
+	if c.RabbitMQ == "" {
+		log.Fatal("Environment RABBITMQ_URL not set")
 	}
 }

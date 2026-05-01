@@ -30,7 +30,7 @@ func LoggerMiddleware(logger *zap.Logger) gin.HandlerFunc {
 		if len(ctx.Errors) > 0 {
 			for _, err := range ctx.Errors {
 
-				logger.Error(err.Error(), fields...)
+				logger.Error("Request failed", append(fields, zap.Error(err.Err))...)
 			}
 		} else {
 			logger.Info(path, fields...)
