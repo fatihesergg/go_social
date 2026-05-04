@@ -2,70 +2,37 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type BaseNotificationService interface {
-	SavePostLikedNotification(ctx context.Context, userID uuid.UUID, postID string, isRead bool) error
+	GetNotifications(ctx context.Context, userID uuid.UUID, pagination database.Pagination) ([]model.Notification, error)
 }
 
 type NotificationService struct {
 	storage *database.Storage
+	logger  *zap.Logger
 }
 
-func NewNotificationService(storage *database.Storage) BaseNotificationService {
+func NewNotificationService(storage *database.Storage, logger *zap.Logger) BaseNotificationService {
 	return &NotificationService{
 		storage: storage,
+		logger:  logger,
 	}
 }
 
-func (ns *NotificationService) SavePostLikedNotification(ctx context.Context, userID uuid.UUID, postID string, isRead bool) error {
-	user, err := ns.storage.UserStore.GetUserByID(ctx, userID)
+func (ns *NotificationService) GetNotifications(ctx context.Context, userID uuid.UUID, pagination database.Pagination) ([]model.Notification, error) {
+	notifications, err := ns.storage.NotificationStore.GetNotifications(ctx, userID, pagination)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Error while getting user information: %w", err))
+		ns.logger.Error("Error while getting notifications", zap.Error(err))
+		return nil, errors.InternalServerError.Wrap(fmt.Errorf("Error while getting notifications: %w", err))
 	}
 
-	message := fmt.Sprintf("%s liked your post", user.Username)
-
-	payload := map[string]interface{}{
-		"liker_id": userID.String(),
-		"post_id":  postID,
-	}
-
-	postUUID, err := uuid.Parse(postID)
-	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Error while parsing post uuid: %w", err))
-	}
-	post, err := ns.storage.PostStore.GetPostByID(ctx, postUUID)
-
-	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Error while getting PostLikedNotification post: %w", err))
-	}
-
-	jsonPayload, err := json.Marshal(payload)
-	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Error while marshal payload: %w", err))
-	}
-
-	model := model.Notification{
-		ID:                uuid.New(),
-		UserID:            post.UserID,
-		Message:           message,
-		Payload:           jsonPayload,
-		Notification_type: model.PostLikedNotification,
-		IsRead:            isRead,
-	}
-
-	err = ns.storage.NotificationStore.CreateNotification(ctx, model)
-	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Error while creating post_liked notification: %w", err))
-	}
-	return nil
-
+	return notifications, nil
 }

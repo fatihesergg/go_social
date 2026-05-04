@@ -10,12 +10,32 @@ DOCKER_COMPOSE_FILE=compose.yaml
 SEED_FILE=seed.sql
 
 
-.PHONY: run build clean
+.PHONY: run build clean local clear-local
 
 run:
 	@echo "Starting server"
 	@go run cmd/go_social/main.go
 
+local: clear-local setup-local
+	@echo "Waiting for database to be ready..."
+	@sleep 3
+	@$(MAKE) migrate-up
+	@$(MAKE) run
+
+setup-local:
+	@echo "Creating postgresql container"
+	@docker run --name go_social_postgres  -e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) -e POSTGRES_USER=$(POSTGRES_USER) -e POSTGRES_DB=$(POSTGRES_DB) -p $(POSTGRES_PORT):5432 --volume go_social_local:/var/lib/postgresql -d postgres:18 
+
+	@echo "Creating rabbitmq container"
+	@docker run --name go_social_rabbitmq  -p  $(RABBITMQ_PORT):$(RABBITMQ_PORT) -p 15672:15672 -e RABBITMQ_DEFAULT_USER=$(RABBITMQ_USER) -e RABBITMQ_DEFAULT_PASS=$(RABBITMQ_PASSWORD) -d rabbitmq:management-alpine
+
+clear-local:
+	@echo "Removing postgresql container"
+	@docker rm -f go_social_postgres
+
+	@echo "Removing rabbitmq container"
+	@docker rm -f go_social_rabbitmq
+	
 build:
 	@echo "Building binary"
 	@go build -o bin/api ./cmd/go_social

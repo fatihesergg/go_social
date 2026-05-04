@@ -20,6 +20,7 @@ import (
 	"github.com/fatihesergg/go_social/internal/services"
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/fatihesergg/go_social/internal/worker"
+	"github.com/fatihesergg/go_social/internal/ws"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -72,7 +73,7 @@ func main() {
 	util.ApiConfig = util.LoadConfig()
 	util.ApiConfig.Validate()
 
-	DB_URI := fmt.Sprintf("postgres://%s:%s@db:5432/%s?sslmode=disable", util.ApiConfig.PGUser, util.ApiConfig.PGPass, util.ApiConfig.PGDB)
+	DB_URI := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", util.ApiConfig.PGUser, util.ApiConfig.PGPass, util.ApiConfig.PGHost, util.ApiConfig.PGPort, util.ApiConfig.PGDB)
 	db, err := sql.Open("postgres", DB_URI)
 	if err != nil {
 		logger.Fatal("Invalid postgres arguments")
@@ -82,13 +83,22 @@ func main() {
 		logger.Fatal("Error connecting database")
 	}
 
-	rabbitmq, err := broker.NewRabbitMq(util.ApiConfig.RabbitMQ)
+	rabbitmqURL := fmt.Sprintf("amqp://%s:%s@%s:%s", util.ApiConfig.RABBITMQ_USER, util.ApiConfig.RABBITMQ_PASSWORD, util.ApiConfig.RABBITMQ_HOST, util.ApiConfig.RABBITMQ_PORT)
+	rabbitmq, err := broker.NewRabbitMq(rabbitmqURL)
 	fmt.Println(util.ApiConfig.RabbitMQ)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
 
 	defer rabbitmq.Close()
+
+	hub := ws.NewWsHub()
+
+	wsocket := engine.Group("/ws")
+	wsocket.Use(middleware.AuthMiddleware())
+	wsocket.GET("/", func(ctx *gin.Context) {
+		ws.ServeWS(hub, ctx)
+	})
 
 	userStore := database.NewUserStore(db)
 	postStore := database.NewPostStore(db)
@@ -118,7 +128,7 @@ func main() {
 	likeService := services.NewLikeService(storage, rabbitmq)
 	replyService := services.NewReplyService(storage)
 	tagService := services.NewTagService(storage)
-	notificationService := services.NewNotificationService(storage)
+	notificationService := services.NewNotificationService(storage, logger)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	rateLimiter := middleware.NewRateLimiter(1, 10)
@@ -128,10 +138,11 @@ func main() {
 	postController := controller.NewPostController(postService, tagService)
 	commentController := controller.NewCommentController(commentService)
 	feedController := controller.NewFeedController(feedService)
-	likeController := controller.NewLikeController(likeService, notificationService)
+	likeController := controller.NewLikeController(likeService)
 	replyController := controller.NewReplyController(replyService)
+	notificationController := controller.NewNotificationController(notificationService)
 
-	routes.MountRoutes(engine, userController, postController, commentController, likeController, feedController, replyController)
+	routes.MountRoutes(engine, userController, postController, commentController, likeController, feedController, replyController, notificationController)
 
 	server := &http.Server{Addr: ":3000", Handler: engine.Handler()}
 
@@ -143,19 +154,23 @@ func main() {
 		}
 	}()
 
-	_, err = rabbitmq.DeclareQueue("notification_queue")
+	_, err = rabbitmq.DeclareQueue("post_liked")
 	if err != nil {
 		logger.Error("Notification queue error", zap.Error(err))
 	}
 
-	notificationWorker := worker.NewNotificationWorker(rabbitmq.Channel, logger)
+	notificationWorker := worker.NewNotificationWorker(rabbitmq.Channel, logger, storage, hub)
+	mainCtx, mainCancel := context.WithCancel(context.Background())
 	go func() {
 		logger.Info("NotificationWorker started")
-		if err := notificationWorker.Consume(); err != nil {
+		if err := notificationWorker.Consume(mainCtx); err != nil {
 			logger.Error("NotificationWorker consume error", zap.Error(err))
 		}
 
 	}()
+	defer mainCancel()
+
+	go hub.Run(mainCtx)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

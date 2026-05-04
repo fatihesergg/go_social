@@ -6,10 +6,12 @@ import (
 	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
+	"github.com/google/uuid"
 )
 
 type BaseNotificationStore interface {
 	CreateNotification(ctx context.Context, notification model.Notification) error
+	GetNotifications(ctx context.Context, userID uuid.UUID, pagination Pagination) ([]model.Notification, error)
 }
 
 type NotificationStore struct {
@@ -37,4 +39,31 @@ func (ns *NotificationStore) CreateNotification(ctx context.Context, notificatio
 	}
 
 	return nil
+}
+
+func (ns *NotificationStore) GetNotifications(ctx context.Context, userID uuid.UUID, pagination Pagination) ([]model.Notification, error) {
+	query := "SELECT id,message,payload FROM notifications WHERE user_id = $1 ORDER BY  created_at DESC limit $2 offset $3"
+
+	result, err := ns.DB.QueryContext(ctx, query, userID, pagination.Limit, pagination.Offset)
+	if err != nil {
+		return nil, fmt.Errorf("Error while getting notifications: %w", err)
+	}
+
+	defer result.Close()
+
+	notifications := []model.Notification{}
+	for result.Next() {
+		notification := model.Notification{}
+		err := result.Scan(&notification.ID, &notification.Message, &notification.Payload)
+		if err != nil {
+			return nil, fmt.Errorf("Error while scanning notification result: %w", err)
+		}
+		notifications = append(notifications, notification)
+	}
+
+	if err := result.Err(); err != nil {
+		return nil, fmt.Errorf("Error while iterating result: %w", err)
+	}
+	return notifications, nil
+
 }

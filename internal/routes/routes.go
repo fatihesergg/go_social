@@ -12,7 +12,8 @@ func MountRoutes(engine *gin.Engine,
 	commentController *controller.CommentController,
 	likeController *controller.LikeController,
 	feedController *controller.FeedController,
-	replyController *controller.ReplyController) {
+	replyController *controller.ReplyController,
+	notificationController *controller.NotificationController) {
 	base := engine.Group("/api/v1")
 
 	base.POST("/signup", userController.Signup)
@@ -64,4 +65,9 @@ func MountRoutes(engine *gin.Engine,
 	replyRouter.POST("/:id/reply", replyController.ReplyAReply)
 	replyRouter.POST("/:id/like", likeController.LikeReply)
 	replyRouter.DELETE("/:id/unlike", likeController.UnlikeReply)
+
+	notificationRouter := base.Group("/notifications")
+	notificationRouter.Use(middleware.AuthMiddleware())
+	notificationRouter.GET("/", notificationController.GetNotification)
+
 }

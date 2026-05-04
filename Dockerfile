@@ -11,7 +11,7 @@ RUN go build -o app ./cmd/go_social/main.go
 
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
-FROM golang:1.24-alpine
+FROM alpine:3.21
 
 WORKDIR /app
 

@@ -8,14 +8,12 @@ import (
 )
 
 type LikeController struct {
-	LikeService         services.BaseLikeService
-	NotificationService services.BaseNotificationService
+	LikeService services.BaseLikeService
 }
 
-func NewLikeController(likeService services.BaseLikeService, notificationService services.BaseNotificationService) *LikeController {
+func NewLikeController(likeService services.BaseLikeService) *LikeController {
 	return &LikeController{
-		LikeService:         likeService,
-		NotificationService: notificationService,
+		LikeService: likeService,
 	}
 }
 
@@ -39,13 +37,6 @@ func (lc LikeController) LikePost(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.MustGet("userID").(uuid.UUID)
 	err := lc.LikeService.LikePost(c.Request.Context(), userID, id)
-	if err != nil {
-		util.WriteAppError(c, err)
-		return
-	}
-
-	err = lc.NotificationService.SavePostLikedNotification(c.Request.Context(), userID, id, false)
-
 	if err != nil {
 		util.WriteAppError(c, err)
 		return
