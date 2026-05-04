@@ -36,8 +36,12 @@ func (nw *NotificationWorker) Consume(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return nil
-		case msg := <-msgs:
+		case msg, ok := <-msgs:
+			if !ok {
+				return nil
+			}
 			nw.handlePostLike(ctx, msg.Body)
+
 		}
 	}
 }
