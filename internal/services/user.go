@@ -241,7 +241,7 @@ func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uui
 	pagination := database.NewPagination(limit, offset)
 	search := database.NewSearch(query)
 	for i := range followers {
-		followerID := followers[i].ID
+		followerID := followers[i].UserID
 		if followerID == userID {
 			posts, err := us.storage.PostStore.GetPostsByUserID(ctx, user.ID, pagination, search)
 			if err != nil {
