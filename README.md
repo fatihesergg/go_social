@@ -1,20 +1,24 @@
 # Go Social API
 
-![Go](https://img.shields.io/badge/Go-1.24-00ADD8?style=flat&logo=go)
+![Go](https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat&logo=postgresql)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?style=flat&logo=postgresql)
 ![Swagger](https://img.shields.io/badge/Swagger-Docs-85EA2D?style=flat&logo=swagger)
 
-A production-ready, layered REST API for a social media platform. Built with **Go**, **Gin**, and **PostgreSQL**, featuring clean architecture, JWT authentication, and automated seeding.
+A layered REST API for a social media platform.
 
 ## ⚡ Features
 
-- **🔐 Auth:** Secure JWT authentication (Signup, Login, Password Reset).
-- **📝 Content:** CRUD for Posts, Comments, and Nested Replies.
-- **❤️ Social:** Like system, Follow/Unfollow users, and Tagging.
-- **📰 Feed:** Personalized feeds based on follower graph.
-- **🔍 Search:** User search and Tag filtering.
-- **🐳 DevOps:** Fully Dockerized with Make automation and Migrations.
+- **Auth:** Secure JWT authentication (Signup, Login, Password Reset).
+- **Content:** CRUD for Posts, Comments, and Nested Replies.
+- **Social:** Like system, Follow/Unfollow users, and Tagging.
+- **Feed:** Personalized feeds.
+- **Search:** User search and Tag filtering.
+- **Architecture:** Layered architecture with RabbitMQ and Websocket for real-time notifications.
+
+## Motivation
+
+    A learning project for backend with go.I didn't find relevant example projects on github so i want to write my own.That way people can inspect my project and can find useful.Im planning using this project for my future project as a reference.
 
 ## 🚀 Quick Start
 
@@ -23,11 +27,18 @@ A production-ready, layered REST API for a social media platform. Built with **G
 Create a `.env` file in the root directory:
 
 ```env
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=password
-POSTGRES_DB=social_db
+POSTGRES_USER=deneme
+POSTGRES_PASSWORD=deneme
+POSTGRES_DB=go_social
+POSTGRES_PORT=5999
+POSTGRES_HOST=localhost
+RABBITMQ_USER=guest
+RABBITMQ_PASSWORD=guest
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
 JWT_SECRET=supersecretkey
-TEST_DB_URL=postgres://postgres:password@localhost:5432/social_db_test
+TEST_DB_URL=postgres://deneme:deneme@localhost:5432/go_social_test?sslmode=disable
+RABBITMQ_URL=amqp://guest:guest@localhost:5672
 ```
 
 ### 2. Run with Docker
@@ -38,36 +49,46 @@ The easiest way to start the API and Database:
 make up
 ```
 
+## 3. To run locally
+
+```bash
+make local
+```
+
 _API will be available at `http://localhost:3000`_
 
-## 📚 Documentation
+## Tech Stack
+
+- **Go**
+- **Postgresql**
+- **RabbitMQ**
+- **Docker**
+- **golang-migrate**
+- **swaggo**
+- **zap**
+
+## Documentation
 
 Interactive API documentation is available via Swagger UI:
 
-👉 **[http://localhost:3000/swagger/index.html](http://localhost:3000/swagger/index.html)**
+**[http://localhost:3000/swagger/index.html](http://localhost:3000/swagger/index.html)**
 
-## 🛠 Make Commands
-
-| Command           | Description                               |
-| :---------------- | :---------------------------------------- |
-| `make up`         | Start API and DB containers in background |
-| `make down`       | Stop and remove containers                |
-| `make logs`       | View live container logs                  |
-| `make run`        | Run the application locally (requires DB) |
-| `make test`       | Run unit tests                            |
-| `make swagger`    | Regenerate Swagger documentation          |
-| `make migrate-up` | Apply database migrations                 |
-
-## 📂 Architecture
+## Project Structure
 
 The project follows a **Clean Architecture** pattern to ensure separation of concerns and scalability:
 
 - **`cmd/`**: Application entry points (API server, Seeder).
 - **`internal/controller`**: **Gin** handlers responsible for request validation and response formatting.
-- **`internal/services`**: Pure business logic layer, decoupled from HTTP and Database details.
+- **`internal/services`**: Business layer, using by controllers via dependency injection.
 - **`internal/database`**: Data access layer using raw SQL for **PostgreSQL** interactions.
 - **`internal/model`**: Core domain entities and database schemas.
 - **`internal/dto`**: Data Transfer Objects for strict API contract definition.
-- **`internal/middleware`**: Cross-cutting concerns like **JWT Auth**, Logging, and Rate Limiting.
-
-#### Note: ( Readme generated via AI )
+- **`internal/middleware`**: **JWT Auth**, Logging, and Rate Limiting.
+- **`internal/routes`**: All routes registered here.
+- **`internal/util`**: Config struct and helper functions.
+- **`internal/errors`**: Define custom error type.
+- **`internal/migration`**: Database migrations for golang-migrate.
+- **`internal/broker`**: Contains functions for rabbitmq to connect,declare channel etc.
+- **`internal/ws`**: Websocket hub and client handling.
+- **`docs/`**: Swagger documentation.
+- **`internal/worker`**: RabbitMQ workers.Consuming event here.
