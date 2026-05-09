@@ -16,16 +16,16 @@ type BaseFeedService interface {
 }
 
 type FeedService struct {
-	storage *database.Storage
+	feedStore database.BaseFeedStore
 }
 
-func NewFeedService(storage *database.Storage) BaseFeedService {
-	return &FeedService{storage: storage}
+func NewFeedService(feedStore database.BaseFeedStore) BaseFeedService {
+	return &FeedService{feedStore: feedStore}
 }
 func (fs *FeedService) GetFeed(ctx context.Context, userID uuid.UUID, limit, offset, query string) ([]dto.FeedResponse, error) {
 	search := database.NewSearch(query)
 	pagination := database.NewPagination(limit, offset)
-	posts, err := fs.storage.FeedStore.GetFeed(ctx, userID, pagination, search)
+	posts, err := fs.feedStore.GetFeed(ctx, userID, pagination, search)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.NoPostsFoundError.Wrap(fmt.Errorf("No posts found"))

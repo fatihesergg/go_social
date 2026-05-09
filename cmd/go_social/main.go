@@ -110,25 +110,14 @@ func main() {
 	tagStore := database.NewTagStore(db)
 	notificationStore := database.NewNotificationStore(db)
 
-	storage := database.NewPostgresStorage(
-		userStore,
-		postStore,
-		commentStore,
-		followStore,
-		feedStore,
-		likeStore,
-		replyStore,
-		tagStore,
-		notificationStore,
-	)
-	userService := services.NewUserService(storage)
-	postService := services.NewPostService(storage)
-	commentService := services.NewCommentService(storage)
-	feedService := services.NewFeedService(storage)
-	likeService := services.NewLikeService(storage, rabbitmq)
-	replyService := services.NewReplyService(storage)
-	tagService := services.NewTagService(storage)
-	notificationService := services.NewNotificationService(storage, logger)
+	userService := services.NewUserService(userStore, followStore, postStore)
+	postService := services.NewPostService(postStore)
+	commentService := services.NewCommentService(postStore, commentStore)
+	feedService := services.NewFeedService(feedStore)
+	likeService := services.NewLikeService(likeStore, postStore, commentStore, rabbitmq)
+	replyService := services.NewReplyService(replyStore, commentStore)
+	tagService := services.NewTagService(tagStore)
+	notificationService := services.NewNotificationService(notificationStore, logger)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	rateLimiter := middleware.NewRateLimiter(1, 10)
@@ -159,7 +148,7 @@ func main() {
 		logger.Error("Notification queue error", zap.Error(err))
 	}
 
-	notificationWorker := worker.NewNotificationWorker(rabbitmq.Channel, logger, storage, hub)
+	notificationWorker := worker.NewNotificationWorker(rabbitmq.Channel, logger, hub, postStore, userStore, notificationStore)
 	mainCtx, mainCancel := context.WithCancel(context.Background())
 	go func() {
 		logger.Info("NotificationWorker started")

@@ -16,14 +16,27 @@ import (
 )
 
 type NotificationWorker struct {
-	Channel *amqp.Channel
-	Logger  *zap.Logger
-	storage *database.Storage
-	hub     *ws.WsHub
+	Channel           *amqp.Channel
+	Logger            *zap.Logger
+	hub               *ws.WsHub
+	postStore         database.BasePostStore
+	userStore         database.BaseUserStore
+	notificationStore database.BaseNotificationStore
 }
 
-func NewNotificationWorker(ch *amqp.Channel, logger *zap.Logger, storage *database.Storage, hub *ws.WsHub) NotificationWorker {
-	return NotificationWorker{Channel: ch, Logger: logger, storage: storage, hub: hub}
+func NewNotificationWorker(ch *amqp.Channel,
+	logger *zap.Logger,
+	hub *ws.WsHub,
+	postStore database.BasePostStore,
+	userStore database.BaseUserStore,
+	notificationStore database.BaseNotificationStore) NotificationWorker {
+	return NotificationWorker{Channel: ch,
+		Logger:            logger,
+		hub:               hub,
+		postStore:         postStore,
+		userStore:         userStore,
+		notificationStore: notificationStore,
+	}
 }
 
 func (nw *NotificationWorker) Consume(ctx context.Context) error {
@@ -63,13 +76,13 @@ func (nw *NotificationWorker) handlePostLike(ctx context.Context, event []byte) 
 	dbContext, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 
-	post, err := nw.storage.PostStore.GetPostByID(dbContext, data.PostID)
+	post, err := nw.postStore.GetPostByID(dbContext, data.PostID)
 	if err != nil {
 		nw.Logger.Error("Error while getting post information: %w", zap.Error(err))
 		return
 	}
 
-	user, err := nw.storage.UserStore.GetUserByID(dbContext, data.LikerID)
+	user, err := nw.userStore.GetUserByID(dbContext, data.LikerID)
 	if err != nil {
 		nw.Logger.Error("Error while getting user information: %w", zap.Error(err))
 		return
@@ -85,7 +98,7 @@ func (nw *NotificationWorker) handlePostLike(ctx context.Context, event []byte) 
 		IsRead:  false,
 	}
 
-	err = nw.storage.NotificationStore.CreateNotification(dbContext, postLikedNotify)
+	err = nw.notificationStore.CreateNotification(dbContext, postLikedNotify)
 	if err != nil {
 		nw.Logger.Error("Error while saving notification to database", zap.Error(err))
 		return

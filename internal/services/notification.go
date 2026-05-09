@@ -16,19 +16,19 @@ type BaseNotificationService interface {
 }
 
 type NotificationService struct {
-	storage *database.Storage
-	logger  *zap.Logger
+	notificationStore database.BaseNotificationStore
+	logger            *zap.Logger
 }
 
-func NewNotificationService(storage *database.Storage, logger *zap.Logger) BaseNotificationService {
+func NewNotificationService(notificationStore database.BaseNotificationStore, logger *zap.Logger) BaseNotificationService {
 	return &NotificationService{
-		storage: storage,
-		logger:  logger,
+		notificationStore: notificationStore,
+		logger:            logger,
 	}
 }
 
 func (ns *NotificationService) GetNotifications(ctx context.Context, userID uuid.UUID, pagination database.Pagination) ([]model.Notification, error) {
-	notifications, err := ns.storage.NotificationStore.GetNotifications(ctx, userID, pagination)
+	notifications, err := ns.notificationStore.GetNotifications(ctx, userID, pagination)
 	if err != nil {
 		ns.logger.Error("Error while getting notifications", zap.Error(err))
 		return nil, errors.InternalServerError.Wrap(fmt.Errorf("Error while getting notifications: %w", err))

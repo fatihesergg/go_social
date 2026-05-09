@@ -20,12 +20,12 @@ type BaseTagService interface {
 }
 
 type TagService struct {
-	storage *database.Storage
+	tagStore database.BaseTagStore
 }
 
-func NewTagService(storage *database.Storage) *TagService {
+func NewTagService(tagStore database.BaseTagStore) *TagService {
 	return &TagService{
-		storage: storage,
+		tagStore: tagStore,
 	}
 }
 
@@ -62,12 +62,12 @@ func (ts *TagService) AddPostTags(ctx context.Context, postID uuid.UUID, tags []
 		}
 	}
 
-	err := ts.storage.TagStore.CreateMultipleTags(ctx, tagModels)
+	err := ts.tagStore.CreateMultipleTags(ctx, tagModels)
 	if err != nil {
 		return errors.InternalServerError.Wrap(fmt.Errorf("Error while creating post tags: %w", err)).Wrap(err)
 	}
 
-	err = ts.storage.TagStore.CreatePostTag(ctx, tags, postID)
+	err = ts.tagStore.CreatePostTag(ctx, tags, postID)
 	if err != nil {
 		return errors.InternalServerError.Wrap(fmt.Errorf("Error while matching post to tags: %w", err)).Wrap(err)
 	}
