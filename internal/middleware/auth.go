@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/fatihesergg/go_social/internal/util"
 	"github.com/gin-gonic/gin"
@@ -11,12 +12,18 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
-		if token == "" || len(token) < 7 {
+		if !strings.HasPrefix(token, "Bearer") {
 			c.JSON(http.StatusUnauthorized, util.ErrorResponse{Error: "unauthorized"})
 			c.Abort()
 			return
 		}
-		token = token[7:] // Remove "Bearer " prefix
+		token = token[7:]
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, util.ErrorResponse{Error: "unauthorized"})
+			c.Abort()
+			return
+		}
+
 		claims, err := util.ParseJWT(token)
 		if err != nil {
 
