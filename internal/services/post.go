@@ -98,7 +98,7 @@ func (ps *PostService) UpdatePost(ctx context.Context, userID uuid.UUID, postIDR
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing postID: %w", err)).Wrap(err)
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing postID: %w", err))
 	}
 
 	existPost, err := ps.postStore.GetPostByID(ctx, postID)
