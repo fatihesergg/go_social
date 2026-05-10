@@ -14,6 +14,7 @@ type BaseFollowStore interface {
 	GetFollowingByUserID(ctx context.Context, userID uuid.UUID) ([]model.Follow, error)
 	FollowUser(ctx context.Context, model model.Follow) error
 	UnFollowUser(ctx context.Context, model model.Follow) error
+	IsFollowing(ctx context.Context, model model.Follow) (bool, error)
 }
 
 type FollowStore struct {
@@ -24,7 +25,7 @@ func NewFollowStore(db *sql.DB) BaseFollowStore {
 	return &FollowStore{db: db}
 }
 
-func (s FollowStore) GetFollowerByUserID(ctx context.Context, userID uuid.UUID) ([]model.Follow, error) {
+func (s *FollowStore) GetFollowerByUserID(ctx context.Context, userID uuid.UUID) ([]model.Follow, error) {
 	var follows []model.Follow
 	query := "SELECT id, user_id, follow_id FROM follows WHERE follow_id = $1"
 	rows, err := s.db.QueryContext(ctx, query, userID)
@@ -50,7 +51,7 @@ func (s FollowStore) GetFollowerByUserID(ctx context.Context, userID uuid.UUID) 
 	return follows, nil
 }
 
-func (s FollowStore) GetFollowingByUserID(ctx context.Context, userID uuid.UUID) ([]model.Follow, error) {
+func (s *FollowStore) GetFollowingByUserID(ctx context.Context, userID uuid.UUID) ([]model.Follow, error) {
 	var follows []model.Follow
 	query := "SELECT id, user_id, follow_id FROM follows WHERE user_id = $1"
 	rows, err := s.db.QueryContext(ctx, query, userID)
@@ -81,7 +82,7 @@ func (s FollowStore) GetFollowingByUserID(ctx context.Context, userID uuid.UUID)
 	return follows, nil
 }
 
-func (s FollowStore) FollowUser(ctx context.Context, model model.Follow) error {
+func (s *FollowStore) FollowUser(ctx context.Context, model model.Follow) error {
 	query := "INSERT INTO follows (id,user_id, follow_id) VALUES ($1, $2,$3)"
 	_, err := s.db.ExecContext(ctx, query, model.ID, model.UserID, model.FollowID)
 	if err != nil {
@@ -89,7 +90,7 @@ func (s FollowStore) FollowUser(ctx context.Context, model model.Follow) error {
 	}
 	return nil
 }
-func (s FollowStore) UnFollowUser(ctx context.Context, model model.Follow) error {
+func (s *FollowStore) UnFollowUser(ctx context.Context, model model.Follow) error {
 	query := "DELETE FROM follows WHERE user_id = $1 AND follow_id = $2"
 	result, err := s.db.ExecContext(ctx, query, model.UserID, model.FollowID)
 	if err != nil {
@@ -103,4 +104,15 @@ func (s FollowStore) UnFollowUser(ctx context.Context, model model.Follow) error
 		return sql.ErrNoRows
 	}
 	return nil
+}
+
+func (s *FollowStore) IsFollowing(ctx context.Context, model model.Follow) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM follows WHERE user_id = $1 AND follow_id = $2)"
+	result := s.db.QueryRowContext(ctx, query, model.UserID, model.FollowID)
+
+	check := false
+	if err := result.Scan(&check); err != nil {
+		return false, err
+	}
+	return check, nil
 }

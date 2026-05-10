@@ -196,22 +196,14 @@ func (us *UserService) UnFollowUser(ctx context.Context, userID uuid.UUID, follo
 		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing unfUser: %w", err))
 	}
 
-	followings, err := us.followStore.GetFollowingByUserID(ctx, userID)
+	isFollowing, err := us.followStore.IsFollowing(ctx, model.Follow{UserID: userID, FollowID: unfUser})
+
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.NoFollowingsFoundError.Wrap(fmt.Errorf("No followings found"))
-		}
-		return errors.InternalServerError.Wrap(err)
+		return errors.InternalServerError.Wrap(fmt.Errorf("Error while checking user following", err))
 	}
 
-	isFollowing := false
-	for _, follow := range followings {
-		if follow.FollowID == unfUser {
-			isFollowing = true
-		}
-	}
 	if !isFollowing {
-		return errors.NotFollowingError.Wrap(fmt.Errorf("User has not following this user yet: %w", err))
+		return errors.NotFollowingError
 	}
 	follow := model.Follow{
 		UserID:   userID,
