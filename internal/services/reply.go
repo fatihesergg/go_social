@@ -13,8 +13,8 @@ import (
 )
 
 type BaseReplyService interface {
-	GetCommentReplies(ctx context.Context, userID uuid.UUID, commentIDRaw string) ([]dto.ReplyResponse, error)
-	GetRepliesByParentID(ctx context.Context, userID uuid.UUID, parentIDRaw string) ([]dto.ReplyResponse, error)
+	GetCommentReplies(ctx context.Context, userID uuid.UUID, commentIDRaw string) ([]model.Reply, error)
+	GetRepliesByParentID(ctx context.Context, userID uuid.UUID, parentIDRaw string) ([]model.Reply, error)
 	ReplyComment(ctx context.Context, userID uuid.UUID, commentIDRaw string, dto dto.CreateReply) error
 	ReplyAReply(ctx context.Context, userID uuid.UUID, replyIDRaw string, dto dto.CreateReply) error
 	UpdateReply(ctx context.Context, userID uuid.UUID, replyIDRaw string, dto dto.UpdateReply) error
@@ -29,7 +29,7 @@ type ReplyService struct {
 func NewReplyService(replyStore database.BaseReplyStore, commentStore database.BaseCommentStore) BaseReplyService {
 	return &ReplyService{replyStore: replyStore, commentStore: commentStore}
 }
-func (rp *ReplyService) GetCommentReplies(ctx context.Context, userID uuid.UUID, commentIDRaw string) ([]dto.ReplyResponse, error) {
+func (rp *ReplyService) GetCommentReplies(ctx context.Context, userID uuid.UUID, commentIDRaw string) ([]model.Reply, error) {
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
 		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing commentID: %w", err))
@@ -60,9 +60,7 @@ func (rp *ReplyService) GetCommentReplies(ctx context.Context, userID uuid.UUID,
 		return nil, errors.InternalServerError.Wrap(err)
 	}
 
-	result := dto.NewReplyResponse(replies)
-
-	return result, nil
+	return replies, nil
 }
 func (rp *ReplyService) ReplyComment(ctx context.Context, userID uuid.UUID, commentIDRaw string, dto dto.CreateReply) error {
 
@@ -174,7 +172,7 @@ func (rp *ReplyService) DeleteReply(ctx context.Context, userID uuid.UUID, reply
 	}
 	return nil
 }
-func (rp *ReplyService) GetRepliesByParentID(ctx context.Context, userID uuid.UUID, parentIDRaw string) ([]dto.ReplyResponse, error) {
+func (rp *ReplyService) GetRepliesByParentID(ctx context.Context, userID uuid.UUID, parentIDRaw string) ([]model.Reply, error) {
 
 	parentID, err := uuid.Parse(parentIDRaw)
 	if err != nil {
@@ -198,8 +196,7 @@ func (rp *ReplyService) GetRepliesByParentID(ctx context.Context, userID uuid.UU
 		return nil, errors.InternalServerError.Wrap(err)
 	}
 
-	result := dto.NewReplyResponse(replies)
-	return result, nil
+	return replies, nil
 }
 
 func (rp *ReplyService) ReplyAReply(ctx context.Context, userID uuid.UUID, replyIDRaw string, dto dto.CreateReply) error {

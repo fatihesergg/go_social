@@ -284,7 +284,9 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched succesfully", Result: posts})
+	result := dto.NewAllPostResponse(posts)
+
+	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched succesfully", Result: result})
 }
 
 // ResetPassword godoc

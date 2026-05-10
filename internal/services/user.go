@@ -25,7 +25,7 @@ type BaseUserService interface {
 	GetFollowingByUserID(ctx context.Context, rawID string) ([]model.Follow, error)
 	FollowUser(ctx context.Context, userID uuid.UUID, followID string) error
 	UnFollowUser(ctx context.Context, userID uuid.UUID, followID string) error
-	GetUsersPosts(ctx context.Context, rawID string, meID uuid.UUID, limit, offset, search string) ([]dto.AllPostResponse, error)
+	GetUsersPosts(ctx context.Context, rawID string, meID uuid.UUID, limit, offset, search string) ([]model.Post, error)
 }
 
 type UserService struct {
@@ -216,7 +216,7 @@ func (us *UserService) UnFollowUser(ctx context.Context, userID uuid.UUID, follo
 	}
 	return nil
 }
-func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uuid.UUID, limit, offset string, query string) ([]dto.AllPostResponse, error) {
+func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uuid.UUID, limit, offset string, query string) ([]model.Post, error) {
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
@@ -249,8 +249,7 @@ func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uui
 				return nil, errors.InternalServerError.Wrap(err)
 			}
 
-			result := dto.NewAllPostResponse(posts)
-			return result, nil
+			return posts, nil
 		}
 	}
 	return nil, errors.NotFollowingError.Wrap(fmt.Errorf("Request user has not following this user yet: %w", err))

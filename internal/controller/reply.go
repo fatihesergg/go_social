@@ -40,7 +40,9 @@ func (rc *ReplyController) GetRepliesByParent(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessResultResponse{Message: "Replies fetched successfully", Result: replies})
+	result := dto.NewReplyResponse(replies)
+
+	c.JSON(200, util.SuccessResultResponse{Message: "Replies fetched successfully", Result: result})
 }
 
 // GetCommentReplies godoc
@@ -65,7 +67,9 @@ func (rc *ReplyController) GetCommentReplies(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessResultResponse{Message: "Replies fetched successfully", Result: replies})
+	result := dto.NewReplyResponse(replies)
+
+	c.JSON(200, util.SuccessResultResponse{Message: "Replies fetched successfully", Result: result})
 
 }
 

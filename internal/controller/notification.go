@@ -44,7 +44,7 @@ func (nc *NotificationController) GetNotification(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	data := dto.NewNotificationResponse(notifications)
+	result := dto.NewNotificationResponse(notifications)
 
-	c.JSON(200, util.SuccessResultResponse{Result: data, Message: "Notification fetched successfully"})
+	c.JSON(200, util.SuccessResultResponse{Result: result, Message: "Notification fetched successfully"})
 }

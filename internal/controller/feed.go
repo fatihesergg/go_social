@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/fatihesergg/go_social/internal/dto"
 	_ "github.com/fatihesergg/go_social/internal/dto"
 	_ "github.com/fatihesergg/go_social/internal/model"
 	"github.com/fatihesergg/go_social/internal/services"
@@ -47,5 +48,7 @@ func (fc FeedController) GetFeed(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: posts})
+	result := dto.NewFeedResponse(posts)
+
+	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: result})
 }

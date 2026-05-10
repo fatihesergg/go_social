@@ -74,7 +74,9 @@ func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessResultResponse{Message: "Comments fetched successfully", Result: comments})
+	result := dto.NewCommentResponse(comments)
+
+	c.JSON(200, util.SuccessResultResponse{Message: "Comments fetched successfully", Result: result})
 }
 
 // UpdateComment godoc

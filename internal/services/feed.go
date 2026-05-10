@@ -6,13 +6,13 @@ import (
 	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/database"
-	"github.com/fatihesergg/go_social/internal/dto"
 	"github.com/fatihesergg/go_social/internal/errors"
+	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
 )
 
 type BaseFeedService interface {
-	GetFeed(ctx context.Context, userID uuid.UUID, limit, offset, query string) ([]dto.FeedResponse, error)
+	GetFeed(ctx context.Context, userID uuid.UUID, limit, offset, query string) ([]model.Post, error)
 }
 
 type FeedService struct {
@@ -22,7 +22,7 @@ type FeedService struct {
 func NewFeedService(feedStore database.BaseFeedStore) BaseFeedService {
 	return &FeedService{feedStore: feedStore}
 }
-func (fs *FeedService) GetFeed(ctx context.Context, userID uuid.UUID, limit, offset, query string) ([]dto.FeedResponse, error) {
+func (fs *FeedService) GetFeed(ctx context.Context, userID uuid.UUID, limit, offset, query string) ([]model.Post, error) {
 	search := database.NewSearch(query)
 	pagination := database.NewPagination(limit, offset)
 	posts, err := fs.feedStore.GetFeed(ctx, userID, pagination, search)
@@ -32,6 +32,5 @@ func (fs *FeedService) GetFeed(ctx context.Context, userID uuid.UUID, limit, off
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
-	response := dto.NewFeedResponse(posts)
-	return response, nil
+	return posts, nil
 }

@@ -14,7 +14,7 @@ import (
 
 type BaseCommentService interface {
 	AddCommentPost(ctx context.Context, userID uuid.UUID, dto dto.CreateCommentDTO) error
-	GetCommentsByPostID(ctx context.Context, userID uuid.UUID, postIDRaw string) ([]dto.CommentResponse, error)
+	GetCommentsByPostID(ctx context.Context, userID uuid.UUID, postIDRaw string) ([]model.Comment, error)
 	UpdateComment(ctx context.Context, userID uuid.UUID, commentIDRaw string, dto dto.UpdateCommentDTO) error
 	DeleteComment(ctx context.Context, userID uuid.UUID, commentIDRaw string) error
 }
@@ -54,7 +54,7 @@ func (cs *CommentService) AddCommentPost(ctx context.Context, userID uuid.UUID, 
 	}
 	return nil
 }
-func (cs *CommentService) GetCommentsByPostID(ctx context.Context, userID uuid.UUID, postIDRaw string) ([]dto.CommentResponse, error) {
+func (cs *CommentService) GetCommentsByPostID(ctx context.Context, userID uuid.UUID, postIDRaw string) ([]model.Comment, error) {
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
@@ -79,8 +79,7 @@ func (cs *CommentService) GetCommentsByPostID(ctx context.Context, userID uuid.U
 		return nil, errors.InternalServerError.Wrap(err)
 	}
 
-	result := dto.NewCommentResponse(comments)
-	return result, nil
+	return comments, nil
 }
 func (cs *CommentService) UpdateComment(ctx context.Context, userID uuid.UUID, commentIDRaw string, dto dto.UpdateCommentDTO) error {
 

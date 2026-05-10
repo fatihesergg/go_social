@@ -46,7 +46,9 @@ func (pc PostController) GetPosts(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: posts})
+	result := dto.NewAllPostResponse(posts)
+
+	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: result})
 }
 
 // GetPosts godoc
@@ -75,7 +77,8 @@ func (pc PostController) GetPostsByTag(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: posts})
+	result := dto.NewAllPostResponse(posts)
+	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: result})
 }
 
 // GetPostByID godoc
@@ -101,8 +104,9 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
+	result := dto.NewPostDetailResponse(post)
 
-	c.JSON(200, util.SuccessResultResponse{Message: "Post fetched successfully", Result: post})
+	c.JSON(200, util.SuccessResultResponse{Message: "Post fetched successfully", Result: result})
 }
 
 // CreatePost godoc
