@@ -12,7 +12,7 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
-		if !strings.HasPrefix(token, "Bearer") {
+		if !strings.HasPrefix(token, "Bearer ") {
 			c.JSON(http.StatusUnauthorized, util.ErrorResponse{Error: "unauthorized"})
 			c.Abort()
 			return
