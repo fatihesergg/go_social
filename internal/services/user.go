@@ -199,7 +199,7 @@ func (us *UserService) UnFollowUser(ctx context.Context, userID uuid.UUID, follo
 	isFollowing, err := us.followStore.IsFollowing(ctx, model.Follow{UserID: userID, FollowID: unfUser})
 
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Error while checking user following", err))
+		return errors.InternalServerError.Wrap(fmt.Errorf("Error while checking user following: %w", err))
 	}
 
 	if !isFollowing {
