@@ -104,7 +104,7 @@ func (nw *NotificationWorker) handlePostLike(ctx context.Context, event []byte) 
 		return
 	}
 
-	nw.hub.Broadcast <- ws.WsData{
+	nw.hub.Messages <- ws.WsData{
 		Data:   event,
 		UserID: post.UserID,
 	}

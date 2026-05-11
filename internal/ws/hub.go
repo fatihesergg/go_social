@@ -16,7 +16,7 @@ type WsHub struct {
 	Clients    map[uuid.UUID]*WsClient
 	register   chan *WsClient
 	unregister chan *WsClient
-	Broadcast  chan WsData
+	Messages   chan WsData
 }
 
 func NewWsHub() *WsHub {
@@ -24,7 +24,7 @@ func NewWsHub() *WsHub {
 		Clients:    map[uuid.UUID]*WsClient{},
 		register:   make(chan *WsClient),
 		unregister: make(chan *WsClient),
-		Broadcast:  make(chan WsData),
+		Messages:   make(chan WsData),
 	}
 }
 
@@ -35,26 +35,45 @@ func (ws *WsHub) Run(ctx context.Context) {
 			ws.Close()
 			return
 		case client := <-ws.register:
-			ws.Clients[client.userID] = client
+			ws.RegisterClient(client)
 		case client := <-ws.unregister:
-			if _, ok := ws.Clients[client.userID]; ok {
-				delete(ws.Clients, client.userID)
-				close(client.send)
-			}
-		case message := <-ws.Broadcast:
-			if client, ok := ws.Clients[message.UserID]; ok {
-				client.send <- message.Data
-			}
+			ws.RemoveClient(client.userID)
+		case message := <-ws.Messages:
+			ws.SendClient(message)
 		}
+	}
+}
+
+func (ws *WsHub) RegisterClient(client *WsClient) {
+	ws.Clients[client.userID] = client
+}
+
+func (ws *WsHub) GetClient(userID uuid.UUID) *WsClient {
+	client, ok := ws.Clients[userID]
+	if !ok {
+		return nil
+	}
+	return client
+}
+
+func (ws *WsHub) RemoveClient(userID uuid.UUID) {
+	_, ok := ws.Clients[userID]
+	if !ok {
+		return
+	}
+	delete(ws.Clients, userID)
+}
+
+func (ws *WsHub) SendClient(message WsData) {
+	if client, ok := ws.Clients[message.UserID]; ok {
+		client.messages <- message.Data
 	}
 }
 
 func (ws *WsHub) Close() {
 	for _, client := range ws.Clients {
-		close(client.send)
+		client.Close()
+
 	}
-	clear(ws.Clients)
-	close(ws.Broadcast)
-	close(ws.register)
-	close(ws.unregister)
+
 }

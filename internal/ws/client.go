@@ -2,6 +2,7 @@ package ws
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,37 +15,48 @@ const (
 )
 
 type WsClient struct {
-	send   chan []byte
-	conn   *websocket.Conn
-	hub    *WsHub
-	userID uuid.UUID
+	messages  chan []byte
+	conn      *websocket.Conn
+	hub       *WsHub
+	userID    uuid.UUID
+	closeOnce sync.Once
 }
 
-func (wc *WsClient) Read() {
-	for {
-		msg := <-wc.send
+func (wc *WsClient) writePump() {
+	defer wc.Close()
+
+	for msg := range wc.messages {
 		wc.conn.SetWriteDeadline(time.Now().Add(waitTime))
 		err := wc.conn.WriteMessage(websocket.TextMessage, msg)
 		if err != nil {
-			// log instead
-			fmt.Println(err.Error())
-
+			wc.conn.WriteMessage(websocket.CloseMessage, nil)
+			wc.hub.unregister <- wc
+			return
 		}
+
 	}
+}
+
+func (wc *WsClient) Close() {
+	wc.closeOnce.Do(func() {
+		close(wc.messages)
+		wc.conn.Close()
+	})
 }
 
 func ServeWS(hub *WsHub, c *gin.Context) {
 	upgrader := websocket.Upgrader{}
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		// log error instead of print
+		// l error instead of print
 		fmt.Println(err.Error())
+		return
 	}
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	client := &WsClient{hub: hub, conn: conn, userID: userID, send: make(chan []byte)}
+	client := &WsClient{hub: hub, conn: conn, userID: userID, messages: make(chan []byte)}
 	client.hub.register <- client
 
-	go client.Read()
+	go client.writePump()
 
 }
