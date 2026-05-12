@@ -447,7 +447,7 @@ func (s *PostStore) GetPostsByUserID(ctx context.Context, userID uuid.UUID, pagi
 				User: model.User{
 					Name:     *commentUserName,
 					LastName: *commentUserLastName,
-					Username: *commentUserName,
+					Username: *commentUserUsername,
 				},
 			}
 			postMap[post.ID].Comments = append(postMap[post.ID].Comments, comment)
