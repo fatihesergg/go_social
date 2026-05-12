@@ -231,6 +231,15 @@ func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uui
 		return nil, errors.InternalServerError.Wrap(err)
 	}
 
+	isFollowing, err := us.followStore.IsFollowing(ctx, model.Follow{UserID: meID, FollowID: userID})
+
+	if err != nil {
+		return nil, errors.InternalServerError.Wrap(err)
+	}
+	if !isFollowing {
+		return nil, errors.NotFollowingError
+	}
+
 	followers, err := us.followStore.GetFollowerByUserID(ctx, user.ID)
 	if err != nil {
 		return nil, errors.InternalServerError
@@ -238,9 +247,10 @@ func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uui
 
 	pagination := database.NewPagination(limit, offset)
 	search := database.NewSearch(query)
+	//NOTE: don't loop array make query
 	for i := range followers {
 		followerID := followers[i].UserID
-		if followerID == userID {
+		if followerID == meID {
 			posts, err := us.postStore.GetPostsByUserID(ctx, user.ID, pagination, search)
 			if err != nil {
 				if err == sql.ErrNoRows {
@@ -252,7 +262,7 @@ func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uui
 			return posts, nil
 		}
 	}
-	return nil, errors.NotFollowingError.Wrap(fmt.Errorf("Request user has not following this user yet: %w", err))
+	return nil, errors.NoFollowersFoundError
 }
 func (us *UserService) ResetPassword(ctx context.Context, meID uuid.UUID, dto dto.ResetUserPasswordDTO) error {
 
