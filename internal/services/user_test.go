@@ -32,7 +32,7 @@ func TestRegister_DBError(t *testing.T) {
 
 	err := service.Register(t.Context(), dto.CreateUserDTO{})
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 
 }
 
@@ -42,7 +42,7 @@ func TestRegister_EmailExist(t *testing.T) {
 	mockStore.On("GetUserByEmail", mock.Anything, mock.Anything).Return(&model.User{}, nil)
 	err := service.Register(t.Context(), dto.CreateUserDTO{})
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.EmailExistError.Error())
+	assert.ErrorAs(t, err, &errors.EmailExistError)
 }
 
 func TestRegister_UsernameExist(t *testing.T) {
@@ -52,7 +52,7 @@ func TestRegister_UsernameExist(t *testing.T) {
 	mockStore.On("GetUserByUsername", mock.Anything, mock.Anything).Return(&model.User{}, nil)
 	err := service.Register(t.Context(), dto.CreateUserDTO{})
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.UsernameExistError.Error())
+	assert.ErrorAs(t, err, &errors.UsernameExistError)
 
 }
 func TestRegister_GetUserByUsernameFail(t *testing.T) {
@@ -64,19 +64,19 @@ func TestRegister_GetUserByUsernameFail(t *testing.T) {
 	err := service.Register(t.Context(), dto.CreateUserDTO{})
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 func TestRegister_CreateUserFail(t *testing.T) {
 	mockStore, _, _, service := setup(t)
 
 	mockStore.On("GetUserByEmail", mock.Anything, mock.Anything).Return(nil, nil)
 	mockStore.On("GetUserByUsername", mock.Anything, mock.Anything).Return(nil, nil)
-	mockStore.On("CreateUser", mock.Anything, mock.Anything).Return(fmt.Errorf("Unexpected Error"))
+	mockStore.On("CreateUser", mock.Anything, mock.Anything).Return(fmt.Errorf("unexpected Error"))
 
 	err := service.Register(t.Context(), dto.CreateUserDTO{})
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 
 func TestRegister_CreateUserSuccess(t *testing.T) {
@@ -101,7 +101,7 @@ func TestGetUserByID_InvalidUUID(t *testing.T) {
 
 	user, err := service.GetUserByID(t.Context(), "")
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InvalidIDFormatError.Error())
+	assert.ErrorAs(t, err, &errors.InvalidIDFormatError)
 	assert.Nil(t, user)
 }
 func TestGetUserByID_GetUserByIDNoRows(t *testing.T) {
@@ -112,7 +112,7 @@ func TestGetUserByID_GetUserByIDNoRows(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, user)
-	assert.Equal(t, err.Error(), errors.UserNotFoundError.Error())
+	assert.ErrorAs(t, err, &errors.UserNotFoundError)
 }
 
 func TestGetUserByID_GetUserByIDFail(t *testing.T) {
@@ -123,7 +123,7 @@ func TestGetUserByID_GetUserByIDFail(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, user)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 func TestGetUserByID_GetUserByIDSuccess(t *testing.T) {
 	mockStore, _, _, service := setup(t)
@@ -144,7 +144,7 @@ func TestLogin_GetUserByEmailNoRows(t *testing.T) {
 	str, err := service.Login(t.Context(), dto.LoginUserDTO{})
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.UserNotFoundError.Error())
+	assert.ErrorAs(t, err, &errors.UserNotFoundError)
 	assert.Empty(t, str)
 }
 
@@ -154,7 +154,7 @@ func TestLogin_GetUserByEmailFail(t *testing.T) {
 
 	str, err := service.Login(t.Context(), dto.LoginUserDTO{})
 	assert.Error(t, err)
-	assert.Equal(t, err, errors.InternalServerError)
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 	assert.Empty(t, str)
 }
 func TestLogin_HashFail(t *testing.T) {
@@ -170,7 +170,7 @@ func TestLogin_HashFail(t *testing.T) {
 
 	str, err := service.Login(t.Context(), dto.LoginUserDTO{Password: "12"})
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InvalidCredentialsError.Error())
+	assert.ErrorAs(t, err, &errors.InvalidCredentialsError)
 	assert.Empty(t, str)
 }
 
@@ -199,7 +199,7 @@ func TestGetFollowerByUserID_InvalidUUID(t *testing.T) {
 	follows, err := service.GetFollowerByUserID(t.Context(), "")
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InvalidIDFormatError.Error())
+	assert.ErrorAs(t, err, &errors.InvalidIDFormatError)
 	assert.Nil(t, follows)
 }
 
@@ -210,18 +210,18 @@ func TestGetFollowerByUserID_GetFollowerByUserIDNoRows(t *testing.T) {
 	follows, err := service.GetFollowerByUserID(t.Context(), uuid.NewString())
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.NoFollowersFoundError.Error())
+	assert.ErrorAs(t, err, &errors.NoFollowersFoundError)
 	assert.Nil(t, follows)
 
 }
 func TestGetFollowerByUserID_GetFollowerByUserFail(t *testing.T) {
 	_, followStore, _, service := setup(t)
-	followStore.On("GetFollowerByUserID", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("UnExpected error"))
+	followStore.On("GetFollowerByUserID", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("unExpected error"))
 
 	follows, err := service.GetFollowerByUserID(t.Context(), uuid.NewString())
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 	assert.Nil(t, follows)
 }
 func TestGetFollowerByUserID_Success(t *testing.T) {
@@ -240,7 +240,7 @@ func TestGetFollowingByUserID_InvalidUUID(t *testing.T) {
 	follows, err := service.GetFollowingByUserID(t.Context(), "")
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InvalidIDFormatError.Error())
+	assert.ErrorAs(t, err, &errors.InvalidIDFormatError)
 	assert.Nil(t, follows)
 }
 func TestGetFollowingByUserID_GetFollowingByUserIDNoRows(t *testing.T) {
@@ -250,7 +250,7 @@ func TestGetFollowingByUserID_GetFollowingByUserIDNoRows(t *testing.T) {
 	follows, err := service.GetFollowingByUserID(t.Context(), uuid.NewString())
 
 	assert.Error(t, err)
-	assert.Error(t, err, errors.InvalidIDFormatError.Error())
+	assert.Error(t, err, &errors.InvalidIDFormatError)
 	assert.Nil(t, follows)
 }
 func TestGetFollowingByUserID_GetFollowingByUserIDFail(t *testing.T) {
@@ -260,7 +260,7 @@ func TestGetFollowingByUserID_GetFollowingByUserIDFail(t *testing.T) {
 	follows, err := service.GetFollowingByUserID(t.Context(), uuid.NewString())
 
 	assert.Error(t, err)
-	assert.Error(t, err, errors.InternalServerError.Error())
+	assert.Error(t, err, &errors.InternalServerError)
 	assert.Nil(t, follows)
 }
 func TestGetFollowingByUserID_Success(t *testing.T) {
@@ -279,7 +279,7 @@ func TestFollowUser_InvalidUUID(t *testing.T) {
 	err := service.FollowUser(t.Context(), uuid.Nil, "")
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InvalidIDFormatError.Error())
+	assert.ErrorAs(t, err, &errors.InvalidIDFormatError)
 
 }
 
@@ -290,7 +290,7 @@ func TestFollowUser_GetFollowingByUserIDFail(t *testing.T) {
 	err := service.FollowUser(t.Context(), uuid.New(), uuid.NewString())
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 
 func TestFollowUser_AlreadyFollowing(t *testing.T) {
@@ -301,7 +301,7 @@ func TestFollowUser_AlreadyFollowing(t *testing.T) {
 	err := service.FollowUser(t.Context(), user, follow.String())
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.AlreadyFollowingError.Error())
+	assert.ErrorAs(t, err, &errors.AlreadyFollowingError)
 }
 
 func TestFollowUser_FollowUserFail(t *testing.T) {
@@ -313,7 +313,7 @@ func TestFollowUser_FollowUserFail(t *testing.T) {
 	err := service.FollowUser(t.Context(), user, follow.String())
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 func TestFollowUser_Success(t *testing.T) {
 	_, followStore, _, service := setup(t)
@@ -331,7 +331,7 @@ func TestUnFollowUser_InvalidUUID(t *testing.T) {
 	err := service.UnFollowUser(t.Context(), uuid.New(), "")
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InvalidIDFormatError.Error())
+	assert.ErrorAs(t, err, &errors.InvalidIDFormatError)
 }
 
 func TestUnFollowUser_IsFollowingError(t *testing.T) {
@@ -340,7 +340,7 @@ func TestUnFollowUser_IsFollowingError(t *testing.T) {
 	err := service.UnFollowUser(t.Context(), uuid.New(), uuid.Nil.String())
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 
 func TestUnFollowUser_NotFollowing(t *testing.T) {
@@ -350,7 +350,7 @@ func TestUnFollowUser_NotFollowing(t *testing.T) {
 	err := service.UnFollowUser(t.Context(), uuid.New(), uuid.Nil.String())
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.NotFollowingError.Error())
+	assert.ErrorAs(t, err, &errors.NotFollowingError)
 }
 func TestUnFollowUser_UnFollowUserFail(t *testing.T) {
 	_, followStore, _, service := setup(t)
@@ -361,7 +361,7 @@ func TestUnFollowUser_UnFollowUserFail(t *testing.T) {
 	err := service.UnFollowUser(t.Context(), user, follow.String())
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 func TestUnFollowUser_Success(t *testing.T) {
 	_, followStore, _, service := setup(t)
@@ -382,7 +382,7 @@ func TestGetUsersPosts_InvalidUUID(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, posts)
-	assert.Equal(t, err.Error(), errors.InvalidIDFormatError.Error())
+	assert.ErrorAs(t, err, &errors.InvalidIDFormatError)
 }
 func TestGetUsersPosts_GetUserByIDNoRows(t *testing.T) {
 	userStore, _, _, service := setup(t)
@@ -392,7 +392,7 @@ func TestGetUsersPosts_GetUserByIDNoRows(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, posts)
-	assert.Equal(t, err.Error(), errors.UserNotFoundError.Error())
+	assert.ErrorAs(t, err, &errors.UserNotFoundError)
 }
 
 func TestGetUsersPosts_GetUserByIDFail(t *testing.T) {
@@ -403,7 +403,7 @@ func TestGetUsersPosts_GetUserByIDFail(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, posts)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 
 func TestGetUsersPosts_GetFollowerByUserIDFail(t *testing.T) {
@@ -417,7 +417,7 @@ func TestGetUsersPosts_GetFollowerByUserIDFail(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, posts)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 
 func TestGetUsersPosts_GetFollowerByUserIDNoRows(t *testing.T) {
@@ -431,7 +431,7 @@ func TestGetUsersPosts_GetFollowerByUserIDNoRows(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, posts)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 
 func TestGetUsersPosts_NotFollowing(t *testing.T) {
@@ -443,7 +443,7 @@ func TestGetUsersPosts_NotFollowing(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, posts)
-	assert.Equal(t, err.Error(), errors.NotFollowingError.Error())
+	assert.ErrorAs(t, err, &errors.NotFollowingError)
 }
 func TestGetUsersPosts_IsFollowingFail(t *testing.T) {
 	userStore, followStore, _, service := setup(t)
@@ -454,7 +454,7 @@ func TestGetUsersPosts_IsFollowingFail(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, posts)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 
 func TestGetUsersPosts_GetPostsByUserIDNoRows(t *testing.T) {
@@ -470,7 +470,7 @@ func TestGetUsersPosts_GetPostsByUserIDNoRows(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, posts)
-	assert.Equal(t, err.Error(), errors.NoPostsFoundError.Error())
+	assert.ErrorAs(t, err, &errors.NoPostsFoundError)
 }
 func TestGetUsersPosts_GetPostsByUserIDFail(t *testing.T) {
 	userStore, followStore, postStore, service := setup(t)
@@ -485,7 +485,7 @@ func TestGetUsersPosts_GetPostsByUserIDFail(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, posts)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 
 func TestGetUsersPosts_GetPostsByUserSuccess(t *testing.T) {
@@ -511,7 +511,7 @@ func TestGetUsersByUsername_GetUsersByUsernameNoRows(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Empty(t, users)
-	assert.Equal(t, err.Error(), errors.NoUsersFoundError.Error())
+	assert.ErrorAs(t, err, &errors.NoUsersFoundError)
 }
 
 func TestGetUsersByUsername_GetUsersByUsernameFail(t *testing.T) {
@@ -522,7 +522,7 @@ func TestGetUsersByUsername_GetUsersByUsernameFail(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Empty(t, users)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 }
 func TestGetUsersByUsername_Success(t *testing.T) {
 	userStore, _, _, service := setup(t)
@@ -541,7 +541,7 @@ func TestResetPassword_GetUserByIDNoRows(t *testing.T) {
 	err := service.ResetPassword(t.Context(), uuid.New(), dto.ResetUserPasswordDTO{})
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.UserNotFoundError.Error())
+	assert.ErrorAs(t, err, &errors.UserNotFoundError)
 
 }
 func TestResetPassword_GetUserByIDFail(t *testing.T) {
@@ -551,7 +551,7 @@ func TestResetPassword_GetUserByIDFail(t *testing.T) {
 	err := service.ResetPassword(t.Context(), uuid.New(), dto.ResetUserPasswordDTO{})
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 
 }
 
@@ -567,7 +567,7 @@ func TestResetPassword_InvalidCredentials(t *testing.T) {
 	err = service.ResetPassword(t.Context(), uuid.New(), dto.ResetUserPasswordDTO{OldPassword: "123"})
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InvalidCredentialsError.Error())
+	assert.ErrorAs(t, err, &errors.InvalidCredentialsError)
 
 }
 
@@ -584,7 +584,7 @@ func TestResetPassword_UpdateUserFail(t *testing.T) {
 	err = service.ResetPassword(t.Context(), uuid.New(), dto.ResetUserPasswordDTO{OldPassword: "123"})
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), errors.InternalServerError.Error())
+	assert.ErrorAs(t, err, &errors.InternalServerError)
 
 }
 func TestResetPassword_Success(t *testing.T) {
