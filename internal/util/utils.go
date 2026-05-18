@@ -1,11 +1,12 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/fatihesergg/go_social/internal/errors"
+	custom_err "github.com/fatihesergg/go_social/internal/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
@@ -99,12 +100,11 @@ func GetErrorMessage(fe validator.FieldError) string {
 
 func WriteAppError(c *gin.Context, err error) {
 
-	appErr, ok := err.(errors.AppError)
-	if !ok {
-		c.Error(err)
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: errors.InternalServerError.Message})
+	c.Error(err)
+	var appErr custom_err.AppError
+	if errors.As(err, &appErr) {
+		c.JSON(appErr.Code, ErrorResponse{Error: appErr.Message})
 		return
 	}
-	c.JSON(appErr.Code, ErrorResponse{Error: appErr.Error()})
-	c.Error(appErr.Actual)
+	c.JSON(http.StatusInternalServerError, ErrorResponse{Error: custom_err.InternalServerError.Message})
 }

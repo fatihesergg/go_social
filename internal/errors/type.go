@@ -7,18 +7,18 @@ type AppError struct {
 }
 
 func (err AppError) Error() string {
-	return err.Message
-}
-
-func (err AppError) ActualErr() string {
 	if err.Actual != nil {
-		return err.Actual.Error()
+		return err.Message + ": " + err.Actual.Error()
 	}
-	return ""
+	return err.Message
 
 }
 
 func (err AppError) Wrap(actual error) AppError {
 	err.Actual = actual
 	return err
+}
+
+func (err AppError) Unwrap() error {
+	return err.Actual
 }
