@@ -57,7 +57,7 @@ func (us *UserService) Register(ctx context.Context, dto dto.CreateUserDTO) erro
 		return errors.InternalServerError.Wrap(err)
 	}
 	if existEmail != nil {
-		return errors.EmailExistError.Wrap(fmt.Errorf("Request user email already exist"))
+		return errors.EmailExistError
 	}
 
 	existUsername, err := us.userStore.GetUserByUsername(ctx, user.Username)
@@ -65,12 +65,12 @@ func (us *UserService) Register(ctx context.Context, dto dto.CreateUserDTO) erro
 		return errors.InternalServerError.Wrap(err)
 	}
 	if existUsername != nil {
-		return errors.UsernameExistError.Wrap(fmt.Errorf("Request user username already exist"))
+		return errors.UsernameExistError.Wrap(fmt.Errorf("request user username already exist"))
 	}
 
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Invalid credentials: %w", err)).Wrap(err)
+		return errors.InternalServerError.Wrap(err)
 	}
 	user.Password = string(hashedPass)
 
@@ -85,13 +85,13 @@ func (us *UserService) Register(ctx context.Context, dto dto.CreateUserDTO) erro
 func (us *UserService) GetUserByID(ctx context.Context, rawID string) (*model.User, error) {
 	userID, err := uuid.Parse(rawID)
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userID: %w", err))
 	}
 
 	user, err := us.userStore.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
+			return nil, errors.UserNotFoundError.Wrap(fmt.Errorf("user not found"))
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -104,19 +104,19 @@ func (us *UserService) Login(ctx context.Context, dto dto.LoginUserDTO) (string,
 	user, err := us.userStore.GetUserByEmail(ctx, dto.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
+			return "", errors.UserNotFoundError.Wrap(err)
 		}
 		return "", errors.InternalServerError
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.Password))
 	if err != nil {
-		return "", errors.InvalidCredentialsError.Wrap(fmt.Errorf("Invalid credentials: %w", err))
+		return "", errors.InvalidCredentialsError.Wrap(err)
 	}
 
 	token, err := util.CreateJsonWebToken(user.ID)
 	if err != nil {
-		return "", errors.InternalServerError.Wrap(err).Wrap(fmt.Errorf("Error while creating jwt token: %w", err))
+		return "", errors.InternalServerError.Wrap(fmt.Errorf("error while creating jwt token: %w", err))
 	}
 	return token, nil
 }
@@ -124,13 +124,13 @@ func (us *UserService) GetFollowerByUserID(ctx context.Context, rawID string) ([
 
 	userID, err := uuid.Parse(rawID)
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userID: %w", err))
 	}
 
 	followers, err := us.followStore.GetFollowerByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NoFollowersFoundError.Wrap(fmt.Errorf("No followers found"))
+			return nil, errors.NoFollowersFoundError.Wrap(err)
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -141,13 +141,13 @@ func (us *UserService) GetFollowingByUserID(ctx context.Context, rawID string) (
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userID: %w", err))
 	}
 
 	followings, err := us.followStore.GetFollowingByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NoFollowingsFoundError.Wrap(fmt.Errorf("No followings found"))
+			return nil, errors.NoFollowingsFoundError.Wrap(fmt.Errorf("no followings found"))
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -158,7 +158,7 @@ func (us *UserService) FollowUser(ctx context.Context, userID uuid.UUID, followI
 
 	followUserID, err := uuid.Parse(followID)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing followUserID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing followUserID: %w", err))
 	}
 
 	followings, err := us.followStore.GetFollowingByUserID(ctx, userID)
@@ -175,7 +175,7 @@ func (us *UserService) FollowUser(ctx context.Context, userID uuid.UUID, followI
 	}
 
 	if isFollowing {
-		return errors.AlreadyFollowingError.Wrap(fmt.Errorf("Request user already follow this user"))
+		return errors.AlreadyFollowingError.Wrap(fmt.Errorf("request user already follow this user"))
 	}
 	follow := model.Follow{
 		ID:       uuid.New(),
@@ -193,13 +193,13 @@ func (us *UserService) UnFollowUser(ctx context.Context, userID uuid.UUID, follo
 
 	unfUser, err := uuid.Parse(followID)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing unfUser: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing unfUser: %w", err))
 	}
 
 	isFollowing, err := us.followStore.IsFollowing(ctx, model.Follow{UserID: userID, FollowID: unfUser})
 
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Error while checking user following: %w", err))
+		return errors.InternalServerError.Wrap(fmt.Errorf("error while checking user following: %w", err))
 	}
 
 	if !isFollowing {
@@ -220,13 +220,13 @@ func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uui
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing userID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userID: %w", err))
 	}
 
 	user, err := us.userStore.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
+			return nil, errors.UserNotFoundError.Wrap(fmt.Errorf("user not found"))
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -254,7 +254,7 @@ func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uui
 			posts, err := us.postStore.GetPostsByUserID(ctx, user.ID, pagination, search)
 			if err != nil {
 				if err == sql.ErrNoRows {
-					return nil, errors.NoPostsFoundError.Wrap(fmt.Errorf("No posts found"))
+					return nil, errors.NoPostsFoundError.Wrap(fmt.Errorf("no posts found"))
 				}
 				return nil, errors.InternalServerError.Wrap(err)
 			}
@@ -269,17 +269,17 @@ func (us *UserService) ResetPassword(ctx context.Context, meID uuid.UUID, dto dt
 	user, err := us.userStore.GetUserByID(ctx, meID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return errors.UserNotFoundError.Wrap(fmt.Errorf("User not found"))
+			return errors.UserNotFoundError.Wrap(fmt.Errorf("user not found"))
 		}
 		return errors.InternalServerError.Wrap(err)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.OldPassword)); err != nil {
-		return errors.InvalidCredentialsError.Wrap(fmt.Errorf("Invalid credentials"))
+		return errors.InvalidCredentialsError.Wrap(err)
 	}
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(dto.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Error while hashing password: %w", err)).Wrap(err)
+		return errors.InternalServerError.Wrap(fmt.Errorf("error while hashing password: %w", err))
 	}
 	user.Password = string(hashedPass)
 
@@ -294,7 +294,7 @@ func (us *UserService) GetUsersByUsername(ctx context.Context, username string) 
 	users, err := us.userStore.GetUsersByUsername(ctx, username)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NoUsersFoundError.Wrap(fmt.Errorf("No users found"))
+			return nil, errors.NoUsersFoundError.Wrap(fmt.Errorf("no users found"))
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}

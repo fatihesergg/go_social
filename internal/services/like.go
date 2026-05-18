@@ -39,7 +39,7 @@ func NewLikeService(likeStore database.BaseLikeStore, postStore database.BasePos
 func (ls *LikeService) LikePost(ctx context.Context, userID uuid.UUID, postIDRaw string) error {
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Error while parsing postID: %w", err)).Wrap(err)
+		return errors.InternalServerError.Wrap(fmt.Errorf("error while parsing postID: %w", err))
 	}
 
 	hasAccess, err := ls.postStore.HasAccessToPost(ctx, userID, postID)
@@ -48,7 +48,7 @@ func (ls *LikeService) LikePost(ctx context.Context, userID uuid.UUID, postIDRaw
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this post"))
+		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this post"))
 	}
 
 	liked, err := ls.likeStore.IsPostLiked(ctx, postID, userID)
@@ -56,7 +56,7 @@ func (ls *LikeService) LikePost(ctx context.Context, userID uuid.UUID, postIDRaw
 		return errors.InternalServerError.Wrap(err)
 	}
 	if liked {
-		return errors.AlreadyPostLikeError.Wrap(fmt.Errorf("User already liked this post"))
+		return errors.AlreadyPostLikeError.Wrap(fmt.Errorf("user already liked this post"))
 	}
 
 	err = ls.likeStore.LikePost(ctx, &model.PostLike{
@@ -86,7 +86,7 @@ func (ls *LikeService) UnlikePost(ctx context.Context, userID uuid.UUID, postIDR
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing uuid: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing uuid: %w", err))
 	}
 
 	hasAccess, err := ls.postStore.HasAccessToPost(ctx, userID, postID)
@@ -95,7 +95,7 @@ func (ls *LikeService) UnlikePost(ctx context.Context, userID uuid.UUID, postIDR
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this post"))
+		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this post"))
 	}
 
 	liked, err := ls.likeStore.IsPostLiked(ctx, postID, userID)
@@ -103,7 +103,7 @@ func (ls *LikeService) UnlikePost(ctx context.Context, userID uuid.UUID, postIDR
 		return errors.InternalServerError.Wrap(err)
 	}
 	if !liked {
-		return errors.PostNotLikedError.Wrap(fmt.Errorf("User has not liked post yet"))
+		return errors.PostNotLikedError.Wrap(fmt.Errorf("user has not liked post yet"))
 	}
 
 	err = ls.likeStore.UnlikePost(ctx, postID, userID)
@@ -117,7 +117,7 @@ func (ls *LikeService) LikeComment(ctx context.Context, userID uuid.UUID, commen
 
 	commentID, err := uuid.Parse(commentRawID)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing commentID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentID: %w", err))
 	}
 	hasAccess, err := ls.commentStore.HasAccessToComment(ctx, userID, commentID)
 
@@ -126,7 +126,7 @@ func (ls *LikeService) LikeComment(ctx context.Context, userID uuid.UUID, commen
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this comment"))
+		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this comment"))
 	}
 
 	existLike, err := ls.likeStore.IsCommentLiked(ctx, commentID, userID)
@@ -151,7 +151,7 @@ func (ls *LikeService) UnlikeComment(ctx context.Context, userID uuid.UUID, comm
 
 	commentID, err := uuid.Parse(commentRawID)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing commentID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentID: %w", err))
 	}
 	hasAccess, err := ls.commentStore.HasAccessToComment(ctx, userID, commentID)
 
@@ -160,7 +160,7 @@ func (ls *LikeService) UnlikeComment(ctx context.Context, userID uuid.UUID, comm
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this comment"))
+		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this comment"))
 	}
 
 	existLike, err := ls.likeStore.IsCommentLiked(ctx, commentID, userID)
@@ -169,7 +169,7 @@ func (ls *LikeService) UnlikeComment(ctx context.Context, userID uuid.UUID, comm
 	}
 
 	if !existLike {
-		return errors.CommentNotLikedError.Wrap(fmt.Errorf("User has not liked comment yet"))
+		return errors.CommentNotLikedError.Wrap(fmt.Errorf("user has not liked comment yet"))
 	}
 
 	err = ls.likeStore.UnlikeComment(ctx, commentID, userID)
@@ -183,7 +183,7 @@ func (ls *LikeService) UnlikeComment(ctx context.Context, userID uuid.UUID, comm
 func (ls *LikeService) LikeReply(ctx context.Context, userID uuid.UUID, replyRawID string) error {
 	replyID, err := uuid.Parse(replyRawID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("Error while parsing replyID: %w", err)).Wrap(err)
+		return errors.InternalServerError.Wrap(fmt.Errorf("error while parsing replyID: %w", err))
 	}
 
 	liked, err := ls.likeStore.IsReplyLiked(ctx, replyID, userID)
@@ -191,7 +191,7 @@ func (ls *LikeService) LikeReply(ctx context.Context, userID uuid.UUID, replyRaw
 		return errors.InternalServerError.Wrap(err)
 	}
 	if liked {
-		return errors.AlreadyReplyLikeError.Wrap(fmt.Errorf("User already liked reply"))
+		return errors.AlreadyReplyLikeError.Wrap(fmt.Errorf("user already liked reply"))
 	}
 
 	err = ls.likeStore.LikeReply(ctx, &model.ReplyLike{
@@ -208,7 +208,7 @@ func (ls *LikeService) LikeReply(ctx context.Context, userID uuid.UUID, replyRaw
 func (ls *LikeService) UnlikeReply(ctx context.Context, userID uuid.UUID, replyRawID string) error {
 	replyID, err := uuid.Parse(replyRawID)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing replyID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing replyID: %w", err))
 	}
 
 	existLike, err := ls.likeStore.IsReplyLiked(ctx, replyID, userID)
@@ -217,7 +217,7 @@ func (ls *LikeService) UnlikeReply(ctx context.Context, userID uuid.UUID, replyR
 	}
 
 	if !existLike {
-		return errors.ReplyNotLikedError.Wrap(fmt.Errorf("User has not liked reply yet"))
+		return errors.ReplyNotLikedError.Wrap(fmt.Errorf("user has not liked reply yet"))
 	}
 
 	err = ls.likeStore.UnlikeReply(ctx, replyID, userID)

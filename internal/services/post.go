@@ -35,7 +35,7 @@ func (ps *PostService) GetAllPosts(ctx context.Context, userID uuid.UUID, limit,
 	posts, err := ps.postStore.GetPosts(ctx, pagination, search, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NoPostsFoundError.Wrap(fmt.Errorf("No posts found"))
+			return nil, errors.NoPostsFoundError.Wrap(err)
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -48,7 +48,7 @@ func (ps *PostService) GetPostByID(ctx context.Context, userID uuid.UUID, postID
 	postID, err := uuid.Parse(postIDRaw)
 
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing postID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing postID: %w", err))
 	}
 
 	hasAccess, err := ps.postStore.HasAccessToPost(ctx, userID, postID)
@@ -57,13 +57,13 @@ func (ps *PostService) GetPostByID(ctx context.Context, userID uuid.UUID, postID
 	}
 
 	if !hasAccess {
-		return nil, errors.InvalidPermissionError.Wrap(fmt.Errorf("User has no access to this post"))
+		return nil, errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this post"))
 	}
 
 	post, err := ps.postStore.GetPostDetailsByID(ctx, postID, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NoPostsFoundError.Wrap(fmt.Errorf("Post not found"))
+			return nil, errors.NoPostsFoundError.Wrap(err)
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
@@ -96,19 +96,19 @@ func (ps *PostService) UpdatePost(ctx context.Context, userID uuid.UUID, postIDR
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing postID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing postID: %w", err))
 	}
 
 	existPost, err := ps.postStore.GetPostByID(ctx, postID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return errors.PostNotFoundError.Wrap(fmt.Errorf("Post not found"))
+			return errors.PostNotFoundError.Wrap(err)
 		}
 		return errors.InternalServerError.Wrap(err)
 	}
 
 	if existPost.UserID != userID {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("Request userid and post userid is different"))
+		return errors.InvalidPermissionError.Wrap(fmt.Errorf("request userid and post userid is different"))
 	}
 	post := &model.Post{
 		ID:      postID,
@@ -125,17 +125,17 @@ func (ps *PostService) DeletePost(ctx context.Context, userID uuid.UUID, postIDR
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("Error while parsing postID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing postID: %w", err))
 	}
 	post, err := ps.postStore.GetPostByID(ctx, postID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return errors.PostNotFoundError.Wrap(fmt.Errorf("Post not found"))
+			return errors.PostNotFoundError.Wrap(err)
 		}
 		return errors.InternalServerError.Wrap(err)
 	}
 	if post.UserID != userID {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("Request userid and post userid is different"))
+		return errors.InvalidPermissionError.Wrap(fmt.Errorf("request userid and post userid is different"))
 	}
 
 	err = ps.postStore.DeletePost(ctx, postID)
@@ -159,7 +159,7 @@ func (ps *PostService) GetAllPostsByTag(ctx context.Context, userID uuid.UUID, l
 	posts, err := ps.postStore.GetPostsByTag(ctx, pagination, tag, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NoPostsFoundError.Wrap(fmt.Errorf("No posts found"))
+			return nil, errors.NoPostsFoundError.Wrap(err)
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}

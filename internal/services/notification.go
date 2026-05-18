@@ -31,7 +31,7 @@ func (ns *NotificationService) GetNotifications(ctx context.Context, userID uuid
 	notifications, err := ns.notificationStore.GetNotifications(ctx, userID, pagination)
 	if err != nil {
 		ns.logger.Error("Error while getting notifications", zap.Error(err))
-		return nil, errors.InternalServerError.Wrap(fmt.Errorf("Error while getting notifications: %w", err))
+		return nil, errors.InternalServerError.Wrap(fmt.Errorf("error while getting notifications: %w", err))
 	}
 
 	return notifications, nil

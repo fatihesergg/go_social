@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/errors"
@@ -28,7 +27,7 @@ func (fs *FeedService) GetFeed(ctx context.Context, userID uuid.UUID, limit, off
 	posts, err := fs.feedStore.GetFeed(ctx, userID, pagination, search)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.NoPostsFoundError.Wrap(fmt.Errorf("No posts found"))
+			return nil, errors.NoPostsFoundError.Wrap(err)
 		}
 		return nil, errors.InternalServerError.Wrap(err)
 	}
