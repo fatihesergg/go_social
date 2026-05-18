@@ -27,7 +27,7 @@ func NewNotificationController(notificationService services.BaseNotificationServ
 //	@Produce		json
 //	@Param			limit	query		int		false	"Limit"		default(20)
 //	@Param			offset	query		int		false	"Offset"	default(0)
-//	@Success		200		{array}		util.SuccessResultResponse{result=[]dto.NotificationResponse}
+//	@Success		200		{array}		util.SuccessResponse{result=[]dto.NotificationResponse}
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		500		{object}	util.ErrorResponse
 //	@Router			/notifications [get]
@@ -46,5 +46,5 @@ func (nc *NotificationController) GetNotification(c *gin.Context) {
 	}
 	result := dto.NewNotificationResponse(notifications)
 
-	c.JSON(200, util.SuccessResultResponse{Result: result, Message: "Notification fetched successfully"})
+	c.JSON(200, util.SuccessResponse{Result: result, Message: "Notification fetched successfully"})
 }

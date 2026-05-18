@@ -26,7 +26,7 @@ func NewCommentController(commentService services.BaseCommentService) *CommentCo
 //	@Accept			json
 //	@Produce		json
 //	@Param			comment	body		dto.CreateCommentDTO	true	"Comment to create"
-//	@Success		201		{object}	util.SuccessMessageResponse
+//	@Success		201		{object}	util.SuccessResponse
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		401		{object}	util.ErrorResponse
 //	@Failure		404		{object}	util.ErrorResponse
@@ -46,7 +46,7 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, util.SuccessMessageResponse{Message: "Comment created successfully"})
+	c.JSON(201, util.SuccessResponse{Message: "comment created successfully"})
 
 }
 
@@ -58,7 +58,7 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Post ID"
-//	@Success		200	{object}	util.SuccessResultResponse{result=[]dto.CommentDetailResponse}
+//	@Success		200	{object}	util.SuccessResponse{result=[]dto.CommentDetailResponse}
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		401	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -76,7 +76,7 @@ func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
 	}
 	result := dto.NewCommentResponse(comments)
 
-	c.JSON(200, util.SuccessResultResponse{Message: "Comments fetched successfully", Result: result})
+	c.JSON(200, util.SuccessResponse{Message: "comments fetched successfully", Result: result})
 }
 
 // UpdateComment godoc
@@ -88,7 +88,7 @@ func (cc *CommentController) GetCommentsByPostID(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		string					true	"Comment ID"
 //	@Param			comment	body		dto.UpdateCommentDTO	true	"Updated comment data"
-//	@Success		200		{object}	util.SuccessMessageResponse
+//	@Success		200		{object}	util.SuccessResponse
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		401		{object}	util.ErrorResponse
 //	@Failure		404		{object}	util.ErrorResponse
@@ -110,7 +110,7 @@ func (cc *CommentController) UpdateComment(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessMessageResponse{Message: "Comment updated successfully"})
+	c.JSON(200, util.SuccessResponse{Message: "comment updated successfully"})
 }
 
 // DeleteComment godoc
@@ -121,7 +121,7 @@ func (cc *CommentController) UpdateComment(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Comment ID"
-//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		401	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -137,5 +137,5 @@ func (cc *CommentController) DeleteComment(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessMessageResponse{Message: "Comment deleted successfully"})
+	c.JSON(200, util.SuccessResponse{Message: "comment deleted successfully"})
 }

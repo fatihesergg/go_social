@@ -25,7 +25,7 @@ func NewLikeController(likeService services.BaseLikeService) *LikeController {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Post ID"
-//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		401	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -42,7 +42,7 @@ func (lc LikeController) LikePost(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, util.SuccessMessageResponse{Message: "Post liked successfully"})
+	c.JSON(201, util.SuccessResponse{Message: "post liked successfully"})
 
 }
 
@@ -54,7 +54,7 @@ func (lc LikeController) LikePost(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Reply ID"
-//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		401	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -70,7 +70,7 @@ func (lc LikeController) LikeReply(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(201, util.SuccessMessageResponse{Message: "Reply liked successfully"})
+	c.JSON(201, util.SuccessResponse{Message: "reply liked successfully"})
 
 }
 
@@ -82,7 +82,7 @@ func (lc LikeController) LikeReply(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Post ID"
-//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		401	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -97,7 +97,7 @@ func (lc LikeController) UnlikePost(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessMessageResponse{Message: "Post unliked successfully"})
+	c.JSON(200, util.SuccessResponse{Message: "post unliked successfully"})
 }
 
 // UnlikeReply godoc
@@ -108,7 +108,7 @@ func (lc LikeController) UnlikePost(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Reply ID"
-//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		401	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -123,7 +123,7 @@ func (lc LikeController) UnlikeReply(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessMessageResponse{Message: "Reply unliked successfully"})
+	c.JSON(200, util.SuccessResponse{Message: "reply unliked successfully"})
 }
 
 // LikePost godoc
@@ -135,7 +135,7 @@ func (lc LikeController) UnlikeReply(c *gin.Context) {
 //	@Produce		json
 //	@Param			id	path		string	true	"Comment ID"
 //
-//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		401	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -150,7 +150,7 @@ func (lc *LikeController) LikeComment(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(201, util.SuccessMessageResponse{Message: "Comment liked succesfully"})
+	c.JSON(201, util.SuccessResponse{Message: "comment liked succesfully"})
 
 }
 
@@ -162,7 +162,7 @@ func (lc *LikeController) LikeComment(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"Comment ID"
-//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		401	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -178,6 +178,6 @@ func (lc *LikeController) UnlikeComment(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessMessageResponse{Message: "Comment unliked succesfully"})
+	c.JSON(200, util.SuccessResponse{Message: "comment unliked succesfully"})
 
 }

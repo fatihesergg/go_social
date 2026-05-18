@@ -17,12 +17,8 @@ type ErrorResponse struct {
 	Error any `json:"error"`
 }
 
-type SuccessMessageResponse struct {
-	Message string `json:"message"`
-}
-
-type SuccessResultResponse struct {
-	Result  any    `json:"result"`
+type SuccessResponse struct {
+	Result  any    `json:"result,omitempty"`
 	Message string `json:"message"`
 }
 

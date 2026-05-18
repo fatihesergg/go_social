@@ -30,7 +30,7 @@ func NewFeedController(feedService services.BaseFeedService) *FeedController {
 //	@Param			limit	query		int		false	"Limit"		default(20)
 //	@Param			offset	query		int		false	"Offset"	default(0)
 //	@Param			search	query		string	false	"Search query"
-//	@Success		200		{object}	util.SuccessResultResponse{result=[]dto.FeedResponse}
+//	@Success		200		{object}	util.SuccessResponse{result=[]dto.FeedResponse}
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		401		{object}	util.ErrorResponse
 //	@Failure		404		{object}	util.ErrorResponse
@@ -50,5 +50,5 @@ func (fc FeedController) GetFeed(c *gin.Context) {
 	}
 	result := dto.NewFeedResponse(posts)
 
-	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: result})
+	c.JSON(200, util.SuccessResponse{Message: "posts fetched successfully", Result: result})
 }

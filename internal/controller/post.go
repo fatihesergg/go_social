@@ -30,7 +30,7 @@ func NewPostController(postService services.BasePostService, tagService services
 //	@Param			limit	query		int		false	"Limit"		default(20)
 //	@Param			offset	query		int		false	"Offset"	default(0)
 //	@Param			search	query		string	false	"Search query"
-//	@Success		200		{array}		util.SuccessResultResponse{result=[]dto.AllPostResponse}
+//	@Success		200		{array}		util.SuccessResponse{result=[]dto.AllPostResponse}
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		500		{object}	util.ErrorResponse
 //	@Router			/posts [get]
@@ -48,7 +48,7 @@ func (pc PostController) GetPosts(c *gin.Context) {
 	}
 	result := dto.NewAllPostResponse(posts)
 
-	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: result})
+	c.JSON(200, util.SuccessResponse{Message: "posts fetched successfully", Result: result})
 }
 
 // GetPosts godoc
@@ -61,7 +61,7 @@ func (pc PostController) GetPosts(c *gin.Context) {
 //	@Param			limit	query		int		false	"Limit"		default(20)
 //	@Param			offset	query		int		false	"Offset"	default(0)
 //	@Param			tag	path		string	false	"Tag query"
-//	@Success		200		{array}		util.SuccessResultResponse{result=[]dto.AllPostResponse}
+//	@Success		200		{array}		util.SuccessResponse{result=[]dto.AllPostResponse}
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		500		{object}	util.ErrorResponse
 //	@Router			/posts/tag/{tag} [get]
@@ -78,7 +78,7 @@ func (pc PostController) GetPostsByTag(c *gin.Context) {
 		return
 	}
 	result := dto.NewAllPostResponse(posts)
-	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched successfully", Result: result})
+	c.JSON(200, util.SuccessResponse{Message: "posts fetched successfully", Result: result})
 }
 
 // GetPostByID godoc
@@ -89,7 +89,7 @@ func (pc PostController) GetPostsByTag(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"Post ID"
-//	@Success		200	{object}	util.SuccessResultResponse{result=dto.PostDetailResponse}
+//	@Success		200	{object}	util.SuccessResponse{result=dto.PostDetailResponse}
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
@@ -106,7 +106,7 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 	}
 	result := dto.NewPostDetailResponse(post)
 
-	c.JSON(200, util.SuccessResultResponse{Message: "Post fetched successfully", Result: result})
+	c.JSON(200, util.SuccessResponse{Message: "post fetched successfully", Result: result})
 }
 
 // CreatePost godoc
@@ -117,7 +117,7 @@ func (pc PostController) GetPostByID(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			post	body		dto.CreatePostDTO	true	"Post data"
-//	@Success		201		{object}	util.SuccessMessageResponse
+//	@Success		201		{object}	util.SuccessResponse
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		500		{object}	util.ErrorResponse
 //	@Router			/posts [post]
@@ -148,7 +148,7 @@ func (pc PostController) CreatePost(c *gin.Context) {
 		}
 	}
 
-	c.JSON(201, util.SuccessMessageResponse{Message: "Post created succesfully"})
+	c.JSON(201, util.SuccessResponse{Message: "post created succesfully"})
 
 }
 
@@ -161,7 +161,7 @@ func (pc PostController) CreatePost(c *gin.Context) {
 //	@Produce		json
 //	@Param			id		path		int					true	"Post ID"
 //	@Param			post	body		dto.UpdatePostDTO	true	"Updated post data"
-//	@Success		200		{object}	util.SuccessMessageResponse
+//	@Success		200		{object}	util.SuccessResponse
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		403		{object}	util.ErrorResponse
 //	@Failure		404		{object}	util.ErrorResponse
@@ -182,7 +182,7 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessMessageResponse{Message: "Post updated succesfully"})
+	c.JSON(200, util.SuccessResponse{Message: "post updated succesfully"})
 
 }
 
@@ -194,7 +194,7 @@ func (pc PostController) UpdatePost(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"Post ID"
-//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		403	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
@@ -211,5 +211,5 @@ func (pc PostController) DeletePost(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessMessageResponse{Message: "Post deleted successfully"})
+	c.JSON(200, util.SuccessResponse{Message: "post deleted successfully"})
 }

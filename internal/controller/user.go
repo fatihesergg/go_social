@@ -27,7 +27,7 @@ func NewUserController(userService services.BaseUserService) *UserController {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"User ID"
-//	@Success		200	{object}	util.SuccessResultResponse{result=[]model.User}
+//	@Success		200	{object}	util.SuccessResponse{result=[]model.User}
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
@@ -36,7 +36,7 @@ func NewUserController(userService services.BaseUserService) *UserController {
 func (uc UserController) GetUserByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
+		c.JSON(400, util.ErrorResponse{Error: "id is required"})
 		return
 	}
 
@@ -57,7 +57,7 @@ func (uc UserController) GetUserByID(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			user	body		dto.CreateUserDTO								true	"User signup data"
-//	@Success		201		{object}	util.SuccessMessageResponse{result=model.User}	"User registered successfully"
+//	@Success		201		{object}	util.SuccessResponse{result=model.User}	"User registered successfully"
 //	@Failure		400		{object}	util.ErrorResponse{}
 //	@Failure		500		{object}	util.ErrorResponse{}
 //	@Router			/signup [post]
@@ -76,7 +76,7 @@ func (uc UserController) Signup(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, util.SuccessMessageResponse{Message: "User registered successfully"})
+	c.JSON(201, util.SuccessResponse{Message: "user registered successfully"})
 }
 
 // Login godoc
@@ -87,7 +87,7 @@ func (uc UserController) Signup(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			credentials	body		dto.LoginUserDTO	true	"User login credentials"
-//	@Success		200			{object}	util.SuccessMessageResponse{result=string}
+//	@Success		200			{object}	util.SuccessResponse{result=string}
 //	@Failure		400			{object}	util.ErrorResponse{error=string}
 //	@Failure		401			{object}	util.ErrorResponse{error=string}
 //	@Failure		404			{object}	util.ErrorResponse{error=string}
@@ -108,7 +108,7 @@ func (uc UserController) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, util.SuccessResultResponse{Message: "Login successful", Result: token})
+	c.JSON(200, util.SuccessResponse{Message: "login successful", Result: token})
 }
 
 // GetMe godoc
@@ -118,7 +118,7 @@ func (uc UserController) Login(c *gin.Context) {
 //	@Tags			Users
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	util.SuccessResultResponse{result=model.User}
+//	@Success		200	{object}	util.SuccessResponse{result=model.User}
 //	@Failure		401	{object}	util.ErrorResponse	"Unauthorized: Invalid or missing token"
 //	@Failure		404	{object}	util.ErrorResponse	"Not Found: User not found"
 //	@Failure		500	{object}	util.ErrorResponse	"Internal Server Error"
@@ -132,7 +132,7 @@ func (uc UserController) GetMe(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, util.SuccessResultResponse{Message: "User fetched successfully", Result: user})
+	c.JSON(200, util.SuccessResponse{Message: "user fetched successfully", Result: user})
 }
 
 // GetFollowerByUserID godoc
@@ -143,7 +143,7 @@ func (uc UserController) GetMe(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"User ID"
-//	@Success		200	{object}	util.SuccessResultResponse{result=[]model.Follow}
+//	@Success		200	{object}	util.SuccessResponse{result=[]model.Follow}
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
@@ -152,7 +152,7 @@ func (uc UserController) GetMe(c *gin.Context) {
 func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
+		c.JSON(400, util.ErrorResponse{Error: "id is required"})
 		return
 	}
 	followers, err := uc.UserService.GetFollowerByUserID(c.Request.Context(), id)
@@ -161,7 +161,7 @@ func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, util.SuccessResultResponse{Message: "Followers fetched successfully", Result: followers})
+	c.JSON(200, util.SuccessResponse{Message: "followers fetched successfully", Result: followers})
 }
 
 // GetFollowingByUserID godoc
@@ -172,7 +172,7 @@ func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"User ID"
-//	@Success		200	{object}	util.SuccessResultResponse{result=[]model.Follow}
+//	@Success		200	{object}	util.SuccessResponse{result=[]model.Follow}
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		404	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
@@ -181,7 +181,7 @@ func (uc UserController) GetFollowerByUserID(c *gin.Context) {
 func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
+		c.JSON(400, util.ErrorResponse{Error: "id is required"})
 		return
 	}
 
@@ -192,7 +192,7 @@ func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, util.SuccessResultResponse{Message: "User following fetched successfully", Result: followings})
+	c.JSON(200, util.SuccessResponse{Message: "user following fetched successfully", Result: followings})
 }
 
 // FollowUser godoc
@@ -203,7 +203,7 @@ func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"User ID"	true	"User ID to follow"
-//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
@@ -211,7 +211,7 @@ func (uc UserController) GetFollowingByUserID(c *gin.Context) {
 func (uc UserController) FollowUser(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
+		c.JSON(400, util.ErrorResponse{Error: "id is required"})
 		return
 	}
 	me := c.MustGet("userID").(uuid.UUID)
@@ -222,7 +222,7 @@ func (uc UserController) FollowUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, util.SuccessMessageResponse{Message: "Followed successfully"})
+	c.JSON(200, util.SuccessResponse{Message: "followed successfully"})
 }
 
 // UnfollowUser godoc
@@ -233,7 +233,7 @@ func (uc UserController) FollowUser(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string	true	"User ID"	true	"User ID to unfollow"
-//	@Success		200	{object}	util.SuccessMessageResponse
+//	@Success		200	{object}	util.SuccessResponse
 //	@Failure		400	{object}	util.ErrorResponse
 //	@Failure		500	{object}	util.ErrorResponse
 //	@Security		Bearer
@@ -241,7 +241,7 @@ func (uc UserController) FollowUser(c *gin.Context) {
 func (uc UserController) UnfollowUser(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: "ID is required"})
+		c.JSON(400, util.ErrorResponse{Error: "id is required"})
 		return
 	}
 	me := c.MustGet("userID").(uuid.UUID)
@@ -250,7 +250,7 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 		util.WriteAppError(c, err)
 		return
 	}
-	c.JSON(200, util.SuccessMessageResponse{Message: "Unfollowed successfully"})
+	c.JSON(200, util.SuccessResponse{Message: "unfollowed successfully"})
 }
 
 // GetUsersPosts godoc
@@ -264,7 +264,7 @@ func (uc UserController) UnfollowUser(c *gin.Context) {
 //	@Param			limit	query		int		false	"Limit"		default(10)
 //	@Param			offset	query		int		false	"Offset"	default(0)
 //	@Param			search	query		string	false	"Search query"
-//	@Success		200		{object}	util.SuccessResultResponse{result=[]dto.AllPostResponse}
+//	@Success		200		{object}	util.SuccessResponse{result=[]dto.AllPostResponse}
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Failure		403		{object}	util.ErrorResponse
 //	@Failure		404		{object}	util.ErrorResponse
@@ -286,7 +286,7 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 	}
 	result := dto.NewAllPostResponse(posts)
 
-	c.JSON(200, util.SuccessResultResponse{Message: "Posts fetched succesfully", Result: result})
+	c.JSON(200, util.SuccessResponse{Message: "posts fetched succesfully", Result: result})
 }
 
 // ResetPassword godoc
@@ -297,7 +297,7 @@ func (uc UserController) GetUsersPosts(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			passwords	body		dto.ResetUserPasswordDTO	true	"Old and new passwords"
-//	@Success		200			{object}	util.SuccessMessageResponse
+//	@Success		200			{object}	util.SuccessResponse
 //	@Failure		400			{object}	util.ErrorResponse
 //	@Failure		404			{object}	util.ErrorResponse
 //	@Failure		500			{object}	util.ErrorResponse
@@ -317,7 +317,7 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, util.SuccessMessageResponse{Message: "Password updated successfully"})
+	c.JSON(200, util.SuccessResponse{Message: "password updated successfully"})
 }
 
 // TODO:  Add docs
@@ -329,7 +329,7 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			username	path		string	true	"Username"
-//	@Success		200			{object}	util.SuccessResultResponse{result=[]model.User}
+//	@Success		200			{object}	util.SuccessResponse{result=[]model.User}
 //	@Failure		400			{object}	util.ErrorResponse
 //	@Failure		404			{object}	util.ErrorResponse
 //	@Failure		500			{object}	util.ErrorResponse
@@ -344,6 +344,6 @@ func (uc UserController) SearchUserByUsername(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, util.SuccessResultResponse{Message: "Users fetched successfully", Result: users})
+	c.JSON(200, util.SuccessResponse{Message: "users fetched successfully", Result: users})
 
 }
