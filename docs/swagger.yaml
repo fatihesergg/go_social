@@ -272,12 +272,7 @@ definitions:
     properties:
       error: {}
     type: object
-  github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  github_com_fatihesergg_go_social_internal_util.SuccessResultResponse:
+  github_com_fatihesergg_go_social_internal_util.SuccessResponse:
     properties:
       message:
         type: string
@@ -304,7 +299,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -343,7 +338,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -387,7 +382,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -426,7 +421,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -466,7 +461,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   items:
@@ -513,7 +508,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -544,7 +539,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -593,7 +588,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   items:
@@ -640,7 +635,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   type: string
@@ -706,7 +701,7 @@ paths:
           schema:
             items:
               allOf:
-              - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+              - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
               - properties:
                   result:
                     items:
@@ -755,7 +750,7 @@ paths:
           schema:
             items:
               allOf:
-              - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+              - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
               - properties:
                   result:
                     items:
@@ -793,7 +788,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -824,7 +819,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -863,7 +858,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   $ref: '#/definitions/github_com_fatihesergg_go_social_internal_dto.PostDetailResponse'
@@ -907,7 +902,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -947,7 +942,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   items:
@@ -992,7 +987,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -1031,7 +1026,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -1081,7 +1076,7 @@ paths:
           schema:
             items:
               allOf:
-              - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+              - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
               - properties:
                   result:
                     items:
@@ -1119,7 +1114,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -1163,7 +1158,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -1202,7 +1197,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -1242,7 +1237,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   items:
@@ -1289,7 +1284,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -1320,7 +1315,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -1361,7 +1356,7 @@ paths:
           description: User registered successfully
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
@@ -1395,7 +1390,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   items:
@@ -1436,7 +1431,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -1468,7 +1463,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   items:
@@ -1510,7 +1505,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   items:
@@ -1567,7 +1562,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   items:
@@ -1612,7 +1607,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -1638,7 +1633,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.User'
@@ -1679,7 +1674,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse'
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
         "400":
           description: Bad Request
           schema:
@@ -1715,7 +1710,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse'
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
             - properties:
                 result:
                   items:

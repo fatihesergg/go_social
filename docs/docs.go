@@ -48,7 +48,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -118,7 +118,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -177,7 +177,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -238,7 +238,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -301,7 +301,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -378,7 +378,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -427,7 +427,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -503,7 +503,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -576,7 +576,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -703,7 +703,7 @@ const docTemplate = `{
                             "items": {
                                 "allOf": [
                                     {
-                                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                     },
                                     {
                                         "type": "object",
@@ -783,7 +783,7 @@ const docTemplate = `{
                             "items": {
                                 "allOf": [
                                     {
-                                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                     },
                                     {
                                         "type": "object",
@@ -846,7 +846,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -912,7 +912,7 @@ const docTemplate = `{
                             "items": {
                                 "allOf": [
                                     {
-                                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                        "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                     },
                                     {
                                         "type": "object",
@@ -977,7 +977,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1049,7 +1049,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1108,7 +1108,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1171,7 +1171,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1245,7 +1245,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1306,7 +1306,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1376,7 +1376,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1435,7 +1435,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1496,7 +1496,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1559,7 +1559,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1636,7 +1636,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1685,7 +1685,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1745,7 +1745,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1797,7 +1797,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1864,7 +1864,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1921,7 +1921,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1991,7 +1991,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2059,7 +2059,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -2110,7 +2110,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2180,7 +2180,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2270,7 +2270,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResultResponse"
+                                    "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2344,7 +2344,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse"
+                            "$ref": "#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse"
                         }
                     },
                     "400": {
@@ -2771,15 +2771,7 @@ const docTemplate = `{
                 "error": {}
             }
         },
-        "github_com_fatihesergg_go_social_internal_util.SuccessMessageResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_fatihesergg_go_social_internal_util.SuccessResultResponse": {
+        "github_com_fatihesergg_go_social_internal_util.SuccessResponse": {
             "type": "object",
             "properties": {
                 "message": {
