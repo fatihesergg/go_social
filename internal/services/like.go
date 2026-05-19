@@ -73,7 +73,7 @@ func (ls *LikeService) LikePost(ctx context.Context, userID uuid.UUID, postIDRaw
 		LikerID: userID,
 		PostID:  postID,
 	}
-	err = ls.publisher.Publish(ctx, "post_liked", event)
+	err = ls.publisher.Publish(ctx, "post", "like_event", event)
 
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)

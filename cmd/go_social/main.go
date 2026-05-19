@@ -143,16 +143,25 @@ func main() {
 		}
 	}()
 
-	_, err = rabbitmq.DeclareQueue("post_liked")
+	_, err = rabbitmq.DeclareQueue("post_like_queue")
 	if err != nil {
 		logger.Error("Notification queue error", zap.Error(err))
+	}
+	err = rabbitmq.DeclareExchange("like_event", "direct", true, true)
+	if err != nil {
+		logger.Error("exchange declare fail", zap.Error(err))
+	}
+
+	err = rabbitmq.BindQueueToExchange("like_event", "post", "post_like_queue")
+	if err != nil {
+		logger.Error("binding queue to exchange fail", zap.Error(err))
 	}
 
 	notificationWorker := worker.NewNotificationWorker(rabbitmq.Channel, logger, hub, postStore, userStore, notificationStore)
 	mainCtx, mainCancel := context.WithCancel(context.Background())
 	go func() {
 		logger.Info("NotificationWorker started")
-		if err := notificationWorker.Consume(mainCtx); err != nil {
+		if err := notificationWorker.ConsumePostLike(mainCtx); err != nil {
 			logger.Error("NotificationWorker consume error", zap.Error(err))
 		}
 

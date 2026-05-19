@@ -39,10 +39,10 @@ func NewNotificationWorker(ch *amqp.Channel,
 	}
 }
 
-func (nw *NotificationWorker) Consume(ctx context.Context) error {
-	msgs, err := nw.Channel.Consume("post_liked", "", true, false, false, false, nil)
+func (nw *NotificationWorker) ConsumePostLike(ctx context.Context) error {
+	msgs, err := nw.Channel.Consume("post_like_queue", "", true, false, false, false, nil)
 	if err != nil {
-		return fmt.Errorf("Error while consuming notification_queue: %w", err)
+		return fmt.Errorf("error while consuming notification_queue: %w", err)
 	}
 
 	for {
@@ -64,14 +64,15 @@ func (nw *NotificationWorker) handlePostLike(ctx context.Context, event []byte) 
 	err := json.Unmarshal(event, &data)
 
 	if err != nil {
-		nw.Logger.Error("Error while parsing postLikedEvent", zap.Error(err))
+		nw.Logger.Error("error while parsing postLikedEvent", zap.Error(err))
 		return
 	}
 
 	nw.Logger.Info(
-		"Notification:",
-		zap.String("LikerID", data.LikerID.String()),
-		zap.String("PostID", data.PostID.String()))
+		"post like event",
+		zap.String("likerID", data.LikerID.String()),
+		zap.String("postID", data.PostID.String()),
+	)
 
 	dbContext, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
@@ -82,30 +83,57 @@ func (nw *NotificationWorker) handlePostLike(ctx context.Context, event []byte) 
 		return
 	}
 
-	user, err := nw.userStore.GetUserByID(dbContext, data.LikerID)
+	liker, err := nw.userStore.GetUserByID(dbContext, data.LikerID)
 	if err != nil {
 		nw.Logger.Error("Error while getting user information: %w", zap.Error(err))
 		return
 
 	}
 
-	postLikedNotify := model.Notification{
+	payload := model.PostLikePayload{
+		PostID:     post.ID.String(),
+		PostUserID: post.UserID.String(),
+		LikerID:    liker.ID.String(),
+	}
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		nw.Logger.Error("error while parsing json payload", zap.String("worker", "post.like"), zap.Error(err))
+		return
+	}
+
+	timeStamp := time.Now()
+
+	notification := model.Notification{
 		ID:      uuid.New(),
 		UserID:  post.UserID,
-		Message: fmt.Sprintf("%s liked your post", user.Username),
-		//NOTE: Send msg.Body as a payload for now.
-		Payload: event,
+		Message: fmt.Sprintf("%s liked your post", liker.Username),
+		Payload: jsonPayload,
 		IsRead:  false,
 	}
 
-	err = nw.notificationStore.CreateNotification(dbContext, postLikedNotify)
+	err = nw.notificationStore.CreateNotification(dbContext, notification)
 	if err != nil {
-		nw.Logger.Error("Error while saving notification to database", zap.Error(err))
+		nw.Logger.Error("error while saving notification to database", zap.Error(err))
+		return
+	}
+
+	wsResponse := model.PostLikeNotification{
+		ID:        notification.ID,
+		UserID:    post.UserID,
+		Message:   fmt.Sprintf("%s liked your post", liker.Username),
+		Payload:   payload,
+		IsRead:    false,
+		Timestamp: timeStamp,
+	}
+
+	jsonResponse, err := json.Marshal(wsResponse)
+	if err != nil {
+		nw.Logger.Error("error while marshalling post like response", zap.Error(err))
 		return
 	}
 
 	nw.hub.Messages <- ws.WsData{
-		Data:   event,
+		Data:   jsonResponse,
 		UserID: post.UserID,
 	}
 }

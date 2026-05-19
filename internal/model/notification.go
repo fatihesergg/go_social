@@ -1,6 +1,10 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type NotificationType int
 
@@ -23,4 +27,21 @@ type Notification struct {
 	Payload           []byte
 	Message           string
 	IsRead            bool
+	Timestamp         time.Time
+}
+
+type PostLikePayload struct {
+	PostID     string
+	PostUserID string
+	LikerID    string
+}
+
+type PostLikeNotification struct {
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Notification_type NotificationType
+	Payload           any
+	Message           string
+	IsRead            bool
+	Timestamp         time.Time
 }

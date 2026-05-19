@@ -9,7 +9,8 @@ import (
 )
 
 type EventPublisher interface {
-	Publish(ctx context.Context, queueName string, message interface{}) error
+	Publish(ctx context.Context, key, exchange string, message interface{}) error
+	DeclareQueue(name string) (amqp.Queue, error)
 }
 
 type RabbitMq struct {
@@ -56,7 +57,24 @@ func (rq *RabbitMq) DeclareQueue(name string) (amqp.Queue, error) {
 	return queue, nil
 }
 
-func (rq *RabbitMq) Publish(ctx context.Context, queueName string, message interface{}) error {
+func (rq *RabbitMq) DeclareExchange(exchange, kind string, durable bool, autoDelete bool) error {
+	err := rq.Channel.ExchangeDeclare(exchange, kind, durable, autoDelete, false, false, amqp.Table{})
+	if err != nil {
+		return fmt.Errorf("error while declaring exchange: %w", err)
+	}
+	return nil
+
+}
+
+func (rq *RabbitMq) BindQueueToExchange(exchange, key, queue string) error {
+	err := rq.Channel.QueueBind(queue, key, exchange, false, amqp.Table{})
+	if err != nil {
+		return fmt.Errorf("error while bind queue %s to exchange %s with key %s: %w", queue, exchange, key, err)
+	}
+	return nil
+}
+
+func (rq *RabbitMq) Publish(ctx context.Context, key, exchange string, message interface{}) error {
 
 	data, err := json.Marshal(message)
 	if err != nil {
@@ -68,7 +86,7 @@ func (rq *RabbitMq) Publish(ctx context.Context, queueName string, message inter
 		Body:        data,
 	}
 
-	err = rq.Channel.PublishWithContext(ctx, "", queueName, false, false, msg)
+	err = rq.Channel.PublishWithContext(ctx, exchange, key, false, false, msg)
 	if err != nil {
 		return fmt.Errorf("Error while publishing messages: %w", err)
 	}
