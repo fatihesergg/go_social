@@ -147,6 +147,17 @@ func main() {
 	if err != nil {
 		logger.Error("Notification queue error", zap.Error(err))
 	}
+
+	_, err = rabbitmq.DeclareQueue("comment_like_queue")
+	if err != nil {
+		logger.Error("Notification queue error", zap.Error(err))
+	}
+
+	_, err = rabbitmq.DeclareQueue("reply_like_queue")
+	if err != nil {
+		logger.Error("Notification queue error", zap.Error(err))
+	}
+
 	err = rabbitmq.DeclareExchange("like_event", "direct", true, true)
 	if err != nil {
 		logger.Error("exchange declare fail", zap.Error(err))
@@ -157,15 +168,39 @@ func main() {
 		logger.Error("binding queue to exchange fail", zap.Error(err))
 	}
 
-	notificationWorker := worker.NewNotificationWorker(rabbitmq.Channel, logger, hub, postStore, userStore, notificationStore)
+	err = rabbitmq.BindQueueToExchange("like_event", "comment", "comment_like_queue")
+	if err != nil {
+		logger.Error("binding queue to exchange fail", zap.Error(err))
+	}
+
+	err = rabbitmq.BindQueueToExchange("like_event", "reply", "reply_like_queue")
+	if err != nil {
+		logger.Error("binding queue to exchange fail", zap.Error(err))
+	}
+
+	notificationWorker := worker.NewNotificationWorker(rabbitmq.Channel, logger, hub, postStore, userStore, commentStore, replyStore, notificationStore)
 	mainCtx, mainCancel := context.WithCancel(context.Background())
 	go func() {
-		logger.Info("NotificationWorker started")
-		if err := notificationWorker.ConsumePostLike(mainCtx); err != nil {
-			logger.Error("NotificationWorker consume error", zap.Error(err))
+		err = notificationWorker.ConsumePostLike(mainCtx)
+		if err != nil {
+			logger.Error("error while starting to consume post like event", zap.Error(err))
 		}
-
 	}()
+
+	go func() {
+		err = notificationWorker.ConsumeCommentLike(mainCtx)
+		if err != nil {
+			logger.Error("error while starting to consume comment like events")
+		}
+	}()
+
+	go func() {
+		err = notificationWorker.ConsumeReplyLike(mainCtx)
+		if err != nil {
+			logger.Error("error while starting to consume reply like event", zap.Error(err))
+		}
+	}()
+
 	defer mainCancel()
 
 	go hub.Run(mainCtx)

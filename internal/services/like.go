@@ -145,6 +145,18 @@ func (ls *LikeService) LikeComment(ctx context.Context, userID uuid.UUID, commen
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
+
+	event := dto.CommentLikedEvent{
+		LikerID:   userID,
+		CommentID: commentID,
+	}
+
+	err = ls.publisher.Publish(ctx, "comment", "like_event", event)
+
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
 	return nil
 }
 func (ls *LikeService) UnlikeComment(ctx context.Context, userID uuid.UUID, commentRawID string) error {
@@ -203,6 +215,17 @@ func (ls *LikeService) LikeReply(ctx context.Context, userID uuid.UUID, replyRaw
 	if err != nil {
 		return errors.InternalServerError.Wrap(err)
 	}
+
+	event := dto.ReplyLikedEvent{
+		ReplyID: replyID,
+		LikerID: userID,
+	}
+
+	err = ls.publisher.Publish(ctx, "reply", "like_event", event)
+	if err != nil {
+		return errors.InternalServerError.Wrap(err)
+	}
+
 	return nil
 }
 func (ls *LikeService) UnlikeReply(ctx context.Context, userID uuid.UUID, replyRawID string) error {
