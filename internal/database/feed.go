@@ -75,7 +75,7 @@ func (fs FeedStore) GetFeed(ctx context.Context, userID uuid.UUID, pagination Pa
 
 	rows, err := fs.DB.QueryContext(ctx, query, userID, pagination.Limit, pagination.Offset, search.Query)
 	if err != nil {
-		return nil, fmt.Errorf("Error while getting user feed: %w", err)
+		return nil, fmt.Errorf("error while getting user feed: %w", err)
 	}
 	defer rows.Close()
 
@@ -87,14 +87,14 @@ func (fs FeedStore) GetFeed(ctx context.Context, userID uuid.UUID, pagination Pa
 			&post.IsLiked,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("Error while scanning result: %w", err)
+			return nil, fmt.Errorf("error while scanning result: %w", err)
 		}
 
 		posts = append(posts, post)
 
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("Error in result row: %w", err)
+		return nil, fmt.Errorf("error in result row: %w", err)
 	}
 
 	if len(posts) == 0 {

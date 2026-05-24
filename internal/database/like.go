@@ -33,7 +33,7 @@ func (s *LikeStore) LikePost(ctx context.Context, like *model.PostLike) error {
 	query := `INSERT INTO post_likes (id,post_id, user_id) VALUES ($1, $2,$3)`
 	_, err := s.DB.ExecContext(ctx, query, like.ID, like.PostID, like.UserID)
 	if err != nil {
-		return fmt.Errorf("Error while inserting post_like: %w", err)
+		return fmt.Errorf("error while inserting post_like: %w", err)
 	}
 	return nil
 }
@@ -42,7 +42,7 @@ func (s *LikeStore) LikeComment(ctx context.Context, like *model.CommentLike) er
 	query := `INSERT INTO comment_likes (id,comment_id, user_id) VALUES ($1, $2,$3)`
 	_, err := s.DB.ExecContext(ctx, query, like.ID, like.CommentID, like.UserID)
 	if err != nil {
-		return fmt.Errorf("Error while inserting comment_like: %w", err)
+		return fmt.Errorf("error while inserting comment_like: %w", err)
 	}
 	return nil
 }
@@ -50,7 +50,7 @@ func (s *LikeStore) UnlikePost(ctx context.Context, postID uuid.UUID, userID uui
 	query := `DELETE FROM post_likes WHERE post_id = $1 AND user_id = $2`
 	result, err := s.DB.ExecContext(ctx, query, postID, userID)
 	if err != nil {
-		return fmt.Errorf("Error while delete post_like: %w", err)
+		return fmt.Errorf("error while delete post_like: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -66,7 +66,7 @@ func (s *LikeStore) LikeReply(ctx context.Context, like *model.ReplyLike) error 
 	query := `INSERT INTO reply_likes  (id,reply_id,user_id) VALUES ($1,$2,$3)`
 	_, err := s.DB.ExecContext(ctx, query, like.ID, like.ReplyID, like.UserID)
 	if err != nil {
-		return fmt.Errorf("Error while inserting reply_like: %w", err)
+		return fmt.Errorf("error while inserting reply_like: %w", err)
 	}
 	return nil
 }
@@ -75,7 +75,7 @@ func (s *LikeStore) UnlikeComment(ctx context.Context, commentID uuid.UUID, user
 	query := `DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2`
 	result, err := s.DB.ExecContext(ctx, query, commentID, userID)
 	if err != nil {
-		return fmt.Errorf("Error while deleting comment_like: %w", err)
+		return fmt.Errorf("error while deleting comment_like: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -90,7 +90,7 @@ func (s *LikeStore) UnlikeReply(ctx context.Context, replyID uuid.UUID, userID u
 	query := `DELETE FROM reply_likes WHERE reply_id = $1 AND user_id = $2`
 	result, err := s.DB.ExecContext(ctx, query, replyID, userID)
 	if err != nil {
-		return fmt.Errorf("Error while deleting reply_like: %w", err)
+		return fmt.Errorf("error while deleting reply_like: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -107,7 +107,7 @@ func (s *LikeStore) IsPostLiked(ctx context.Context, postID uuid.UUID, userID uu
 	query := `SELECT EXISTS ( SELECT  1 FROM post_likes WHERE post_id = $1 AND user_id = $2)`
 	err := s.DB.QueryRowContext(ctx, query, postID, userID).Scan(&result)
 	if err != nil {
-		return false, fmt.Errorf("Error while checking post liked: %w", err)
+		return false, fmt.Errorf("error while checking post liked: %w", err)
 	}
 	return result, nil
 }
@@ -116,7 +116,7 @@ func (s *LikeStore) IsCommentLiked(ctx context.Context, commentID uuid.UUID, use
 	query := `SELECT EXISTS (SELECT 1 FROM comment_likes WHERE comment_id = $1 AND user_id = $2)`
 	err := s.DB.QueryRowContext(ctx, query, commentID, userID).Scan(&result)
 	if err != nil {
-		return false, fmt.Errorf("Error while checking comment liked: %w", err)
+		return false, fmt.Errorf("error while checking comment liked: %w", err)
 	}
 	return result, nil
 }
@@ -125,7 +125,7 @@ func (s *LikeStore) IsReplyLiked(ctx context.Context, replyID uuid.UUID, userID 
 	query := `SELECT EXISTS (SELECT 1 FROM reply_likes WHERE reply_id = $1 AND user_id = $2)`
 	err := s.DB.QueryRowContext(ctx, query, replyID, userID).Scan(&result)
 	if err != nil {
-		return false, fmt.Errorf("Error while checking reply liked: %w", err)
+		return false, fmt.Errorf("error while checking reply liked: %w", err)
 	}
 	return result, nil
 }

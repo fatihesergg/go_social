@@ -39,7 +39,7 @@ func NewLikeService(likeStore database.BaseLikeStore, postStore database.BasePos
 func (ls *LikeService) LikePost(ctx context.Context, userID uuid.UUID, postIDRaw string) error {
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("error while parsing postID: %w", err))
+		return errors.InternalServerError.Wrap(fmt.Errorf("error while parsing postid: %w", err))
 	}
 
 	hasAccess, err := ls.postStore.HasAccessToPost(ctx, userID, postID)
@@ -117,7 +117,7 @@ func (ls *LikeService) LikeComment(ctx context.Context, userID uuid.UUID, commen
 
 	commentID, err := uuid.Parse(commentRawID)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
 	}
 	hasAccess, err := ls.commentStore.HasAccessToComment(ctx, userID, commentID)
 
@@ -163,7 +163,7 @@ func (ls *LikeService) UnlikeComment(ctx context.Context, userID uuid.UUID, comm
 
 	commentID, err := uuid.Parse(commentRawID)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
 	}
 	hasAccess, err := ls.commentStore.HasAccessToComment(ctx, userID, commentID)
 
@@ -195,7 +195,7 @@ func (ls *LikeService) UnlikeComment(ctx context.Context, userID uuid.UUID, comm
 func (ls *LikeService) LikeReply(ctx context.Context, userID uuid.UUID, replyRawID string) error {
 	replyID, err := uuid.Parse(replyRawID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("error while parsing replyID: %w", err))
+		return errors.InternalServerError.Wrap(fmt.Errorf("error while parsing replyid: %w", err))
 	}
 
 	liked, err := ls.likeStore.IsReplyLiked(ctx, replyID, userID)
@@ -231,7 +231,7 @@ func (ls *LikeService) LikeReply(ctx context.Context, userID uuid.UUID, replyRaw
 func (ls *LikeService) UnlikeReply(ctx context.Context, userID uuid.UUID, replyRawID string) error {
 	replyID, err := uuid.Parse(replyRawID)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing replyID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing replyid: %w", err))
 	}
 
 	existLike, err := ls.likeStore.IsReplyLiked(ctx, replyID, userID)

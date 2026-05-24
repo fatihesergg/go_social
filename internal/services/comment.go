@@ -85,7 +85,7 @@ func (cs *CommentService) UpdateComment(ctx context.Context, userID uuid.UUID, c
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
 
 	}
 
@@ -122,7 +122,7 @@ func (cs *CommentService) DeleteComment(ctx context.Context, userID uuid.UUID, c
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
 	}
 
 	hasAccess, err := cs.commentStore.HasAccessToComment(ctx, userID, commentID)

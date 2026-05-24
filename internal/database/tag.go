@@ -36,12 +36,12 @@ func (ts *TagStore) CreateMultipleTags(ctx context.Context, tags []model.Tag) er
 	for _, tag := range tags {
 		_, err := tx.ExecContext(ctx, "INSERT INTO tags(id,name) VALUES($1,$2) ON CONFLICT(name) DO NOTHING;", tag.ID, tag.Name)
 		if err != nil {
-			return fmt.Errorf("Error while inserting tag: %w", err)
+			return fmt.Errorf("error while inserting tag: %w", err)
 		}
 	}
 	err = tx.Commit()
 	if err != nil {
-		return fmt.Errorf("Error while committing transaction: %w", err)
+		return fmt.Errorf("error while committing transaction: %w", err)
 	}
 	return nil
 }
@@ -50,11 +50,11 @@ func (ts *TagStore) CreatePostTag(ctx context.Context, tags []string, postID uui
 	query := "INSERT INTO post_tags(post_id,tag_id) SELECT $1,id FROM tags WHERE tags.name = ANY($2);"
 	result, err := ts.db.ExecContext(ctx, query, postID, pq.StringArray(tags))
 	if err != nil {
-		return fmt.Errorf("Error while inserting post tag: %w", err)
+		return fmt.Errorf("error while inserting post tag: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("Error getting affected rows: %w", err)
+		return fmt.Errorf("error getting affected rows: %w", err)
 	}
 	if rows == 0 {
 		return sql.ErrNoRows

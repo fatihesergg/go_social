@@ -43,7 +43,7 @@ func (s *PostStore) HasAccessToPost(ctx context.Context, userID, postID uuid.UUI
 
 	err := s.DB.QueryRowContext(ctx, query, userID, postID).Scan(&result)
 	if err != nil {
-		return false, fmt.Errorf("Error while checking post access: %w", err)
+		return false, fmt.Errorf("error while checking post access: %w", err)
 	}
 	return result, nil
 
@@ -104,7 +104,7 @@ func (s *PostStore) GetPosts(ctx context.Context, pagination Pagination, search 
 
 	rows, err := s.DB.QueryContext(ctx, query, search.Query, pagination.Limit, pagination.Offset, userID, userID)
 	if err != nil {
-		return nil, fmt.Errorf("Error while getting all posts: %w", err)
+		return nil, fmt.Errorf("error while getting all posts: %w", err)
 	}
 	defer rows.Close()
 
@@ -119,7 +119,7 @@ func (s *PostStore) GetPosts(ctx context.Context, pagination Pagination, search 
 			&isLiked, &isFollowing,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("Error while scanning result: %w", err)
+			return nil, fmt.Errorf("error while scanning result: %w", err)
 		}
 		post.LikeCount = *postLikeCount
 		post.CommentCount = *commentCount
@@ -130,7 +130,7 @@ func (s *PostStore) GetPosts(ctx context.Context, pagination Pagination, search 
 
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("Error in result row: %w", err)
+		return nil, fmt.Errorf("error in result row: %w", err)
 	}
 
 	if len(posts) == 0 {
@@ -200,7 +200,7 @@ func (s *PostStore) GetPostsByTag(ctx context.Context, pagination Pagination, ta
 
 	rows, err := s.DB.QueryContext(ctx, query, tag, pagination.Limit, pagination.Offset, userID)
 	if err != nil {
-		return nil, fmt.Errorf("Error while getting all posts by tags: %w", err)
+		return nil, fmt.Errorf("error while getting all posts by tags: %w", err)
 	}
 	defer rows.Close()
 
@@ -215,7 +215,7 @@ func (s *PostStore) GetPostsByTag(ctx context.Context, pagination Pagination, ta
 			&isLiked, &isFollowing,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("Error while scanning result: %w", err)
+			return nil, fmt.Errorf("error while scanning result: %w", err)
 		}
 		post.LikeCount = *postLikeCount
 		post.CommentCount = *commentCount
@@ -226,7 +226,7 @@ func (s *PostStore) GetPostsByTag(ctx context.Context, pagination Pagination, ta
 
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("Error in result row: %w", err)
+		return nil, fmt.Errorf("error in result row: %w", err)
 	}
 
 	if len(posts) == 0 {
@@ -243,7 +243,7 @@ func (s *PostStore) GetPostByID(ctx context.Context, postID uuid.UUID) (*model.P
 	query := `SELECT id,user_id,content FROM posts WHERE id = $1`
 	err := s.DB.QueryRowContext(ctx, query, postID).Scan(&id, &userID, &content)
 	if err != nil {
-		return nil, fmt.Errorf("Error while getting post by id: %w", err)
+		return nil, fmt.Errorf("error while getting post by id: %w", err)
 	}
 	result.ID = *id
 	result.Content = *content
@@ -339,7 +339,7 @@ func (s *PostStore) GetPostDetailsByID(ctx context.Context, postID, userID uuid.
 
 	rows, err := s.DB.QueryContext(ctx, postQuery, userID, postID)
 	if err != nil {
-		return nil, fmt.Errorf("Error while getting post details by id: %w", err)
+		return nil, fmt.Errorf("error while getting post details by id: %w", err)
 	}
 
 	defer rows.Close()
@@ -363,7 +363,7 @@ func (s *PostStore) GetPostDetailsByID(ctx context.Context, postID, userID uuid.
 			&post.IsFollowing, &isCommentFollowing,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("Error while scanning result: %w", err)
+			return nil, fmt.Errorf("error while scanning result: %w", err)
 		}
 		if commentID != nil {
 
@@ -388,7 +388,7 @@ func (s *PostStore) GetPostDetailsByID(ctx context.Context, postID, userID uuid.
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("Error in result row: %w", err)
+		return nil, fmt.Errorf("error in result row: %w", err)
 	}
 	if post.ID == uuid.Nil {
 		return nil, sql.ErrNoRows
@@ -420,7 +420,7 @@ func (s *PostStore) GetPostsByUserID(ctx context.Context, userID uuid.UUID, pagi
 	rows, err := s.DB.QueryContext(ctx, postQuery, userID.String(), search.Query, pagination.Limit, pagination.Offset)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error while getting posts by user id: %w", err)
+		return nil, fmt.Errorf("error while getting posts by user id: %w", err)
 	}
 	defer rows.Close()
 	postMap := make(map[uuid.UUID]*model.Post)
@@ -436,7 +436,7 @@ func (s *PostStore) GetPostsByUserID(ctx context.Context, userID uuid.UUID, pagi
 			&commentUserName, &commentUserLastName, &commentUserUsername,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("Error while scanning result: %w", err)
+			return nil, fmt.Errorf("error while scanning result: %w", err)
 		}
 		if _, ok := postMap[post.ID]; !ok {
 			postMap[post.ID] = &post
@@ -454,7 +454,7 @@ func (s *PostStore) GetPostsByUserID(ctx context.Context, userID uuid.UUID, pagi
 		}
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("Error in result row: %w", err)
+		return nil, fmt.Errorf("error in result row: %w", err)
 	}
 
 	for _, post := range postMap {
@@ -474,7 +474,7 @@ func (s *PostStore) CreatePost(ctx context.Context, post *model.Post) error {
 
 	_, err := s.DB.ExecContext(ctx, query, post.ID, post.Content, post.UserID, post.Visibility)
 	if err != nil {
-		return fmt.Errorf("Error while inserting post: %w", err)
+		return fmt.Errorf("error while inserting post: %w", err)
 	}
 
 	return nil
@@ -484,7 +484,7 @@ func (s *PostStore) UpdatePost(ctx context.Context, post *model.Post) error {
 	query := "UPDATE posts SET content = $1 WHERE id = $2"
 	result, err := s.DB.ExecContext(ctx, query, post.Content, post.ID)
 	if err != nil {
-		return fmt.Errorf("Error while updating post: %w", err)
+		return fmt.Errorf("error while updating post: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -501,7 +501,7 @@ func (s *PostStore) DeletePost(ctx context.Context, id uuid.UUID) error {
 	query := "DELETE FROM posts WHERE id = $1"
 	result, err := s.DB.ExecContext(ctx, query, id)
 	if err != nil {
-		return fmt.Errorf("Error while deleting post: %w", err)
+		return fmt.Errorf("error while deleting post: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {

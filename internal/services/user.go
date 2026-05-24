@@ -85,7 +85,7 @@ func (us *UserService) Register(ctx context.Context, dto dto.CreateUserDTO) erro
 func (us *UserService) GetUserByID(ctx context.Context, rawID string) (*model.User, error) {
 	userID, err := uuid.Parse(rawID)
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userid: %w", err))
 	}
 
 	user, err := us.userStore.GetUserByID(ctx, userID)
@@ -124,7 +124,7 @@ func (us *UserService) GetFollowerByUserID(ctx context.Context, rawID string) ([
 
 	userID, err := uuid.Parse(rawID)
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userid: %w", err))
 	}
 
 	followers, err := us.followStore.GetFollowerByUserID(ctx, userID)
@@ -141,7 +141,7 @@ func (us *UserService) GetFollowingByUserID(ctx context.Context, rawID string) (
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userid: %w", err))
 	}
 
 	followings, err := us.followStore.GetFollowingByUserID(ctx, userID)
@@ -158,7 +158,7 @@ func (us *UserService) FollowUser(ctx context.Context, userID uuid.UUID, followI
 
 	followUserID, err := uuid.Parse(followID)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing followUserID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing followuserid: %w", err))
 	}
 
 	followings, err := us.followStore.GetFollowingByUserID(ctx, userID)
@@ -193,7 +193,7 @@ func (us *UserService) UnFollowUser(ctx context.Context, userID uuid.UUID, follo
 
 	unfUser, err := uuid.Parse(followID)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing unfUser: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing unfuser: %w", err))
 	}
 
 	isFollowing, err := us.followStore.IsFollowing(ctx, model.Follow{UserID: userID, FollowID: unfUser})
@@ -220,7 +220,7 @@ func (us *UserService) GetUsersPosts(ctx context.Context, rawID string, meID uui
 	userID, err := uuid.Parse(rawID)
 
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing userid: %w", err))
 	}
 
 	user, err := us.userStore.GetUserByID(ctx, userID)

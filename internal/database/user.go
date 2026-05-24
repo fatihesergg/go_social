@@ -39,7 +39,7 @@ func (s *UserStore) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User,
 		if err == sql.ErrNoRows {
 			return nil, err
 		}
-		return nil, fmt.Errorf("Error while getting user by id: %w", err)
+		return nil, fmt.Errorf("error while getting user by id: %w", err)
 	}
 	return user, nil
 }
@@ -56,7 +56,7 @@ func (s *UserStore) GetUserByUsername(ctx context.Context, username string) (*mo
 		if err == sql.ErrNoRows {
 			return nil, err
 		}
-		return nil, fmt.Errorf("Error while getting user by username: %w", err)
+		return nil, fmt.Errorf("error while getting user by username: %w", err)
 	}
 	return user, nil
 }
@@ -73,7 +73,7 @@ func (s *UserStore) GetUserByEmail(ctx context.Context, email string) (*model.Us
 		if err == sql.ErrNoRows {
 			return nil, err
 		}
-		return nil, fmt.Errorf("Error while getting user by email: %w", err)
+		return nil, fmt.Errorf("error while getting user by email: %w", err)
 	}
 	return user, nil
 }
@@ -83,7 +83,7 @@ func (s *UserStore) CreateUser(ctx context.Context, user *model.User) error {
 	query := "INSERT INTO users (id, name, last_name, username, email, password, avatar) VALUES ($1, $2, $3, $4, $5, $6,$7) RETURNING id"
 	err := s.DB.QueryRowContext(ctx, query, user.ID, user.Name, user.LastName, user.Username, user.Email, user.Password, user.Avatar).Scan(&id)
 	if err != nil {
-		return fmt.Errorf("Error while creating user: %w", err)
+		return fmt.Errorf("error while creating user: %w", err)
 	}
 	return nil
 }
@@ -92,7 +92,7 @@ func (s *UserStore) UpdateUser(ctx context.Context, user *model.User) error {
 	query := "UPDATE users SET name = $1, last_name = $2, username = $3, email = $4, password = $5 WHERE id = $6"
 	result, err := s.DB.ExecContext(ctx, query, user.Name, user.LastName, user.Username, user.Email, user.Password, user.ID.String())
 	if err != nil {
-		return fmt.Errorf("Error while updating user: %w", err)
+		return fmt.Errorf("error while updating user: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -108,7 +108,7 @@ func (s *UserStore) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	query := "DELETE FROM users WHERE id = $1"
 	result, err := s.DB.ExecContext(ctx, query, id)
 	if err != nil {
-		return fmt.Errorf("Error while deleting user: %w", err)
+		return fmt.Errorf("error while deleting user: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -126,20 +126,20 @@ func (s *UserStore) GetUsersByUsername(ctx context.Context, userName string) ([]
 	rows, err := s.DB.QueryContext(ctx, query, userName)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error while getting users by username: %w", err)
+		return nil, fmt.Errorf("error while getting users by username: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		user := model.User{}
 		err := rows.Scan(&user.ID, &user.Name, &user.LastName, &user.Username)
 		if err != nil {
-			return nil, fmt.Errorf("Error while scanning result set: %w", err)
+			return nil, fmt.Errorf("error while scanning result set: %w", err)
 		}
 
 		users = append(users, user)
 	}
 	if rows.Err() != nil {
-		return nil, fmt.Errorf("Error in result row: %w", err)
+		return nil, fmt.Errorf("error in result row: %w", err)
 	}
 	if len(users) == 0 {
 		return nil, sql.ErrNoRows

@@ -48,7 +48,7 @@ func (ps *PostService) GetPostByID(ctx context.Context, userID uuid.UUID, postID
 	postID, err := uuid.Parse(postIDRaw)
 
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing postID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing postid: %w", err))
 	}
 
 	hasAccess, err := ps.postStore.HasAccessToPost(ctx, userID, postID)
@@ -96,7 +96,7 @@ func (ps *PostService) UpdatePost(ctx context.Context, userID uuid.UUID, postIDR
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing postID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing postid: %w", err))
 	}
 
 	existPost, err := ps.postStore.GetPostByID(ctx, postID)
@@ -125,7 +125,7 @@ func (ps *PostService) DeletePost(ctx context.Context, userID uuid.UUID, postIDR
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing postID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing postid: %w", err))
 	}
 	post, err := ps.postStore.GetPostByID(ctx, postID)
 	if err != nil {

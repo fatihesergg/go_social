@@ -32,7 +32,7 @@ func NewReplyService(replyStore database.BaseReplyStore, commentStore database.B
 func (rp *ReplyService) GetCommentReplies(ctx context.Context, userID uuid.UUID, commentIDRaw string) ([]model.Reply, error) {
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
 	}
 
 	hasAccess, err := rp.commentStore.HasAccessToComment(ctx, userID, commentID)
@@ -66,7 +66,7 @@ func (rp *ReplyService) ReplyComment(ctx context.Context, userID uuid.UUID, comm
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
 	}
 
 	hasAccess, err := rp.commentStore.HasAccessToComment(ctx, userID, commentID)
@@ -103,7 +103,7 @@ func (rp *ReplyService) UpdateReply(ctx context.Context, userID uuid.UUID, reply
 
 	replyID, err := uuid.Parse(replyIDRaw)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("error while parsing replyID: %w", err))
+		return errors.InternalServerError.Wrap(fmt.Errorf("error while parsing replyid: %w", err))
 	}
 
 	hasAccess, err := rp.replyStore.HasAccessToReply(ctx, userID, replyID)
@@ -142,7 +142,7 @@ func (rp *ReplyService) DeleteReply(ctx context.Context, userID uuid.UUID, reply
 
 	replyID, err := uuid.Parse(replyIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing replyID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing replyid: %w", err))
 	}
 
 	hasAccess, err := rp.replyStore.HasAccessToReply(ctx, userID, replyID)
@@ -176,7 +176,7 @@ func (rp *ReplyService) GetRepliesByParentID(ctx context.Context, userID uuid.UU
 
 	parentID, err := uuid.Parse(parentIDRaw)
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing parentID: %w", err))
+		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing parentid: %w", err))
 	}
 
 	hasAccess, err := rp.replyStore.HasAccessToReply(ctx, userID, parentID)
@@ -202,7 +202,7 @@ func (rp *ReplyService) GetRepliesByParentID(ctx context.Context, userID uuid.UU
 func (rp *ReplyService) ReplyAReply(ctx context.Context, userID uuid.UUID, replyIDRaw string, dto dto.CreateReply) error {
 	parentID, err := uuid.Parse(replyIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing parentID: %w", err))
+		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing parentid: %w", err))
 	}
 
 	hasAccess, err := rp.replyStore.HasAccessToReply(ctx, userID, parentID)

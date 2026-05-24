@@ -47,7 +47,7 @@ func (rs *ReplyStore) HasAccessToReply(ctx context.Context, userID, replyID uuid
 	)`
 	err := rs.DB.QueryRowContext(ctx, query, userID, replyID).Scan(&result)
 	if err != nil {
-		return false, fmt.Errorf("Error while checking reply access: %w", err)
+		return false, fmt.Errorf("error while checking reply access: %w", err)
 	}
 	return result, err
 
@@ -57,7 +57,7 @@ func (rs *ReplyStore) CreateCommentReply(ctx context.Context, reply *model.Reply
 	query := "INSERT INTO replies ( id,comment_id,user_id,message ) VALUES ( $1,$2,$3,$4 )"
 	_, err := rs.DB.ExecContext(ctx, query, reply.ID, reply.CommentID, reply.UserID, reply.Message)
 	if err != nil {
-		return fmt.Errorf("Error while inserting reply: %w", err)
+		return fmt.Errorf("error while inserting reply: %w", err)
 	}
 	return nil
 }
@@ -66,7 +66,7 @@ func (rs *ReplyStore) CreateNestedReply(ctx context.Context, reply *model.Reply)
 	query := "INSERT INTO replies ( id,parent_id,user_id,message ) VALUES ( $1,$2,$3,$4 )"
 	_, err := rs.DB.ExecContext(ctx, query, reply.ID, reply.ParentID, reply.UserID, reply.Message)
 	if err != nil {
-		return fmt.Errorf("Error while inserting nested reply: %w", err)
+		return fmt.Errorf("error while inserting nested reply: %w", err)
 	}
 	return nil
 }
@@ -75,7 +75,7 @@ func (rs *ReplyStore) UpdateReply(ctx context.Context, reply *model.Reply) error
 	query := "UPDATE replies SET comment_id = $1, user_id = $2, message = $3 WHERE id = $4"
 	_, err := rs.DB.ExecContext(ctx, query, reply.CommentID, reply.UserID, reply.Message, reply.ID)
 	if err != nil {
-		return fmt.Errorf("Error while updating reply: %w", err)
+		return fmt.Errorf("error while updating reply: %w", err)
 	}
 	return nil
 }
@@ -86,7 +86,7 @@ func (rs *ReplyStore) GetReplyByID(ctx context.Context, replyID uuid.UUID) (*mod
 	err := rs.DB.QueryRowContext(ctx, query, replyID).Scan(&reply.ID, &reply.CommentID, &reply.UserID, &reply.Message)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error while getting reply by id: %w", err)
+		return nil, fmt.Errorf("error while getting reply by id: %w", err)
 	}
 
 	return &reply, err
@@ -97,7 +97,7 @@ func (rs *ReplyStore) DeleteReply(ctx context.Context, replyID uuid.UUID) error 
 	query := "DELETE FROM replies WHERE id = $1"
 	result, err := rs.DB.ExecContext(ctx, query, replyID)
 	if err != nil {
-		return fmt.Errorf("Error while deleting reply: %w", err)
+		return fmt.Errorf("error while deleting reply: %w", err)
 	}
 	rows, err := result.RowsAffected()
 	if err != nil {
@@ -159,7 +159,7 @@ func (rs *ReplyStore) GetRepliesByCommentID(ctx context.Context, commentID, user
 	`
 	rows, err := rs.DB.QueryContext(ctx, query, commentID, userID)
 	if err != nil {
-		return nil, fmt.Errorf("Error while getting replies by comment id: %w", err)
+		return nil, fmt.Errorf("error while getting replies by comment id: %w", err)
 	}
 
 	defer rows.Close()
@@ -172,14 +172,14 @@ func (rs *ReplyStore) GetRepliesByCommentID(ctx context.Context, commentID, user
 			&reply.LikeCount, &reply.ReplyCount, &reply.IsLiked, &reply.IsFollowing,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("Error while scanning result: %w", err)
+			return nil, fmt.Errorf("error while scanning result: %w", err)
 		}
 
 		replies = append(replies, reply)
 
 	}
 	if rows.Err() != nil {
-		return nil, fmt.Errorf("Error in result row: %w", err)
+		return nil, fmt.Errorf("error in result row: %w", err)
 	}
 	if len(replies) == 0 {
 		return nil, sql.ErrNoRows
@@ -239,7 +239,7 @@ func (rs *ReplyStore) GetRepliesByParentID(ctx context.Context, parentID, userID
 	`
 	rows, err := rs.DB.QueryContext(ctx, query, parentID, userID)
 	if err != nil {
-		return nil, fmt.Errorf("Error while getting replies by parent id: %w", err)
+		return nil, fmt.Errorf("error while getting replies by parent id: %w", err)
 	}
 	defer rows.Close()
 
@@ -252,14 +252,14 @@ func (rs *ReplyStore) GetRepliesByParentID(ctx context.Context, parentID, userID
 			&reply.LikeCount, &reply.ReplyCount, &reply.IsLiked, &reply.IsFollowing,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("Error while scanning result: %w", err)
+			return nil, fmt.Errorf("error while scanning result: %w", err)
 		}
 
 		replies = append(replies, reply)
 
 	}
 	if rows.Err() != nil {
-		return nil, fmt.Errorf("Error in result row: %w", err)
+		return nil, fmt.Errorf("error in result row: %w", err)
 	}
 	if len(replies) == 0 {
 		return nil, sql.ErrNoRows
