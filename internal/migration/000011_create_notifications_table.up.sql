@@ -1,4 +1,4 @@
-CREATE TYPE notify_type AS ENUM ('post_liked');
+CREATE TYPE notify_type AS ENUM ('post_like','comment_like','reply_like');
 
 
 CREATE TABLE IF NOT EXISTS notifications(
