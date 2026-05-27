@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/fatihesergg/go_social/internal/appError"
 	"github.com/fatihesergg/go_social/internal/database"
-	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -31,7 +31,7 @@ func (ns *NotificationService) GetNotifications(ctx context.Context, userID uuid
 	notifications, err := ns.notificationStore.GetNotifications(ctx, userID, pagination)
 	if err != nil {
 		ns.logger.Error("Error while getting notifications", zap.Error(err))
-		return nil, errors.InternalServerError.Wrap(fmt.Errorf("error while getting notifications: %w", err))
+		return nil, appError.InternalServerError.Wrap(fmt.Errorf("error while getting notifications: %w", err))
 	}
 
 	return notifications, nil

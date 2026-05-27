@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/fatihesergg/go_social/internal/appError"
 	"github.com/fatihesergg/go_social/internal/database"
-	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
 )
@@ -64,12 +64,12 @@ func (ts *TagService) AddPostTags(ctx context.Context, postID uuid.UUID, tags []
 
 	err := ts.tagStore.CreateMultipleTags(ctx, tagModels)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("error while creating post tags: %w", err))
+		return appError.InternalServerError.Wrap(fmt.Errorf("error while creating post tags: %w", err))
 	}
 
 	err = ts.tagStore.CreatePostTag(ctx, tags, postID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("error while matching post to tags: %w", err))
+		return appError.InternalServerError.Wrap(fmt.Errorf("error while matching post to tags: %w", err))
 	}
 	return nil
 }

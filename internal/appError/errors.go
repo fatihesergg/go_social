@@ -1,4 +1,4 @@
-package errors
+package appError
 
 import "net/http"
 
@@ -19,6 +19,9 @@ var NoPostsFoundError = AppError{Message: "no posts found", Code: http.StatusOK}
 var NoCommentsFoundError = AppError{Message: "no comments found", Code: http.StatusOK}
 
 // Exist
+var AlreadySendFollowRequestError = AppError{Message: "you already send this follow request", Code: http.StatusBadRequest}
+var AlreadyAcceptedFollowRequestError = AppError{Message: "you already accepted this follow request", Code: http.StatusBadRequest}
+var AlreadyRejectedFollowRequestError = AppError{Message: "you already rejected this follow request", Code: http.StatusBadRequest}
 var AlreadyReplyLikeError = AppError{Message: "reply already liked", Code: http.StatusBadRequest}
 var AlreadyFollowingError = AppError{Message: "you are already following this user", Code: http.StatusBadRequest}
 var AlreadyPostLikeError = AppError{Message: "post already liked", Code: http.StatusBadRequest}
@@ -31,6 +34,12 @@ var PostNotLikedError = AppError{Message: "post not liked yet", Code: http.Statu
 var CommentNotLikedError = AppError{Message: "comment not liked yet", Code: http.StatusBadRequest}
 var ReplyNotLikedError = AppError{Message: "reply not liked yet", Code: http.StatusBadRequest}
 var NotFollowingError = AppError{Message: "you are not following this user", Code: http.StatusForbidden}
+var NotSendFollowRequest = AppError{Message: "send follow request first", Code: http.StatusBadRequest}
+var FollowNotAccepted = AppError{Message: "follow user should accept your request first", Code: http.StatusBadRequest}
+
+// Forbidden
+var SelfFollowError = AppError{Message: "you can't follow yourself", Code: http.StatusForbidden}
+var CancelRejectedError = AppError{Message: "you can't cancel rejected follow request", Code: http.StatusBadRequest}
 
 // Other
 var InvalidCredentialsError = AppError{Message: "invalid credentials", Code: http.StatusBadRequest}

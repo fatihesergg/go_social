@@ -3,11 +3,12 @@ package services
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/fatihesergg/go_social/internal/appError"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
-	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
 )
@@ -32,32 +33,32 @@ func NewReplyService(replyStore database.BaseReplyStore, commentStore database.B
 func (rp *ReplyService) GetCommentReplies(ctx context.Context, userID uuid.UUID, commentIDRaw string) ([]model.Reply, error) {
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
+		return nil, appError.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
 	}
 
 	hasAccess, err := rp.commentStore.HasAccessToComment(ctx, userID, commentID)
 	if err != nil {
-		return nil, errors.InternalServerError.Wrap(err)
+		return nil, appError.InternalServerError.Wrap(err)
 	}
 
 	if !hasAccess {
-		return nil, errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this comment"))
+		return nil, appError.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this comment"))
 	}
 
 	existComment, err := rp.commentStore.GetCommentByID(ctx, commentID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.CommentNotFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, appError.CommentNotFoundError.Wrap(err)
 		}
-		return nil, errors.InternalServerError.Wrap(err)
+		return nil, appError.InternalServerError.Wrap(err)
 	}
 
 	replies, err := rp.replyStore.GetRepliesByCommentID(ctx, existComment.ID, userID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.NoRepliesFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, appError.NoRepliesFoundError.Wrap(err)
 		}
-		return nil, errors.InternalServerError.Wrap(err)
+		return nil, appError.InternalServerError.Wrap(err)
 	}
 
 	return replies, nil
@@ -66,24 +67,24 @@ func (rp *ReplyService) ReplyComment(ctx context.Context, userID uuid.UUID, comm
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
+		return appError.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
 	}
 
 	hasAccess, err := rp.commentStore.HasAccessToComment(ctx, userID, commentID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this comment"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this comment"))
 	}
 
 	comment, err := rp.commentStore.GetCommentByID(ctx, commentID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.CommentNotFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return appError.CommentNotFoundError.Wrap(err)
 		}
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	reply := &model.Reply{
@@ -95,7 +96,7 @@ func (rp *ReplyService) ReplyComment(ctx context.Context, userID uuid.UUID, comm
 
 	err = rp.replyStore.CreateCommentReply(ctx, reply)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 	return nil
 }
@@ -103,35 +104,35 @@ func (rp *ReplyService) UpdateReply(ctx context.Context, userID uuid.UUID, reply
 
 	replyID, err := uuid.Parse(replyIDRaw)
 	if err != nil {
-		return errors.InternalServerError.Wrap(fmt.Errorf("error while parsing replyid: %w", err))
+		return appError.InternalServerError.Wrap(fmt.Errorf("error while parsing replyid: %w", err))
 	}
 
 	hasAccess, err := rp.replyStore.HasAccessToReply(ctx, userID, replyID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this reply"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this reply"))
 	}
 
 	existReply, err := rp.replyStore.GetReplyByID(ctx, replyID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.ReplyNotFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return appError.ReplyNotFoundError.Wrap(err)
 		}
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if existReply.UserID != userID {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("request userid and reply userid is different"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("request userid and reply userid is different"))
 	}
 
 	existReply.Message = dto.Message
 
 	err = rp.replyStore.UpdateReply(ctx, existReply)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	return nil
@@ -142,33 +143,33 @@ func (rp *ReplyService) DeleteReply(ctx context.Context, userID uuid.UUID, reply
 
 	replyID, err := uuid.Parse(replyIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing replyid: %w", err))
+		return appError.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing replyid: %w", err))
 	}
 
 	hasAccess, err := rp.replyStore.HasAccessToReply(ctx, userID, replyID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this reply"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this reply"))
 	}
 
 	existReply, err := rp.replyStore.GetReplyByID(ctx, replyID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.ReplyNotFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return appError.ReplyNotFoundError.Wrap(err)
 		}
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if existReply.UserID != userID {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("request userid and reply id is different"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("request userid and reply id is different"))
 	}
 
 	err = rp.replyStore.DeleteReply(ctx, existReply.ID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 	return nil
 }
@@ -176,24 +177,24 @@ func (rp *ReplyService) GetRepliesByParentID(ctx context.Context, userID uuid.UU
 
 	parentID, err := uuid.Parse(parentIDRaw)
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing parentid: %w", err))
+		return nil, appError.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing parentid: %w", err))
 	}
 
 	hasAccess, err := rp.replyStore.HasAccessToReply(ctx, userID, parentID)
 	if err != nil {
-		return nil, errors.InternalServerError.Wrap(err)
+		return nil, appError.InternalServerError.Wrap(err)
 	}
 
 	if !hasAccess {
-		return nil, errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this reply"))
+		return nil, appError.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this reply"))
 	}
 
 	replies, err := rp.replyStore.GetRepliesByParentID(ctx, parentID, userID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.ReplyNotFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, appError.ReplyNotFoundError.Wrap(err)
 		}
-		return nil, errors.InternalServerError.Wrap(err)
+		return nil, appError.InternalServerError.Wrap(err)
 	}
 
 	return replies, nil
@@ -202,28 +203,28 @@ func (rp *ReplyService) GetRepliesByParentID(ctx context.Context, userID uuid.UU
 func (rp *ReplyService) ReplyAReply(ctx context.Context, userID uuid.UUID, replyIDRaw string, dto dto.CreateReply) error {
 	parentID, err := uuid.Parse(replyIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing parentid: %w", err))
+		return appError.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing parentid: %w", err))
 	}
 
 	hasAccess, err := rp.replyStore.HasAccessToReply(ctx, userID, parentID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this reply"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this reply"))
 	}
 
 	reply, err := rp.replyStore.GetReplyByID(ctx, parentID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.ReplyNotFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return appError.ReplyNotFoundError.Wrap(err)
 		}
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if reply == nil {
-		return errors.ReplyNotFoundError
+		return appError.ReplyNotFoundError
 	}
 
 	nestedReply := &model.Reply{
@@ -235,7 +236,7 @@ func (rp *ReplyService) ReplyAReply(ctx context.Context, userID uuid.UUID, reply
 
 	err = rp.replyStore.CreateNestedReply(ctx, nestedReply)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 	return nil
 }

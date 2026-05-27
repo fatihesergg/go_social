@@ -3,11 +3,12 @@ package services
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/fatihesergg/go_social/internal/appError"
 	"github.com/fatihesergg/go_social/internal/database"
 	"github.com/fatihesergg/go_social/internal/dto"
-	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
 )
@@ -34,11 +35,11 @@ func (cs *CommentService) AddCommentPost(ctx context.Context, userID uuid.UUID, 
 
 	hasAccess, err := cs.postStore.HasAccessToPost(ctx, userID, dto.PostID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to post"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to post"))
 	}
 
 	comment := &model.Comment{
@@ -50,7 +51,7 @@ func (cs *CommentService) AddCommentPost(ctx context.Context, userID uuid.UUID, 
 
 	err = cs.commentStore.CreateComment(ctx, comment)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 	return nil
 }
@@ -58,25 +59,25 @@ func (cs *CommentService) GetCommentsByPostID(ctx context.Context, userID uuid.U
 
 	postID, err := uuid.Parse(postIDRaw)
 	if err != nil {
-		return nil, errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing uuid: %w", err))
+		return nil, appError.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing uuid: %w", err))
 	}
 
 	hasAccess, err := cs.postStore.HasAccessToPost(ctx, userID, postID)
 	if err != nil {
-		return nil, errors.InternalServerError.Wrap(err)
+		return nil, appError.InternalServerError.Wrap(err)
 	}
 
 	if !hasAccess {
-		return nil, errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this post"))
+		return nil, appError.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this post"))
 	}
 
 	comments, err := cs.commentStore.GetCommentsByPostID(ctx, postID, userID)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.CommentNotFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, appError.CommentNotFoundError.Wrap(err)
 		}
-		return nil, errors.InternalServerError.Wrap(err)
+		return nil, appError.InternalServerError.Wrap(err)
 	}
 
 	return comments, nil
@@ -85,35 +86,35 @@ func (cs *CommentService) UpdateComment(ctx context.Context, userID uuid.UUID, c
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
+		return appError.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
 
 	}
 
 	hasAccess, err := cs.commentStore.HasAccessToComment(ctx, userID, commentID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this comment"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this comment"))
 	}
 
 	comment, err := cs.commentStore.GetCommentByID(ctx, commentID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.CommentNotFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return appError.CommentNotFoundError.Wrap(err)
 		}
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if comment.UserID != userID {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("request userid and comment userid is different"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("request userid and comment userid is different"))
 	}
 	comment.Content = dto.Content
 
 	err = cs.commentStore.UpdateComment(ctx, comment)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 
 	}
 	return nil
@@ -122,33 +123,33 @@ func (cs *CommentService) DeleteComment(ctx context.Context, userID uuid.UUID, c
 
 	commentID, err := uuid.Parse(commentIDRaw)
 	if err != nil {
-		return errors.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
+		return appError.InvalidIDFormatError.Wrap(fmt.Errorf("error while parsing commentid: %w", err))
 	}
 
 	hasAccess, err := cs.commentStore.HasAccessToComment(ctx, userID, commentID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if !hasAccess {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this comment"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("user has no access to this comment"))
 	}
 
 	comment, err := cs.commentStore.GetCommentByID(ctx, commentID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.CommentNotFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return appError.CommentNotFoundError.Wrap(err)
 		}
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 
 	if comment.UserID != userID {
-		return errors.InvalidPermissionError.Wrap(fmt.Errorf("request userid and comment userid is different"))
+		return appError.InvalidPermissionError.Wrap(fmt.Errorf("request userid and comment userid is different"))
 	}
 
 	err = cs.commentStore.DeleteComment(ctx, commentID)
 	if err != nil {
-		return errors.InternalServerError.Wrap(err)
+		return appError.InternalServerError.Wrap(err)
 	}
 	return nil
 }

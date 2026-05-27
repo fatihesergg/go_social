@@ -162,9 +162,7 @@ definitions:
     properties:
       message:
         type: string
-      payload:
-        additionalProperties: true
-        type: object
+      payload: {}
     type: object
   github_com_fatihesergg_go_social_internal_dto.PostDetailResponse:
     properties:
@@ -252,9 +250,21 @@ definitions:
     properties:
       follow_id:
         type: string
+      status:
+        $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.FollowReqStatus'
       user_id:
         type: string
     type: object
+  github_com_fatihesergg_go_social_internal_model.FollowReqStatus:
+    enum:
+    - accepted
+    - pending
+    - rejected
+    type: string
+    x-enum-varnames:
+    - Accepted
+    - Pending
+    - Rejected
   github_com_fatihesergg_go_social_internal_model.User:
     properties:
       avatar:
@@ -616,6 +626,249 @@ paths:
       summary: Get feed posts
       tags:
       - Feed
+  /follows/{id}/accept:
+    post:
+      description: Accept follow request
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Accept follow request
+      tags:
+      - Follows
+  /follows/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel follow request with UserID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Cancel follow request
+      tags:
+      - Follows
+  /follows/{id}/follow:
+    post:
+      consumes:
+      - application/json
+      description: Send follow request to user with user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Follow request
+      tags:
+      - Follows
+  /follows/{id}/followers:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of followers for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Follow'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get followers of a user by user ID
+      tags:
+      - Follows
+  /follows/{id}/following:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of users that a specific user is following
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+            - properties:
+                result:
+                  items:
+                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Follow'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get followings of a user by user ID
+      tags:
+      - Follows
+  /follows/{id}/reject:
+    post:
+      description: reject follow request
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: reject follow request
+      tags:
+      - Follows
+  /follows/{id}/unfollow:
+    post:
+      consumes:
+      - application/json
+      description: Unfollow a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Unfollow a user
+      tags:
+      - Follows
   /login:
     post:
       consumes:
@@ -1414,121 +1667,6 @@ paths:
       summary: Get user by user ID
       tags:
       - Users
-  /users/{id}/follow:
-    post:
-      consumes:
-      - application/json
-      description: Follow a user by their ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Follow a user
-      tags:
-      - Users
-  /users/{id}/followers:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve a list of followers for a specific user
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
-            - properties:
-                result:
-                  items:
-                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Follow'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Get followers of a user by user ID
-      tags:
-      - Users
-  /users/{id}/following:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve a list of users that a specific user is following
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
-            - properties:
-                result:
-                  items:
-                    $ref: '#/definitions/github_com_fatihesergg_go_social_internal_model.Follow'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Get followings of a user by user ID
-      tags:
-      - Users
   /users/{id}/posts:
     get:
       consumes:
@@ -1588,37 +1726,6 @@ paths:
       security:
       - Bearer: []
       summary: Get posts of a user by user ID
-      tags:
-      - Users
-  /users/{id}/unfollow:
-    post:
-      consumes:
-      - application/json
-      description: Unfollow a user by their ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_fatihesergg_go_social_internal_util.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Unfollow a user
       tags:
       - Users
   /users/me:

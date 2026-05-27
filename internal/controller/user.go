@@ -135,124 +135,6 @@ func (uc UserController) GetMe(c *gin.Context) {
 	c.JSON(200, util.SuccessResponse{Message: "user fetched successfully", Result: user})
 }
 
-// GetFollowerByUserID godoc
-//
-//	@Summary		Get followers of a user by user ID
-//	@Description	Retrieve a list of followers for a specific user
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		string	true	"User ID"
-//	@Success		200	{object}	util.SuccessResponse{result=[]model.Follow}
-//	@Failure		400	{object}	util.ErrorResponse
-//	@Failure		404	{object}	util.ErrorResponse
-//	@Failure		500	{object}	util.ErrorResponse
-//	@Security		Bearer
-//	@Router			/users/{id}/followers [get]
-func (uc UserController) GetFollowerByUserID(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: "id is required"})
-		return
-	}
-	followers, err := uc.UserService.GetFollowerByUserID(c.Request.Context(), id)
-	if err != nil {
-		util.WriteAppError(c, err)
-		return
-	}
-
-	c.JSON(200, util.SuccessResponse{Message: "followers fetched successfully", Result: followers})
-}
-
-// GetFollowingByUserID godoc
-//
-//	@Summary		Get followings of a user by user ID
-//	@Description	Retrieve a list of users that a specific user is following
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		string	true	"User ID"
-//	@Success		200	{object}	util.SuccessResponse{result=[]model.Follow}
-//	@Failure		400	{object}	util.ErrorResponse
-//	@Failure		404	{object}	util.ErrorResponse
-//	@Failure		500	{object}	util.ErrorResponse
-//	@Security		Bearer
-//	@Router			/users/{id}/following [get]
-func (uc UserController) GetFollowingByUserID(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: "id is required"})
-		return
-	}
-
-	followings, err := uc.UserService.GetFollowingByUserID(c.Request.Context(), id)
-
-	if err != nil {
-		util.WriteAppError(c, err)
-		return
-	}
-
-	c.JSON(200, util.SuccessResponse{Message: "user following fetched successfully", Result: followings})
-}
-
-// FollowUser godoc
-//
-//	@Summary		Follow a user
-//	@Description	Follow a user by their ID
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		string	true	"User ID"	true	"User ID to follow"
-//	@Success		200	{object}	util.SuccessResponse
-//	@Failure		400	{object}	util.ErrorResponse
-//	@Failure		500	{object}	util.ErrorResponse
-//	@Security		Bearer
-//	@Router			/users/{id}/follow [post]
-func (uc UserController) FollowUser(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: "id is required"})
-		return
-	}
-	me := c.MustGet("userID").(uuid.UUID)
-
-	err := uc.UserService.FollowUser(c.Request.Context(), me, id)
-	if err != nil {
-		util.WriteAppError(c, err)
-		return
-	}
-
-	c.JSON(200, util.SuccessResponse{Message: "followed successfully"})
-}
-
-// UnfollowUser godoc
-//
-//	@Summary		Unfollow a user
-//	@Description	Unfollow a user by their ID
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Param			id	path		string	true	"User ID"	true	"User ID to unfollow"
-//	@Success		200	{object}	util.SuccessResponse
-//	@Failure		400	{object}	util.ErrorResponse
-//	@Failure		500	{object}	util.ErrorResponse
-//	@Security		Bearer
-//	@Router			/users/{id}/unfollow [post]
-func (uc UserController) UnfollowUser(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, util.ErrorResponse{Error: "id is required"})
-		return
-	}
-	me := c.MustGet("userID").(uuid.UUID)
-	err := uc.UserService.UnFollowUser(c.Request.Context(), me, id)
-	if err != nil {
-		util.WriteAppError(c, err)
-		return
-	}
-	c.JSON(200, util.SuccessResponse{Message: "unfollowed successfully"})
-}
-
 // GetUsersPosts godoc
 //
 //	@Summary		Get posts of a user by user ID
@@ -320,7 +202,6 @@ func (uc UserController) ResetPassword(c *gin.Context) {
 	c.JSON(200, util.SuccessResponse{Message: "password updated successfully"})
 }
 
-// TODO:  Add docs
 // SearchUserByUsername godoc
 //
 //	@Summary		Search user by username

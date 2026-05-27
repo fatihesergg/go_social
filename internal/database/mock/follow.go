@@ -29,17 +29,20 @@ func (fs *MockFollowStore) GetFollowingByUserID(ctx context.Context, userID uuid
 	}
 	return follows, args.Error(1)
 }
-
-func (fs *MockFollowStore) FollowUser(ctx context.Context, model model.Follow) error {
-	args := fs.Called(ctx, model)
-	return args.Error(0)
+func (fs *MockFollowStore) UpsertFollowRequest(ctx context.Context, followModel model.Follow) (string, error) {
+	args := fs.Called(ctx, followModel)
+	return args.String(0), args.Error(1)
 }
 
-func (fs *MockFollowStore) UnFollowUser(ctx context.Context, model model.Follow) error {
-	args := fs.Called(ctx, model)
-	return args.Error(0)
+func (fs *MockFollowStore) DeleteFollowRequest(ctx context.Context, model model.Follow, status model.FollowReqStatus) (string, string, error) {
+	args := fs.Called(ctx, model, status)
+	return args.String(0), args.String(1), args.Error(1)
 }
 
+func (fs *MockFollowStore) UpdateFollowStatus(ctx context.Context, model model.Follow) (string, string, error) {
+	args := fs.Called(ctx, model)
+	return args.String(0), args.String(1), args.Error(1)
+}
 func (fs *MockFollowStore) IsFollowing(ctx context.Context, model model.Follow) (bool, error) {
 	args := fs.Called(ctx, model)
 	return args.Bool(0), args.Error(1)

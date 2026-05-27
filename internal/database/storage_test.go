@@ -362,7 +362,7 @@ func TestUserStore_GetUserByEmail(t *testing.T) {
 	})
 }
 
-func TestFollowStore_FollowUser(t *testing.T) {
+func TestFollowStore_UpsertFollowRequest(t *testing.T) {
 	ctx := context.Background()
 	user1 := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 	user2 := createTestUser(t, "test_2", "test_2", "test_2", "test_2@test.com", "test_2")
@@ -374,17 +374,20 @@ func TestFollowStore_FollowUser(t *testing.T) {
 	assert.NoError(t, err)
 
 	follow := createTestFollow(t, user1.ID, user2.ID)
+	follow.Status = model.Pending
 
-	err = testFollowStore.FollowUser(ctx, *follow)
+	oldStatus, err := testFollowStore.UpsertFollowRequest(ctx, *follow)
 	assert.NoError(t, err)
+	assert.Equal(t, oldStatus, "")
 
-	t.Run("Follow user fail", func(t *testing.T) {
-		err = testFollowStore.FollowUser(ctx, *follow)
-		assert.Error(t, err)
+	t.Run("double follow request fail", func(t *testing.T) {
+		oldStatus, err := testFollowStore.UpsertFollowRequest(ctx, *follow)
+		assert.NoError(t, err)
+		assert.Equal(t, oldStatus, "pending")
 	})
 
 	t.Cleanup(func() {
-		_ = testFollowStore.UnFollowUser(ctx, *follow)
+		_, _, _ = testFollowStore.DeleteFollowRequest(ctx, *follow, model.Pending)
 		_ = testUserStore.DeleteUser(ctx, user1.ID)
 		_ = testUserStore.DeleteUser(ctx, user2.ID)
 
@@ -392,7 +395,7 @@ func TestFollowStore_FollowUser(t *testing.T) {
 
 }
 
-func TestFollowStore_UnFollowStore(t *testing.T) {
+func TestFollowStore_UpdateFollowStatus(t *testing.T) {
 	ctx := context.Background()
 	user1 := createTestUser(t, "test", "test", "test", "test@test.com", "test")
 	user2 := createTestUser(t, "test_2", "test_2", "test_2", "test_2@test.com", "test_2")
@@ -404,12 +407,16 @@ func TestFollowStore_UnFollowStore(t *testing.T) {
 	assert.NoError(t, err)
 
 	follow := createTestFollow(t, user1.ID, user2.ID)
-	err = testFollowStore.FollowUser(ctx, *follow)
+	follow.Status = model.Pending
+	oldStatus, err := testFollowStore.UpsertFollowRequest(ctx, *follow)
 	assert.NoError(t, err)
+	assert.Equal(t, oldStatus, "")
 
-	t.Run("Unfollow user success", func(t *testing.T) {
-		err = testFollowStore.UnFollowUser(ctx, *follow)
+	t.Run("sender user accept its own request", func(t *testing.T) {
+		follow.Status = model.Accepted
+		oldStatus, newStatus, err := testFollowStore.UpdateFollowStatus(ctx, *follow)
 		assert.NoError(t, err)
+		assert.Equal(t, oldStatus, "")
 	})
 
 	t.Run("Unfollow user fail", func(t *testing.T) {

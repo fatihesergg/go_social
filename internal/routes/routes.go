@@ -13,6 +13,7 @@ func MountRoutes(engine *gin.Engine,
 	likeController *controller.LikeController,
 	feedController *controller.FeedController,
 	replyController *controller.ReplyController,
+	followController *controller.FollowController,
 	notificationController *controller.NotificationController) {
 	base := engine.Group("/api/v1")
 
@@ -24,12 +25,18 @@ func MountRoutes(engine *gin.Engine,
 	userRouter.GET("/:id", userController.GetUserByID)
 	userRouter.GET("/:id/posts", userController.GetUsersPosts)
 	userRouter.GET("/me", userController.GetMe)
-	userRouter.POST("/:id/follow", userController.FollowUser)
-	userRouter.DELETE("/:id/unfollow", userController.UnfollowUser)
-	userRouter.GET("/:id/followers", userController.GetFollowerByUserID)
-	userRouter.GET("/:id/following", userController.GetFollowingByUserID)
 	userRouter.POST("/reset_password", userController.ResetPassword)
 	userRouter.GET("/search/:username", userController.SearchUserByUsername)
+
+	followRouter := base.Group("/follows")
+	followRouter.Use(middleware.AuthMiddleware())
+	followRouter.POST("/:id/follow", followController.SendFollowRequest)
+	followRouter.DELETE("/:id/unfollow", followController.UnfollowUser)
+	followRouter.POST("/:id/accept", followController.AcceptFollowRequest)
+	followRouter.POST("/:id/reject", followController.RejectFollowRequest)
+	followRouter.POST("/:id/cancel", followController.CancelFollowRequest)
+	followRouter.GET("/:id/followers", followController.GetFollowerByUserID)
+	followRouter.GET("/:id/following", followController.GetFollowingByUserID)
 
 	postRouter := base.Group("/posts")
 	postRouter.Use(middleware.AuthMiddleware())

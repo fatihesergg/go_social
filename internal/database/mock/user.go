@@ -12,14 +12,6 @@ type MockUserStore struct {
 	mock.Mock
 }
 
-// GetUsersByUsername(ctx context.Context, userName string) ([]model.User, error)
-// GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error)
-// GetUserByUsername(ctx context.Context, username string) (*model.User, error)
-// GetUserByEmail(ctx context.Context, email string) (*model.User, error)
-// CreateUser(ctx context.Context, user *model.User) error
-// UpdateUser(ctx context.Context, user *model.User) error
-// DeleteUser(ctx context.Context, id uuid.UUID) error
-
 func (us *MockUserStore) CreateUser(ctx context.Context, user *model.User) error {
 	args := us.Called(ctx, user)
 	return args.Error(0)

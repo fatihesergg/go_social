@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/fatihesergg/go_social/internal/model"
@@ -36,7 +37,7 @@ func (s *UserStore) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User,
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.Avatar, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
 		return nil, fmt.Errorf("error while getting user by id: %w", err)
@@ -53,7 +54,7 @@ func (s *UserStore) GetUserByUsername(ctx context.Context, username string) (*mo
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.Avatar, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
 		return nil, fmt.Errorf("error while getting user by username: %w", err)
@@ -70,7 +71,7 @@ func (s *UserStore) GetUserByEmail(ctx context.Context, email string) (*model.Us
 	err := row.Scan(&user.ID, &user.Name, &user.LastName, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt, &user.Avatar)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
 		return nil, fmt.Errorf("error while getting user by email: %w", err)

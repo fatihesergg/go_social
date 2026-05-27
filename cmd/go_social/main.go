@@ -117,6 +117,7 @@ func main() {
 	likeService := services.NewLikeService(likeStore, postStore, commentStore, rabbitmq)
 	replyService := services.NewReplyService(replyStore, commentStore)
 	tagService := services.NewTagService(tagStore)
+	followService := services.NewFollowService(followStore, userStore)
 	notificationService := services.NewNotificationService(notificationStore, logger)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -129,9 +130,10 @@ func main() {
 	feedController := controller.NewFeedController(feedService)
 	likeController := controller.NewLikeController(likeService)
 	replyController := controller.NewReplyController(replyService)
+	followController := controller.NewFollowController(followService)
 	notificationController := controller.NewNotificationController(notificationService)
 
-	routes.MountRoutes(engine, userController, postController, commentController, likeController, feedController, replyController, notificationController)
+	routes.MountRoutes(engine, userController, postController, commentController, likeController, feedController, replyController, followController, notificationController)
 
 	server := &http.Server{Addr: ":3000", Handler: engine.Handler()}
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	custom_err "github.com/fatihesergg/go_social/internal/errors"
+	"github.com/fatihesergg/go_social/internal/appError"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
@@ -97,10 +97,10 @@ func GetErrorMessage(fe validator.FieldError) string {
 func WriteAppError(c *gin.Context, err error) {
 
 	c.Error(err)
-	var appErr custom_err.AppError
+	var appErr appError.AppError
 	if errors.As(err, &appErr) {
 		c.JSON(appErr.Code, ErrorResponse{Error: appErr.Message})
 		return
 	}
-	c.JSON(http.StatusInternalServerError, ErrorResponse{Error: custom_err.InternalServerError.Message})
+	c.JSON(http.StatusInternalServerError, ErrorResponse{Error: appError.InternalServerError.Message})
 }

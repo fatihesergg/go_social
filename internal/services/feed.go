@@ -3,9 +3,10 @@ package services
 import (
 	"context"
 	"database/sql"
+	"errors"
 
+	"github.com/fatihesergg/go_social/internal/appError"
 	"github.com/fatihesergg/go_social/internal/database"
-	"github.com/fatihesergg/go_social/internal/errors"
 	"github.com/fatihesergg/go_social/internal/model"
 	"github.com/google/uuid"
 )
@@ -26,10 +27,10 @@ func (fs *FeedService) GetFeed(ctx context.Context, userID uuid.UUID, limit, off
 	pagination := database.NewPagination(limit, offset)
 	posts, err := fs.feedStore.GetFeed(ctx, userID, pagination, search)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.NoPostsFoundError.Wrap(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, appError.NoPostsFoundError.Wrap(err)
 		}
-		return nil, errors.InternalServerError.Wrap(err)
+		return nil, appError.InternalServerError.Wrap(err)
 	}
 	return posts, nil
 }
