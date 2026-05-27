@@ -81,12 +81,13 @@ The project follows a **Clean Architecture** pattern to ensure separation of con
 - **`internal/controller`**: **Gin** handlers responsible for request validation and response formatting.
 - **`internal/services`**: Business layer, using by controllers via dependency injection.
 - **`internal/database`**: Data access layer using raw SQL for **PostgreSQL** interactions.
+- **`internal/mock`**: Mock database structs for testing purpose.
 - **`internal/model`**: Core domain entities and database schemas.
 - **`internal/dto`**: Data Transfer Objects for strict API contract definition.
 - **`internal/middleware`**: **JWT Auth**, Logging, and Rate Limiting.
 - **`internal/routes`**: All routes registered here.
 - **`internal/util`**: Config struct and helper functions.
-- **`internal/errors`**: Define custom error type.
+- **`internal/appError`**: Define custom error type.
 - **`internal/migration`**: Database migrations for golang-migrate.
 - **`internal/broker`**: Contains functions for rabbitmq to connect,declare channel etc.
 - **`internal/ws`**: Websocket hub and client handling.
